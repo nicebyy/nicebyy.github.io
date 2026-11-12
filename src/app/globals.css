@@ -38,6 +38,14 @@
   }
 }
 
+/* Cyberpunk Custom Cursor Styles (Desktop Pointer Only) */
+@media (pointer: fine) {
+  body.cyber-cursor-active,
+  body.cyber-cursor-active * {
+    cursor: none !important;
+  }
+}
+
 /* Hide Next.js 15 local dev indicator badge */
 nextjs-portal [data-next-badge],
 nextjs-portal [aria-label*="Next.js"],

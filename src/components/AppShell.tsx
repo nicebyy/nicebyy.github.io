@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { CyberCursor } from "./CyberCursor";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
 
@@ -76,6 +77,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen flex flex-col relative">
+      <CyberCursor />
       <Navbar
         isSidebarCollapsed={isCollapsed}
         onToggleSidebar={toggleCollapse}
