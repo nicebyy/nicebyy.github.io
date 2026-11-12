@@ -34,7 +34,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     {
       id: 2,
       type: "output",
-      text: `> Welcome, Operator! Initialized ${posts.length} markdown logs with full cyber-telemetry.`,
+      text: `> Welcome, Operator! Initialized ${posts.length} archived logs. [SECTOR_09: 0 PEERS DETECTED — SOLO SESSION]`,
     },
   ]);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
@@ -75,6 +75,8 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           "  whoami   — 운영자(kimkkatta) 프로필 및 개발 철학 출력",
           "  skills   — 실시간 핵심 기술 스택 게이지 전송",
           "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
+          "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
+          "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환",
           "  status   — 나이트 시티 메인프레임 통신 상태 진단",
           "  clear    — 터미널 콘솔 로그 초기화",
         ].join("\n"),
@@ -109,11 +111,39 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         type: "output",
         text: `📁 ARCHIVED LOGS in /content/posts:\n${list}`,
       });
+    } else if (cmd === "scan") {
+      newLines.push({
+        id: Date.now() + 1,
+        type: "accent",
+        text: `[SUBNET_RADAR_SCAN] Sweeping Night City Sector 01..09...\n  • Sector 01 ~ 04 : [NO CARRIER / SILENT]\n  • Sector 05 ~ 08 : [SIGNAL LOST / ABANDONED]\n  • Sector 09      : [SOLO NODE ACTIVE -> ${siteConfig.author} (YOU)]\n> RESULT: 0 other operators detected. Signal completely isolated.`,
+      });
+    } else if (cmd === "rain" || cmd === "rain on" || cmd === "rain off") {
+      const explicitState =
+        cmd === "rain on" ? true : cmd === "rain off" ? false : undefined;
+      window.dispatchEvent(
+        new CustomEvent("toggle-rain-audio", { detail: explicitState })
+      );
+      if (typeof explicitState === "boolean") {
+        window.dispatchEvent(
+          new CustomEvent("toggle-rain-visual", { detail: explicitState })
+        );
+      }
+      newLines.push({
+        id: Date.now() + 1,
+        type: "accent",
+        text: `[ATMOSPHERE_DECK] Night City ambient rain soundscape ${
+          explicitState === true
+            ? "ENABLED"
+            : explicitState === false
+            ? "DISABLED"
+            : "TOGGLED"
+        }. (Rain outside the shelter terminal...)`,
+      });
     } else if (cmd === "status") {
       newLines.push({
         id: Date.now() + 1,
         type: "accent",
-        text: `[MAINFRAME STATUS] ALL CIRCUITS NOMINAL\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • SECURITY: BOT_FIREWALL_ACTIVE\n  • UPTIME: 99.99%\n  • NODE: SEOUL_CENTRAL_HUB`,
+        text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
       });
     } else if (cmd === "clear") {
       setHistory([]);
@@ -161,12 +191,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-ping" />
-              <span className="hidden sm:inline font-orbitron text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/30 tracking-widest">
-                CLI // ACTIVE
+              <span className="w-1.5 h-1.5 rounded-full bg-neon-pink animate-ping" />
+              <span className="hidden sm:inline font-orbitron text-[10px] px-2 py-0.5 rounded bg-pink-500/10 text-neon-pink border border-pink-500/35 tracking-widest cyber-signal-flicker">
+                SOLO_NODE // 0 PEERS
               </span>
-              <span className="sm:hidden font-orbitron text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/30 tracking-wider">
-                LIVE
+              <span className="sm:hidden font-orbitron text-[9px] px-1.5 py-0.5 rounded bg-pink-500/10 text-neon-pink border border-pink-500/35 tracking-wider">
+                SOLO
               </span>
             </div>
           </div>
@@ -201,6 +231,8 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               {[
                 { name: "help", color: "cyan" },
+                { name: "scan", color: "pink" },
+                { name: "rain", color: "cyan" },
                 { name: "whoami", color: "pink" },
                 { name: "skills", color: "green" },
                 { name: "ls", color: "cyan" },
@@ -235,7 +267,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="명령어 입력 (whoami, skills, ls, status, help)..."
+                placeholder="명령어 입력 (scan, rain, whoami, skills, status, help)..."
                 className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none"
               />
               <button
@@ -250,7 +282,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         </div>
 
         {/* Right 5 cols: Developer Telemetry & Neon Dashboard Card */}
-        <div className="lg:col-span-5 rounded-2xl border border-pink-500/40 bg-[#0b101e]/95 p-5 sm:p-6 shadow-lg shadow-neon-pink flex flex-col justify-between space-y-5 cyber-box cyber-corner group relative">
+        <div className="lg:col-span-5 rounded-2xl border border-pink-500/40 bg-[#0b101e]/95 p-5 sm:p-6 shadow-lg shadow-neon-pink flex flex-col justify-between gap-5 cyber-box cyber-corner group relative">
           <span className="cyber-corner-bracket-tl" />
           <span className="cyber-corner-bracket-tr" />
           <span className="cyber-corner-bracket-bl" />

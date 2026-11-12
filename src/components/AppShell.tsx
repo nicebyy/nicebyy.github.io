@@ -13,6 +13,16 @@ const CyberCursor = dynamic(
   { ssr: false }
 );
 
+const IsolatedAtmosphere = dynamic(
+  () => import("./IsolatedAtmosphere").then((mod) => mod.IsolatedAtmosphere),
+  { ssr: false }
+);
+
+const LoneOperatorHud = dynamic(
+  () => import("./LoneOperatorHud").then((mod) => mod.LoneOperatorHud),
+  { ssr: false }
+);
+
 export type NavSection = "dashboard" | "posts" | "about";
 
 export function AppShell({
@@ -27,6 +37,25 @@ export function AppShell({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
+  const [rainAudio, setRainAudio] = useState(false);
+
+  // Sync procedural rain audio state across footer / HUD / terminal CLI
+  useEffect(() => {
+    const handleRainState = (e: Event) => {
+      const custom = e as CustomEvent<boolean>;
+      if (typeof custom.detail === "boolean") {
+        setRainAudio(custom.detail);
+      }
+    };
+    window.addEventListener("rain-audio-state", handleRainState);
+    return () => {
+      window.removeEventListener("rain-audio-state", handleRainState);
+    };
+  }, []);
+
+  const toggleRainAudio = () => {
+    window.dispatchEvent(new CustomEvent("toggle-rain-audio"));
+  };
 
   // Performance: Pause CSS animations across the blog when browser tab is inactive (0% idle CPU)
   useEffect(() => {
@@ -134,6 +163,8 @@ export function AppShell({
 
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col relative overflow-x-clip">
+      <IsolatedAtmosphere />
+      <LoneOperatorHud />
       <CyberCursor />
       <Navbar
         isSidebarCollapsed={isCollapsed}
@@ -169,12 +200,32 @@ export function AppShell({
                   {siteConfig.githubUsername}). POWERED BY NEXT.JS & GITHUB PAGES.
                 </span>
               </div>
-              <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
+                <button
+                  type="button"
+                  onClick={toggleRainAudio}
+                  title="사이버펑크 빗소리 앰비언스 전환"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
+                    rainAudio
+                      ? "border-pink-500/50 bg-pink-500/15 text-neon-pink shadow-[0_0_10px_rgba(255,0,127,0.25)]"
+                      : "border-cyan-500/30 bg-black/40 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-400 hover:text-neon-cyan"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      rainAudio
+                        ? "bg-neon-pink shadow-[0_0_6px_#ff007f] animate-pulse"
+                        : "bg-slate-500"
+                    }`}
+                  />
+                  <span>RAIN: {rainAudio ? "ON" : "OFF"}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={toggleCursorMode}
                   title="마우스 커서 스타일 전환 (사이버펑크 / 시스템 기본)"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-[10px] font-mono text-slate-300 hover:text-neon-cyan transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-[10px] font-mono text-slate-300 hover:text-neon-cyan transition-all cursor-pointer active:scale-95"
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${

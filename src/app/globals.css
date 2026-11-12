@@ -495,7 +495,7 @@ html.tab-inactive *::after {
     0 0 25px rgba(0, 243, 255, 0.35),
     0 0 50px rgba(0, 243, 255, 0.15),
     inset 0 0 20px rgba(0, 243, 255, 0.1);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
 .cyber-box:hover::before {
@@ -508,125 +508,140 @@ html.tab-inactive *::after {
   transform: rotate(25deg) translateY(100%);
 }
 
-/* Cyber HUD Corner Marks (Tech Reticle Brackets) */
+/* Cyber HUD Corner Marks (Curved Reticle Arcs hugging card border-radius) */
 .cyber-corner {
   position: relative;
 }
 
-/* 좌상단 & 우하단 기본 브래킷 */
 .cyber-corner-bracket-tl,
 .cyber-corner-bracket-tr,
 .cyber-corner-bracket-bl,
 .cyber-corner-bracket-br {
   position: absolute;
-  width: 9px;
-  height: 9px;
+  margin: 0 !important;
+  width: 24px;
+  height: 24px;
   pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 3;
-  will-change: width, height, box-shadow;
+  opacity: 0.72;
+  transition:
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    filter 0.3s ease;
+  z-index: 20;
+  will-change: width, height, opacity, filter;
 }
 
 .cyber-corner-bracket-tl {
-  top: -1px;
-  left: -1px;
+  top: 0;
+  left: 0;
   border-top: 2px solid #00f3ff;
   border-left: 2px solid #00f3ff;
+  border-top-left-radius: inherit;
 }
 
 .cyber-corner-bracket-tr {
-  top: -1px;
-  right: -1px;
+  top: 0;
+  right: 0;
   border-top: 2px solid #ff007f;
   border-right: 2px solid #ff007f;
+  border-top-right-radius: inherit;
 }
 
 .cyber-corner-bracket-bl {
-  bottom: -1px;
-  left: -1px;
+  bottom: 0;
+  left: 0;
   border-bottom: 2px solid #00ff9d;
   border-left: 2px solid #00ff9d;
+  border-bottom-left-radius: inherit;
 }
 
 .cyber-corner-bracket-br {
-  bottom: -1px;
-  right: -1px;
+  bottom: 0;
+  right: 0;
   border-bottom: 2px solid #00f3ff;
   border-right: 2px solid #00f3ff;
+  border-bottom-right-radius: inherit;
 }
 
-/* Hover 시 브래킷 타겟 락온(Lock-on) 확장 모션 */
-.group:hover .cyber-corner-bracket-tl,
-.cyber-corner:hover .cyber-corner-bracket-tl {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 8px #00f3ff;
-  border-color: #00f3ff;
+/* Hover 시 코너 곡률을 따라 부드럽게 확장되는 락온 글로우 */
+.group:hover > .cyber-corner-bracket-tl,
+.cyber-corner:hover > .cyber-corner-bracket-tl {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(0, 243, 255, 0.85));
 }
 
-.group:hover .cyber-corner-bracket-tr,
-.cyber-corner:hover .cyber-corner-bracket-tr {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 8px #ff007f;
-  border-color: #ff007f;
+.group:hover > .cyber-corner-bracket-tr,
+.cyber-corner:hover > .cyber-corner-bracket-tr {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.85));
 }
 
-.group:hover .cyber-corner-bracket-bl,
-.cyber-corner:hover .cyber-corner-bracket-bl {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 8px #00ff9d;
-  border-color: #00ff9d;
+.group:hover > .cyber-corner-bracket-bl,
+.cyber-corner:hover > .cyber-corner-bracket-bl {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 157, 0.85));
 }
 
-.group:hover .cyber-corner-bracket-br,
-.cyber-corner:hover .cyber-corner-bracket-br {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 8px #00f3ff;
-  border-color: #00f3ff;
+.group:hover > .cyber-corner-bracket-br,
+.cyber-corner:hover > .cyber-corner-bracket-br {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(0, 243, 255, 0.85));
 }
 
-/* 기존 ::before/::after 기반 .cyber-corner 호환 및 강화 */
-.cyber-corner::before {
+/* 브래킷 span 및 .cyber-box가 없는 .cyber-corner 전용 폴백 코너 아크 (충돌 방지) */
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl))::before,
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl))::after {
   content: "";
   position: absolute;
-  top: -1px;
-  left: -1px;
-  width: 8px;
-  height: 8px;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  opacity: 0.72;
+  transition:
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.3s ease,
+    filter 0.3s ease;
+  z-index: 3;
+}
+
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl))::before {
+  top: 0;
+  left: 0;
   border-top: 2px solid #00f3ff;
   border-left: 2px solid #00f3ff;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 3;
+  border-top-left-radius: inherit;
 }
 
-.cyber-corner::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  width: 8px;
-  height: 8px;
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl))::after {
+  bottom: 0;
+  right: 0;
   border-bottom: 2px solid #ff007f;
   border-right: 2px solid #ff007f;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 3;
+  border-bottom-right-radius: inherit;
 }
 
-.cyber-corner:hover::before {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 10px #00f3ff;
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl)):hover::before {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(0, 243, 255, 0.85));
 }
 
-.cyber-corner:hover::after {
-  width: 16px;
-  height: 16px;
-  box-shadow: 0 0 10px #ff007f;
+.cyber-corner:not(.cyber-box):not(:has(> .cyber-corner-bracket-tl)):hover::after {
+  width: 38px;
+  height: 38px;
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.85));
 }
 
 /* 사이버펑크 인터랙티브 네온 칩 & 버튼 모션 */
@@ -792,4 +807,103 @@ html.tab-inactive *::after {
 .hljs-meta {
   color: #64748b;
   font-style: italic;
+}
+
+/* =========================================================================
+   Isolated Cyberpunk World Ambience (CRT Visor Vignette, Signal Sweep & Radar)
+   ========================================================================= */
+
+.cyber-crt-vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 56%,
+    rgba(3, 6, 14, 0.45) 82%,
+    rgba(2, 4, 10, 0.84) 100%
+  );
+}
+
+.cyber-crt-vignette-idle {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(2, 4, 10, 0.08) 45%,
+    rgba(2, 4, 10, 0.65) 80%,
+    rgba(1, 2, 6, 0.92) 100%
+  );
+}
+
+@keyframes cyber-crt-sweep {
+  0% {
+    transform: translate3d(0, -15vh, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.7;
+  }
+  92% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(0, 110vh, 0);
+    opacity: 0;
+  }
+}
+
+.cyber-crt-beam {
+  height: 90px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 243, 255, 0.03) 45%,
+    rgba(0, 243, 255, 0.08) 50%,
+    rgba(255, 0, 127, 0.03) 54%,
+    transparent 100%
+  );
+  animation: cyber-crt-sweep 9.5s linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Rare subtle signal interference flicker on isolated HUD elements (~every 18s) */
+@keyframes cyber-signal-flicker {
+  0%, 94%, 100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: none;
+  }
+  95% {
+    opacity: 0.72;
+    transform: translate3d(-1px, 0, 0);
+    text-shadow: 2px 0 #ff007f, -2px 0 #00f3ff;
+  }
+  96% {
+    opacity: 0.95;
+    transform: translate3d(1px, 0, 0);
+  }
+  97% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0);
+    text-shadow: -1.5px 0 #ff007f, 1.5px 0 #00f3ff;
+  }
+  98% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.cyber-signal-flicker {
+  animation: cyber-signal-flicker 18s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes cyber-radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cyber-radar-beam {
+  animation: cyber-radar-sweep 3.8s linear infinite;
+  will-change: transform;
 }
