@@ -23,14 +23,16 @@ import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, CategoryNode } from "@/lib/categories";
 
-const MIN_SIDEBAR_WIDTH = 200;
-const MAX_SIDEBAR_WIDTH = 520;
+const MIN_SIDEBAR_WIDTH = 180;
+const MAX_SIDEBAR_WIDTH = 560;
 const DEFAULT_SIDEBAR_WIDTH = 256;
+const COLLAPSE_THRESHOLD = 120;
 
 interface SidebarProps {
   posts: PostMeta[];
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onSetCollapsed?: (collapsed: boolean) => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   activeSection?: "dashboard" | "posts" | "about";
@@ -41,6 +43,7 @@ export function Sidebar({
   posts,
   isCollapsed,
   onToggleCollapse,
+  onSetCollapsed,
   isMobileOpen,
   onCloseMobile,
   activeSection = "dashboard",
@@ -53,14 +56,24 @@ export function Sidebar({
   const [tagsOpen, setTagsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
-  // Resizable sidebar width state & drag handler
+  // Resizable sidebar width state & rock-solid pointer drag handler
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarWidthRef = useRef(sidebarWidth);
+  const isResizingRef = useRef(false);
+  const isCollapsedRef = useRef(isCollapsed);
 
   useEffect(() => {
     sidebarWidthRef.current = sidebarWidth;
   }, [sidebarWidth]);
+
+  useEffect(() => {
+    isCollapsedRef.current = isCollapsed;
+  }, [isCollapsed]);
+
+  useEffect(() => {
+    isResizingRef.current = isResizing;
+  }, [isResizing]);
 
   // Restore saved width from localStorage on mount
   useEffect(() => {
@@ -77,28 +90,74 @@ export function Sidebar({
     }
   }, []);
 
-  // Handle resizing mouse & touch movements
+  const handlePointerMoveInternal = (clientX: number) => {
+    const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(window.innerWidth * 0.55));
+
+    // When dragged left past collapse threshold, snap to collapsed
+    if (clientX < COLLAPSE_THRESHOLD) {
+      if (!isCollapsedRef.current) {
+        onSetCollapsed?.(true);
+      }
+      return;
+    }
+
+    // When dragged right past collapse threshold, unfold
+    if (isCollapsedRef.current) {
+      onSetCollapsed?.(false);
+    }
+
+    const clamped = Math.min(Math.max(clientX, MIN_SIDEBAR_WIDTH), maxWidth);
+    setSidebarWidth(clamped);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // fallback
+    }
+
+    setIsResizing(true);
+    isResizingRef.current = true;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isResizingRef.current) return;
+    e.preventDefault();
+    handlePointerMoveInternal(e.clientX);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isResizingRef.current) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+    setIsResizing(false);
+    isResizingRef.current = false;
+    try {
+      localStorage.setItem("kimgatta_sidebar_width", String(sidebarWidthRef.current));
+    } catch {
+      // ignore
+    }
+  };
+
+  // Window fallback listeners for bulletproof dragging
   useEffect(() => {
     if (!isResizing) return;
 
-    const handleMove = (clientX: number) => {
-      const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(window.innerWidth * 0.5));
-      const clamped = Math.min(Math.max(clientX, MIN_SIDEBAR_WIDTH), maxWidth);
-      setSidebarWidth(clamped);
+    const onWindowMove = (e: PointerEvent) => {
+      handlePointerMoveInternal(e.clientX);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      handleMove(e.clientX);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches[0]) {
-        handleMove(e.touches[0].clientX);
-      }
-    };
-
-    const handleEnd = () => {
+    const onWindowUp = () => {
       setIsResizing(false);
+      isResizingRef.current = false;
       try {
         localStorage.setItem("kimgatta_sidebar_width", String(sidebarWidthRef.current));
       } catch {
@@ -106,10 +165,9 @@ export function Sidebar({
       }
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleEnd);
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
-    window.addEventListener("touchend", handleEnd);
+    window.addEventListener("pointermove", onWindowMove);
+    window.addEventListener("pointerup", onWindowUp);
+    window.addEventListener("pointercancel", onWindowUp);
 
     const prevUserSelect = document.body.style.userSelect;
     const prevCursor = document.body.style.cursor;
@@ -117,20 +175,34 @@ export function Sidebar({
     document.body.style.cursor = "col-resize";
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleEnd);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("pointermove", onWindowMove);
+      window.removeEventListener("pointerup", onWindowUp);
+      window.removeEventListener("pointercancel", onWindowUp);
       document.body.style.userSelect = prevUserSelect;
       document.body.style.cursor = prevCursor;
     };
   }, [isResizing]);
 
-  const handleResetWidth = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleResetWidth = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    if (isCollapsed) {
+      onSetCollapsed?.(false);
+    }
     setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
     try {
       localStorage.setItem("kimgatta_sidebar_width", String(DEFAULT_SIDEBAR_WIDTH));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSetPresetWidth = (width: number) => {
+    if (isCollapsed) {
+      onSetCollapsed?.(false);
+    }
+    setSidebarWidth(width);
+    try {
+      localStorage.setItem("kimgatta_sidebar_width", String(width));
     } catch {
       // ignore
     }
@@ -602,7 +674,48 @@ export function Sidebar({
       </div>
 
       {/* Bottom Footer of Sidebar */}
-      <div className="p-2.5 border-t border-cyan-500/20">
+      <div className="p-2.5 border-t border-cyan-500/20 space-y-2">
+        {!collapsed && (
+          <div className="flex flex-col gap-1.5 pb-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-cyan-400/80">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
+                WIDTH: {sidebarWidth}px
+              </span>
+              <button
+                type="button"
+                onClick={() => handleResetWidth()}
+                title="기본 크기(256px)로 복원"
+                className="text-[10px] text-pink-400 hover:text-neon-pink underline transition-colors cursor-pointer"
+              >
+                RESET
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { label: "180", width: 180, title: "축소 (180px)" },
+                { label: "256", width: 256, title: "기본 (256px)" },
+                { label: "340", width: 340, title: "넓게 (340px)" },
+                { label: "460", width: 460, title: "최대 (460px)" },
+              ].map((preset) => (
+                <button
+                  key={preset.width}
+                  type="button"
+                  onClick={() => handleSetPresetWidth(preset.width)}
+                  title={preset.title}
+                  className={`py-1 text-[10px] font-mono rounded-lg border transition-all cursor-pointer ${
+                    sidebarWidth === preset.width
+                      ? "bg-cyan-500/20 text-neon-cyan border-cyan-400 shadow-[0_0_6px_rgba(0,243,255,0.4)] font-bold"
+                      : "bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-cyan-500/30 hover:bg-cyan-500/10"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <a
           href={siteConfig.social.github}
           target="_blank"
@@ -632,57 +745,68 @@ export function Sidebar({
     <>
       {/* Desktop Sticky Collapsible & Resizable Sidebar */}
       <aside
-        style={{ width: isCollapsed ? 64 : sidebarWidth }}
-        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/20 bg-[#070b14]/90 backdrop-blur-md z-30 relative ${
-          isResizing ? "transition-none select-none" : "transition-[width] duration-300"
+        style={{
+          width: isCollapsed ? 64 : sidebarWidth,
+          minWidth: isCollapsed ? 64 : sidebarWidth,
+          maxWidth: isCollapsed ? 64 : sidebarWidth,
+        }}
+        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/25 bg-[#070b14]/90 backdrop-blur-md z-30 relative min-w-0 overflow-x-hidden ${
+          isResizing ? "transition-none select-none" : "transition-[width] duration-200"
         }`}
       >
-        <div className="flex-1 min-h-0 overflow-y-auto cyber-scrollbar flex flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto cyber-scrollbar flex flex-col min-w-0">
           {sidebarContent(isCollapsed)}
         </div>
 
-        {/* Cyberpunk Neon Resizer Handle (Only when expanded) */}
-        {!isCollapsed && (
+        {/* Cyberpunk Neon Resizer Handle (Available both expanded & collapsed) */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="사이드바 너비 조절"
+          title={
+            isCollapsed
+              ? "드래그하여 사이드바 펼치기 (더블 클릭: 기본 256px 복원)"
+              : "드래그하여 사이드바 너비 조절 (더블 클릭: 기본 256px 복원)"
+          }
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onDoubleClick={handleResetWidth}
+          className={`absolute top-0 -right-2.5 w-5 h-full cursor-col-resize z-40 flex items-center justify-center transition-colors group select-none touch-none ${
+            isResizing ? "bg-cyan-500/20" : "hover:bg-cyan-500/10"
+          }`}
+        >
+          {/* 세로 네온 가이드라인 */}
           <div
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="사이드바 너비 조절"
-            title="드래그하여 사이드바 너비 조절 (더블 클릭: 기본 크기 복원)"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsResizing(true);
-            }}
-            onTouchStart={() => {
-              setIsResizing(true);
-            }}
-            onDoubleClick={handleResetWidth}
-            className={`absolute top-0 -right-2 w-4 h-full cursor-col-resize z-40 flex items-center justify-center transition-colors group select-none ${
-              isResizing ? "bg-cyan-500/20" : "hover:bg-cyan-500/10"
+            className={`w-[2px] h-full transition-all duration-150 ${
+              isResizing
+                ? "bg-neon-cyan shadow-[0_0_8px_#00f3ff,0_0_16px_#00f3ff]"
+                : "bg-cyan-500/25 group-hover:bg-cyan-400 group-hover:shadow-[0_0_8px_#00f3ff]"
+            }`}
+          />
+
+          {/* 중앙 사이버펑크 네온 도트 핸들 */}
+          <div
+            className={`absolute top-1/2 -translate-y-1/2 flex flex-col gap-1 items-center justify-center py-2 px-1 rounded-full border transition-all duration-150 pointer-events-none ${
+              isResizing
+                ? "border-cyan-400 bg-black shadow-[0_0_12px_#00f3ff] opacity-100 scale-125"
+                : "opacity-60 group-hover:opacity-100 border-cyan-500/60 bg-[#070b14] shadow-[0_0_6px_rgba(0,243,255,0.4)] group-hover:scale-110"
             }`}
           >
-            {/* 세로 네온 가이드라인 */}
-            <div
-              className={`w-[2px] h-full transition-all duration-150 ${
-                isResizing
-                  ? "bg-neon-cyan shadow-[0_0_8px_#00f3ff,0_0_16px_#00f3ff]"
-                  : "bg-transparent group-hover:bg-cyan-400/70 group-hover:shadow-[0_0_6px_#00f3ff]"
-              }`}
-            />
-
-            {/* 중앙 사이버펑크 네온 도트 핸들 */}
-            <div
-              className={`absolute top-1/2 -translate-y-1/2 flex flex-col gap-1 items-center justify-center py-2 px-0.5 rounded-full border transition-all duration-150 pointer-events-none ${
-                isResizing
-                  ? "border-cyan-400 bg-black shadow-[0_0_10px_#00f3ff] opacity-100 scale-110"
-                  : "opacity-0 group-hover:opacity-100 border-cyan-500/60 bg-[#070b14] shadow-[0_0_6px_rgba(0,243,255,0.4)]"
-              }`}
-            >
-              <div className="w-1 h-1 rounded-full bg-neon-cyan shadow-[0_0_3px_#00f3ff]" />
-              <div className="w-1 h-1 rounded-full bg-neon-pink shadow-[0_0_3px_#ff007f]" />
-              <div className="w-1 h-1 rounded-full bg-neon-cyan shadow-[0_0_3px_#00f3ff]" />
-            </div>
+            <div className="w-1 h-1 rounded-full bg-neon-cyan shadow-[0_0_3px_#00f3ff]" />
+            <div className="w-1 h-1 rounded-full bg-neon-pink shadow-[0_0_3px_#ff007f]" />
+            <div className="w-1 h-1 rounded-full bg-neon-cyan shadow-[0_0_3px_#00f3ff]" />
           </div>
-        )}
+
+          {/* 드래그 중 실시간 너비 표시 HUD 뱃지 */}
+          {isResizing && (
+            <div className="absolute top-20 left-4 z-50 pointer-events-none whitespace-nowrap px-2.5 py-1 rounded-lg bg-black/90 border border-cyan-400 text-neon-cyan font-mono text-[11px] font-bold shadow-[0_0_14px_rgba(0,243,255,0.6)] flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-ping" />
+              <span>WIDTH: {isCollapsed ? 64 : sidebarWidth}PX</span>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* Mobile Slide-Over Drawer Sidebar */}

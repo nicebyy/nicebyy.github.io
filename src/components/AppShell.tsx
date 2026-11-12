@@ -67,10 +67,23 @@ export function AppShell({
     }
   }, [pathname]);
 
+  const setCollapsedState = (collapsed: boolean) => {
+    setIsCollapsed(collapsed);
+    try {
+      localStorage.setItem("kimgatta_sidebar_collapsed", String(collapsed));
+    } catch {
+      // ignore
+    }
+  };
+
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem("kimgatta_sidebar_collapsed", String(next));
+      try {
+        localStorage.setItem("kimgatta_sidebar_collapsed", String(next));
+      } catch {
+        // ignore
+      }
       return next;
     });
   };
@@ -91,6 +104,7 @@ export function AppShell({
           posts={posts}
           isCollapsed={isCollapsed}
           onToggleCollapse={toggleCollapse}
+          onSetCollapsed={setCollapsedState}
           isMobileOpen={isMobileOpen}
           onCloseMobile={() => setIsMobileOpen(false)}
           activeSection={activeSection}
