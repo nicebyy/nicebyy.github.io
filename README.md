@@ -5,12 +5,13 @@ GitHub Pages(`output: 'export'`)를 통해 **100% 무료 호스팅** 및 **GitHu
 
 ## 주요 기능
 
-- **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `skills`, `ls`, `status`, `clear` 명령어 실시간 실행
-- **사이버펑크 네온 단일 테마**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI
+- **인터랙티브 CLI 터미널 히어로**: `help`, `scan`, `rain`, `whoami`, `skills`, `ls`, `status`, `clear` 명령어 실시간 실행
+- **사이버펑크 네온 단일 테마 & 고립 무드 앰비언스**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI, 네온 빗줄기·부유 먼지 캔버스(`IsolatedAtmosphere`), CRT 비네팅 & 주사선, 단독 오퍼레이터 레이더 HUD(`LoneOperatorHud`)
+- **프로시저럴 Web Audio 빗소리 신디사이저**: 외부 오디오 파일 없이 실시간 생성되는 Night City 빗소리 사운드스케이프(`RAIN FX` / `RAIN SND` 토글 및 `$rain` 명령 지원)
 - **실시간 방문자 수 텔레메트리**: `hitscounter.dev` 연동 TODAY / TOTAL 방문자 카운터 (`VisitorCounter` 위젯 — 이전 티스토리 누적 방문자 수 `49,561`명 합산, 사이드바 및 대시보드 HUD 표시, 세션 중복 집계 방지 및 로컬 미리보기 조회 전용 모드 지원)
 - **마크다운(MD/MDX) 블로그 엔진**: `content/posts/*.md` 파일만 추가하면 자동 빌드, 코드 하이라이팅(`COPY` 버튼 포함), 목차(TOC) 및 독서 진행률 바 자동 생성
 - **실시간 검색 및 필터**: `Ctrl + K` 빠른 검색, 카테고리별 탭, 태그 필터, 그리드/리스트 뷰 전환
-- **Giscus 댓글 시스템**: GitHub Discussions 연동 댓글 위젯 (다크/라이트 테마 실시간 동기화)
+- **Giscus 댓글 시스템**: GitHub Discussions 연동 댓글 위젯 (사이버펑크 다크 테마 동기화)
 
 ## 로컬 실행 방법
 
@@ -19,7 +20,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`으로 접속하면 실시간으로 블로그를 확인하고 수정할 수 있습니다.
+브라우저에서 `http://localhost:3333`으로 접속하면 실시간으로 블로그를 확인하고 수정할 수 있습니다.
 
 ## 새 게시글 작성 방법
 

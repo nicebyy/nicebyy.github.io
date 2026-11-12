@@ -191,12 +191,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-ping" />
-              <span className="hidden sm:inline font-orbitron text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/30 tracking-widest">
-                CLI // ACTIVE
+              <span className="w-1.5 h-1.5 rounded-full bg-neon-pink animate-ping" />
+              <span className="hidden sm:inline font-orbitron text-[10px] px-2 py-0.5 rounded bg-pink-500/10 text-neon-pink border border-pink-500/35 tracking-widest cyber-signal-flicker">
+                SOLO_NODE // 0 PEERS
               </span>
-              <span className="sm:hidden font-orbitron text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/30 tracking-wider">
-                LIVE
+              <span className="sm:hidden font-orbitron text-[9px] px-1.5 py-0.5 rounded bg-pink-500/10 text-neon-pink border border-pink-500/35 tracking-wider">
+                SOLO
               </span>
             </div>
           </div>
@@ -231,6 +231,8 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               {[
                 { name: "help", color: "cyan" },
+                { name: "scan", color: "pink" },
+                { name: "rain", color: "cyan" },
                 { name: "whoami", color: "pink" },
                 { name: "skills", color: "green" },
                 { name: "ls", color: "cyan" },
@@ -265,7 +267,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="명령어 입력 (whoami, skills, ls, status, help)..."
+                placeholder="명령어 입력 (scan, rain, whoami, skills, status, help)..."
                 className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none"
               />
               <button
