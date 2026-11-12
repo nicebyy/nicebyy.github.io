@@ -15,6 +15,7 @@ import {
   Menu,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
+import { CyberBgmPlayer } from "./CyberBgmPlayer";
 
 interface NavbarProps {
   isSidebarCollapsed?: boolean;
@@ -159,6 +160,9 @@ export function Navbar({
               <span>ABOUT</span>
             </Link>
           </nav>
+
+          {/* Cyberpunk HUD BGM Player */}
+          <CyberBgmPlayer />
 
           {/* Desktop Search Button */}
           <button
