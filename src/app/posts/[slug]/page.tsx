@@ -62,12 +62,12 @@ export default async function PostDetailPage({
 
       <div className="flex flex-col xl:flex-row gap-8 items-start">
         {/* Main Article Column */}
-        <article className="flex-1 min-w-0 w-full rounded-3xl border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0b101e]/95 p-6 sm:p-10 shadow-xl">
+        <article className="flex-1 min-w-0 w-full rounded-3xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-6 sm:p-10 shadow-xl dark:shadow-[0_0_30px_rgba(0,243,255,0.15)] cyber-corner">
           {/* Post Header */}
-          <header className="pb-6 mb-8 border-b border-slate-200 dark:border-white/10 space-y-4">
+          <header className="pb-6 mb-8 border-b border-slate-200 dark:border-cyan-500/20 space-y-4">
             <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-neon-cyan border border-cyan-500/25 font-semibold">
-                <Folder className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 font-bold dark:shadow-[0_0_10px_rgba(0,243,255,0.3)]">
+                <Folder className="w-3.5 h-3.5 text-neon-cyan" />
                 {post.category}
               </span>
               <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">

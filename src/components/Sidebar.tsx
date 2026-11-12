@@ -102,18 +102,18 @@ export function Sidebar({
         <div
           className={`flex items-center ${
             collapsed ? "justify-center" : "justify-between"
-          } px-3 pt-4 pb-3 border-b border-slate-200/80 dark:border-white/10`}
+          } px-3 pt-4 pb-3 border-b border-slate-200/80 dark:border-cyan-500/20`}
         >
           {!collapsed && (
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-600 dark:text-neon-cyan shrink-0 shadow-sm">
-                <Terminal className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-600 dark:text-neon-cyan shrink-0 shadow-sm dark:shadow-[0_0_12px_rgba(0,243,255,0.4)]">
+                <Terminal className="w-4 h-4 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                <p className="font-bold text-sm text-slate-900 dark:text-white dark:drop-shadow-[0_0_8px_#00f3ff] truncate">
                   {siteConfig.author}
                 </p>
-                <p className="font-mono text-[11px] text-cyan-600 dark:text-neon-cyan truncate">
+                <p className="font-mono text-[11px] text-pink-600 dark:text-neon-pink truncate">
                   @{siteConfig.githubUsername}
                 </p>
               </div>
@@ -124,10 +124,10 @@ export function Sidebar({
             type="button"
             onClick={onToggleCollapse}
             title={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
-            className="hidden lg:flex p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-cyan-500/15 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-neon-cyan border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+            className="hidden lg:flex p-2 rounded-xl bg-slate-100 dark:bg-black/50 hover:bg-cyan-500/15 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-neon-cyan border border-slate-200 dark:border-cyan-500/30 hover:dark:shadow-neon-cyan transition-all cursor-pointer"
           >
             {collapsed ? (
-              <PanelLeftOpen className="w-4 h-4" />
+              <PanelLeftOpen className="w-4 h-4 text-neon-cyan animate-pulse" />
             ) : (
               <PanelLeftClose className="w-4 h-4" />
             )}
@@ -146,8 +146,8 @@ export function Sidebar({
         {/* Navigation Links */}
         <div className="px-2.5 space-y-1">
           {!collapsed && (
-            <p className="px-2 pb-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              NAVIGATION
+            <p className="px-2 pb-1 text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400 dark:text-neon-cyan/70">
+              // NAVIGATION
             </p>
           )}
           <Link
@@ -158,11 +158,11 @@ export function Sidebar({
               collapsed ? "justify-center px-2" : "gap-2.5 px-3"
             } py-2 rounded-xl text-xs font-mono transition-all ${
               pathname === "/"
-                ? "bg-cyan-500/15 text-cyan-700 dark:text-neon-cyan border border-cyan-500/30 font-bold"
-                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                ? "bg-cyan-500/15 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 dark:shadow-neon-cyan font-bold"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-cyan-500/10 border border-transparent dark:hover:border-cyan-500/20"
             }`}
           >
-            <Cpu className="w-4 h-4 shrink-0" />
+            <Cpu className="w-4 h-4 shrink-0 text-neon-cyan" />
             {!collapsed && <span>Dashboard</span>}
           </Link>
 
@@ -172,13 +172,13 @@ export function Sidebar({
             title="전체 포스트 목록"
             className={`flex items-center ${
               collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-            } py-2 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-all`}
+            } py-2 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-pink-500/10 border border-transparent dark:hover:border-pink-500/20 transition-all`}
           >
-            <BookOpen className="w-4 h-4 shrink-0" />
+            <BookOpen className="w-4 h-4 shrink-0 text-neon-pink" />
             {!collapsed && (
               <span className="flex-1 flex items-center justify-between">
                 <span>All Logs</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-white/10">
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-pink-500/20 text-slate-700 dark:text-neon-pink border border-transparent dark:border-pink-500/30">
                   {posts.length}
                 </span>
               </span>
@@ -193,11 +193,11 @@ export function Sidebar({
               collapsed ? "justify-center px-2" : "gap-2.5 px-3"
             } py-2 rounded-xl text-xs font-mono transition-all ${
               pathname?.startsWith("/about")
-                ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 font-bold"
-                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/40 dark:shadow-neon-purple font-bold"
+                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-purple-500/10 border border-transparent dark:hover:border-purple-500/20"
             }`}
           >
-            <User className="w-4 h-4 shrink-0" />
+            <User className="w-4 h-4 shrink-0 text-purple-400" />
             {!collapsed && <span>About 김까따</span>}
           </Link>
         </div>
