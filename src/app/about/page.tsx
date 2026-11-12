@@ -1,10 +1,34 @@
 import React from "react";
+import type { Metadata } from "next";
 import { Terminal, Github, Cpu, Code2, Globe, Sparkles } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "About",
   description: `${siteConfig.author} 프로필 및 기술 스택 소개`,
+  openGraph: {
+    title: `About | ${siteConfig.title}`,
+    description: `${siteConfig.author} 프로필 및 기술 스택 소개`,
+    url: `${siteConfig.url}/about/`,
+    siteName: siteConfig.title,
+    locale: "ko_KR",
+    type: "profile",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: `${siteConfig.title} — About ${siteConfig.author}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About | ${siteConfig.title}`,
+    description: `${siteConfig.author} 프로필 및 기술 스택 소개`,
+    images: ["/og-image.png"],
+  },
 };
 
 export default function AboutPage() {

@@ -1,8 +1,10 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Tag, Folder } from "lucide-react";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
+import { siteConfig } from "@/config/site";
 import { PostEnhancer } from "@/components/PostEnhancer";
 import { GiscusComments } from "@/components/GiscusComments";
 
@@ -17,15 +19,50 @@ export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) {
     return { title: "Post Not Found" };
   }
+
+  // Strip stray markdown image remnants in summary for clean social card preview
+  const cleanDescription =
+    post.summary
+      .replace(/!?\[?[^\]]*\]?\(\/images\/[^)]+\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim() || siteConfig.description;
+
+  const ogImage = post.image || "/og-image.png";
+
   return {
     title: post.title,
-    description: post.summary,
+    description: cleanDescription,
+    openGraph: {
+      title: `${post.title} | ${siteConfig.title}`,
+      description: cleanDescription,
+      url: `${siteConfig.url}/posts/${slug}/`,
+      siteName: siteConfig.title,
+      locale: "ko_KR",
+      type: "article",
+      publishedTime: post.date,
+      authors: [siteConfig.author],
+      tags: post.tags,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: cleanDescription,
+      images: [ogImage],
+    },
   };
 }
 

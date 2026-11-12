@@ -24,6 +24,7 @@ export interface PostMeta {
   category: string;
   tags: string[];
   summary: string;
+  image?: string;
   featured?: boolean;
   readingTime: string;
 }
@@ -95,6 +96,7 @@ export function getAllPosts(): PostMeta[] {
       category: data.category ?? "Dev",
       tags: Array.isArray(data.tags) ? data.tags : [],
       summary: data.summary ?? "",
+      image: typeof data.image === "string" ? data.image : undefined,
       featured: Boolean(data.featured),
       readingTime: calculateReadingTime(content),
     };
@@ -138,6 +140,7 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
     category: data.category ?? "Dev",
     tags: Array.isArray(data.tags) ? data.tags : [],
     summary: data.summary ?? "",
+    image: typeof data.image === "string" ? data.image : undefined,
     featured: Boolean(data.featured),
     readingTime: calculateReadingTime(content),
     contentHtml,
