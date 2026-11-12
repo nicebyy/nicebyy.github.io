@@ -14,8 +14,18 @@ import {
   PanelLeftOpen,
   Menu,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
-import { CyberBgmPlayer } from "./CyberBgmPlayer";
+
+const CyberBgmPlayer = dynamic(
+  () => import("./CyberBgmPlayer").then((mod) => mod.CyberBgmPlayer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-8 w-24 rounded-xl border border-cyan-500/20 bg-black/40" />
+    ),
+  }
+);
 
 interface NavbarProps {
   isSidebarCollapsed?: boolean;

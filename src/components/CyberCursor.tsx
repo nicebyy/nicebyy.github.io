@@ -153,13 +153,18 @@ export function CyberCursor() {
         ctx.lineCap = "round";
         ctx.lineJoin = "miter";
 
-        for (let i = segments.length - 1; i >= 0; i--) {
+        let segWrite = 0;
+        for (let i = 0; i < segments.length; i++) {
           const seg = segments[i];
           seg.age++;
           if (seg.age >= seg.maxAge) {
-            segments.splice(i, 1);
             continue;
           }
+
+          if (segWrite !== i) {
+            segments[segWrite] = seg;
+          }
+          segWrite++;
 
           const alpha = 1 - seg.age / seg.maxAge;
 
@@ -207,18 +212,24 @@ export function CyberCursor() {
             ctx.fill();
           }
         }
+        segments.length = segWrite;
       }
 
       // 2. DRAW CLICK BURSTS (EMPTY SPACE EMP vs INTERACTIVE LOCK-ON SPARK)
       const bursts = clickBursts.current;
       if (bursts.length > 0) {
-        for (let i = bursts.length - 1; i >= 0; i--) {
+        let burstWrite = 0;
+        for (let i = 0; i < bursts.length; i++) {
           const burst = bursts[i];
           burst.age++;
           if (burst.age >= burst.maxAge) {
-            bursts.splice(i, 1);
             continue;
           }
+
+          if (burstWrite !== i) {
+            bursts[burstWrite] = burst;
+          }
+          burstWrite++;
 
           const progress = burst.age / burst.maxAge;
           const alpha = 1 - progress;
@@ -296,7 +307,8 @@ export function CyberCursor() {
             ctx.stroke();
           }
 
-          // Sparks
+          // In-place compact sparks
+          let sparkWrite = 0;
           for (let s = 0; s < burst.sparks.length; s++) {
             const spark = burst.sparks[s];
             spark.x += spark.vx;
@@ -305,15 +317,24 @@ export function CyberCursor() {
             spark.vy *= 0.93;
             spark.life++;
 
-            const sAlpha = Math.max(0, 1 - spark.life / spark.maxLife);
-            if (sAlpha <= 0) continue;
+            if (spark.life >= spark.maxLife) {
+              continue;
+            }
 
+            if (sparkWrite !== s) {
+              burst.sparks[sparkWrite] = spark;
+            }
+            sparkWrite++;
+
+            const sAlpha = 1 - spark.life / spark.maxLife;
             ctx.fillStyle = `rgba(${spark.rgb}, ${sAlpha})`;
             ctx.beginPath();
             ctx.arc(spark.x, spark.y, spark.size * sAlpha, 0, Math.PI * 2);
             ctx.fill();
           }
+          burst.sparks.length = sparkWrite;
         }
+        bursts.length = burstWrite;
       }
 
       // Keep running only while active effects exist (0% idle CPU usage)
@@ -366,6 +387,10 @@ export function CyberCursor() {
             };
           }
 
+          if (trailSegments.current.length >= 36) {
+            trailSegments.current.splice(0, trailSegments.current.length - 35);
+          }
+
           trailSegments.current.push({
             x1: px,
             y1: py,
@@ -375,10 +400,6 @@ export function CyberCursor() {
             maxAge: 20,
             branch,
           });
-
-          if (trailSegments.current.length > 36) {
-            trailSegments.current.shift();
-          }
 
           startLoop();
         }
@@ -446,6 +467,10 @@ export function CyberCursor() {
         }
       }
 
+      if (clickBursts.current.length >= 6) {
+        clickBursts.current.splice(0, clickBursts.current.length - 5);
+      }
+
       clickBursts.current.push({
         x,
         y,
@@ -456,10 +481,6 @@ export function CyberCursor() {
         sparks,
       });
 
-      if (clickBursts.current.length > 6) {
-        clickBursts.current.shift();
-      }
-
       startLoop();
     };
 
@@ -468,9 +489,24 @@ export function CyberCursor() {
       prevMousePos.current.y = -1;
     };
 
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (animFrameId.current) {
+          cancelAnimationFrame(animFrameId.current);
+          animFrameId.current = null;
+        }
+        isLoopRunning.current = false;
+      } else {
+        if (trailSegments.current.length > 0 || clickBursts.current.length > 0) {
+          startLoop();
+        }
+      }
+    };
+
     window.addEventListener("pointermove", onPointerMove, { capture: true, passive: true });
     window.addEventListener("pointerdown", onPointerDown, { capture: true, passive: true });
     window.addEventListener("mouseleave", onMouseLeave);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     return () => {
       document.body.classList.remove("cyber-cursor-active");
@@ -479,6 +515,7 @@ export function CyberCursor() {
       window.removeEventListener("pointermove", onPointerMove, { capture: true });
       window.removeEventListener("pointerdown", onPointerDown, { capture: true });
       window.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       if (animFrameId.current) {
         cancelAnimationFrame(animFrameId.current);
       }

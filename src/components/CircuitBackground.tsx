@@ -6,7 +6,8 @@ export function CircuitBackground() {
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none opacity-40 dark:opacity-65 transition-opacity"
+      className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none opacity-40 dark:opacity-65 transition-opacity transform-gpu [contain:strict]"
+      style={{ transform: "translateZ(0)" }}
     >
       <svg
         className="w-full h-full object-cover"

@@ -27,13 +27,18 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
   }, [zoomedImage]);
 
   useEffect(() => {
-    // 1. Reading progress bar
+    // 1. Reading progress bar with RAF throttling to eliminate layout thrashing
+    let scrollRaf: number | null = null;
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const docHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
-      setProgress(pct);
+      if (scrollRaf !== null) return;
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = null;
+        const scrollTop = window.scrollY;
+        const docHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+        setProgress(pct);
+      });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -105,6 +110,7 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      if (scrollRaf !== null) cancelAnimationFrame(scrollRaf);
       images.forEach((img) => img.removeEventListener("click", handleImgClick));
       observer?.disconnect();
     };

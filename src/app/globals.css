@@ -430,6 +430,13 @@ nextjs-portal [data-nextjs-toast],
   text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
 }
 
+/* Performance Optimization: Pause all CSS animations when browser tab is inactive to drop CPU/GPU usage to 0% */
+html.tab-inactive *,
+html.tab-inactive *::before,
+html.tab-inactive *::after {
+  animation-play-state: paused !important;
+}
+
 /* Cyberpunk Card with Tech Corners & Neon Laser Runner */
 .cyber-box {
   position: relative;
@@ -438,6 +445,8 @@ nextjs-portal [data-nextjs-toast],
   box-shadow: 0 0 15px rgba(0, 243, 255, 0.12), inset 0 0 15px rgba(0, 243, 255, 0.04);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  will-change: transform, border-color, box-shadow;
+  transform: translateZ(0);
 }
 
 /* 상단 네온 레이저 빔 러너 */
@@ -454,6 +463,7 @@ nextjs-portal [data-nextjs-toast],
   pointer-events: none;
   z-index: 2;
   transition: opacity 0.2s ease;
+  will-change: transform, opacity;
 }
 
 /* 45도 레이더 홀로그램 스캔 광선 */
@@ -476,6 +486,7 @@ nextjs-portal [data-nextjs-toast],
   z-index: 1;
   transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 .cyber-box:hover {
@@ -513,6 +524,7 @@ nextjs-portal [data-nextjs-toast],
   pointer-events: none;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 3;
+  will-change: width, height, box-shadow;
 }
 
 .cyber-corner-bracket-tl {

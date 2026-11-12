@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Terminal as TerminalIcon,
   Sparkles,
@@ -39,8 +39,14 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
   ]);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
 
-  const categories = Array.from(new Set(posts.map((p) => p.category)));
-  const allTags = Array.from(new Set(posts.flatMap((p) => p.tags)));
+  const categories = useMemo(
+    () => Array.from(new Set(posts.map((p) => p.category))),
+    [posts]
+  );
+  const allTags = useMemo(
+    () => Array.from(new Set(posts.flatMap((p) => p.tags))),
+    [posts]
+  );
 
   useEffect(() => {
     if (terminalBodyRef.current) {

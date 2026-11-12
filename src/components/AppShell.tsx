@@ -2,11 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
-import { CyberCursor } from "./CyberCursor";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
+
+const CyberCursor = dynamic(
+  () => import("./CyberCursor").then((mod) => mod.CyberCursor),
+  { ssr: false }
+);
 
 export type NavSection = "dashboard" | "posts" | "about";
 
@@ -22,6 +27,21 @@ export function AppShell({
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
+
+  // Performance: Pause CSS animations across the blog when browser tab is inactive (0% idle CPU)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        document.documentElement.classList.add("tab-inactive");
+      } else {
+        document.documentElement.classList.remove("tab-inactive");
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("kimgatta_sidebar_collapsed");
@@ -45,7 +65,7 @@ export function AppShell({
     window.dispatchEvent(new CustomEvent("toggle-cursor-mode", { detail: next }));
   };
 
-  // Update activeSection on pathname changes and on scroll
+  // Update activeSection on pathname changes and on scroll with RAF throttling
   useEffect(() => {
     if (pathname.startsWith("/about")) {
       setActiveSection("about");
@@ -63,22 +83,30 @@ export function AppShell({
         setActiveSection("dashboard");
       }
 
+      let scrollRaf: number | null = null;
       const handleScroll = () => {
-        const postsEl = document.getElementById("posts");
-        if (!postsEl) return;
-        const rect = postsEl.getBoundingClientRect();
-        // When posts section top reaches upper half of viewport
-        if (rect.top <= 250) {
-          setActiveSection("posts");
-        } else {
-          setActiveSection("dashboard");
-        }
+        if (scrollRaf !== null) return;
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null;
+          const postsEl = document.getElementById("posts");
+          if (!postsEl) return;
+          const rect = postsEl.getBoundingClientRect();
+          // When posts section top reaches upper half of viewport
+          if (rect.top <= 250) {
+            setActiveSection("posts");
+          } else {
+            setActiveSection("dashboard");
+          }
+        });
       };
 
       window.addEventListener("scroll", handleScroll, { passive: true });
       handleScroll();
       return () => {
         window.removeEventListener("scroll", handleScroll);
+        if (scrollRaf !== null) {
+          cancelAnimationFrame(scrollRaf);
+        }
       };
     }
   }, [pathname]);

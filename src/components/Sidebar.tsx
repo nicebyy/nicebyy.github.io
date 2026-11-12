@@ -95,24 +95,30 @@ export function Sidebar({
     });
   }, []);
 
+  const resizeRafRef = useRef<number | null>(null);
+
   const handlePointerMoveInternal = (clientX: number) => {
-    const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(window.innerWidth * 0.55));
+    if (resizeRafRef.current !== null) return;
+    resizeRafRef.current = requestAnimationFrame(() => {
+      resizeRafRef.current = null;
+      const maxWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.floor(window.innerWidth * 0.55));
 
-    // When dragged left past collapse threshold, snap to collapsed
-    if (clientX < COLLAPSE_THRESHOLD) {
-      if (!isCollapsedRef.current) {
-        onSetCollapsed?.(true);
+      // When dragged left past collapse threshold, snap to collapsed
+      if (clientX < COLLAPSE_THRESHOLD) {
+        if (!isCollapsedRef.current) {
+          onSetCollapsed?.(true);
+        }
+        return;
       }
-      return;
-    }
 
-    // When dragged right past collapse threshold, unfold
-    if (isCollapsedRef.current) {
-      onSetCollapsed?.(false);
-    }
+      // When dragged right past collapse threshold, unfold
+      if (isCollapsedRef.current) {
+        onSetCollapsed?.(false);
+      }
 
-    const clamped = Math.min(Math.max(clientX, MIN_SIDEBAR_WIDTH), maxWidth);
-    setSidebarWidth(clamped);
+      const clamped = Math.min(Math.max(clientX, MIN_SIDEBAR_WIDTH), maxWidth);
+      setSidebarWidth(clamped);
+    });
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -144,6 +150,10 @@ export function Sidebar({
     } catch {
       // ignore
     }
+    if (resizeRafRef.current !== null) {
+      cancelAnimationFrame(resizeRafRef.current);
+      resizeRafRef.current = null;
+    }
     setIsResizing(false);
     isResizingRef.current = false;
     document.body.classList.remove("is-resizing-sidebar");
@@ -163,6 +173,10 @@ export function Sidebar({
     };
 
     const onWindowUp = () => {
+      if (resizeRafRef.current !== null) {
+        cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = null;
+      }
       setIsResizing(false);
       isResizingRef.current = false;
       document.body.classList.remove("is-resizing-sidebar");
@@ -187,6 +201,10 @@ export function Sidebar({
       window.removeEventListener("pointermove", onWindowMove);
       window.removeEventListener("pointerup", onWindowUp);
       window.removeEventListener("pointercancel", onWindowUp);
+      if (resizeRafRef.current !== null) {
+        cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = null;
+      }
       document.body.style.userSelect = prevUserSelect;
       document.body.style.cursor = prevCursor;
       document.body.classList.remove("is-resizing-sidebar");
