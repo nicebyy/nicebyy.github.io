@@ -12,14 +12,15 @@ const config: Config = {
       fontFamily: {
         orbitron: [
           "var(--font-orbitron)",
-          "Orbit",
-          "Oxanium",
+          "'Pretendard Variable'",
+          "Pretendard",
           "sans-serif",
         ],
         chakra: [
           "var(--font-chakra)",
           "Oxanium",
-          "Orbit",
+          "'Pretendard Variable'",
+          "Pretendard",
           "sans-serif",
         ],
         mono: [
@@ -30,15 +31,28 @@ const config: Config = {
           "monospace",
         ],
         sans: [
-          "Orbit",
+          "'Pretendard Variable'",
+          "Pretendard",
           "var(--font-chakra)",
-          "Oxanium",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "system-ui",
+          "Roboto",
+          "'Helvetica Neue'",
+          "'Segoe UI'",
+          "'Apple SD Gothic Neo'",
+          "'Noto Sans KR'",
           "sans-serif",
         ],
         cyber: [
           "var(--font-orbitron)",
+          "'Pretendard Variable'",
+          "Pretendard",
+          "sans-serif",
+        ],
+        orbit: [
           "Orbit",
-          "Oxanium",
+          "'Pretendard Variable'",
           "sans-serif",
         ],
         pixel: [
