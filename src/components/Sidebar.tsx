@@ -22,6 +22,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, CategoryNode } from "@/lib/categories";
+import { VisitorCounter } from "./VisitorCounter";
 
 const MIN_SIDEBAR_WIDTH = 180;
 const MAX_SIDEBAR_WIDTH = 560;
@@ -667,7 +668,8 @@ export function Sidebar({
       </div>
 
       {/* Bottom Footer of Sidebar */}
-      <div className="p-2.5 border-t border-cyan-500/20">
+      <div className="p-2.5 border-t border-cyan-500/20 space-y-2">
+        <VisitorCounter variant="sidebar" collapsed={collapsed} />
         <a
           href={siteConfig.social.github}
           target="_blank"

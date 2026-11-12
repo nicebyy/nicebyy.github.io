@@ -34,6 +34,11 @@ export const siteConfig = {
     inputPosition: "bottom",
     lang: "ko",
   },
+  // 방문자 수 카운터 설정 (hitscounter.dev 기반 정적 사이트 무료 카운터)
+  visitorCounter: {
+    enabled: true,
+    targetUrl: "https://nicebyy.github.io",
+  },
 };
 
 export type SiteConfig = typeof siteConfig;

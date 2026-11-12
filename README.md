@@ -5,8 +5,9 @@ GitHub Pages(`output: 'export'`)를 통해 **100% 무료 호스팅** 및 **GitHu
 
 ## 주요 기능
 
-- **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `skills`, `ls`, `theme`, `clear` 명령어 실시간 실행
-- **사이버펑크 다크 모드 / 클린 라이트 모드**: 상단 토글 버튼 및 로컬 스토리지 테마 유지
+- **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `skills`, `ls`, `status`, `clear` 명령어 실시간 실행
+- **사이버펑크 네온 단일 테마**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI
+- **실시간 방문자 수 텔레메트리**: `hitscounter.dev` 연동 TODAY / TOTAL 방문자 카운터 (`VisitorCounter` 위젯 — 사이드바 및 대시보드 HUD 표시, 세션 중복 집계 방지 및 로컬 미리보기 조회 전용 모드 지원)
 - **마크다운(MD/MDX) 블로그 엔진**: `content/posts/*.md` 파일만 추가하면 자동 빌드, 코드 하이라이팅(`COPY` 버튼 포함), 목차(TOC) 및 독서 진행률 바 자동 생성
 - **실시간 검색 및 필터**: `Ctrl + K` 빠른 검색, 카테고리별 탭, 태그 필터, 그리드/리스트 뷰 전환
 - **Giscus 댓글 시스템**: GitHub Discussions 연동 댓글 위젯 (다크/라이트 테마 실시간 동기화)
