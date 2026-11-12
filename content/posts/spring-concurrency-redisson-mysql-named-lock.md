@@ -1,128 +1,97 @@
 ---
-title: '[Spring] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락)'
+title: '[Spring] 분산 환경 동시성 제어 — Redisson 락 병목과 MySQL Named Lock 전환기'
 date: '2023-04-07'
 category: Backend/Spring
 tags:
-  - MYSQL
-  - NamedLock
-  - Redis
+  - Concurrency
+  - Distributed Lock
   - Redisson
+  - MySQL NamedLock
   - Spring
-  - 네임드락
-  - 레디스
-  - 병행제어
-  - 분산락
 summary: >-
-  정말 오랜만에 블로그를 쓰는 것 같다. 쓰고 싶은 것들이 한 트럭인데 생각만하다가 흘러간 세월이 벌써 이렇게된듯.. 틈틈이 이제 써
-  봐야겠다. 1. 병행제어 > 실무에서 동시성관리는 매우 중요하다. 특히나 내가 속한 팀인 거래소팀에서는 더욱 중요한 ...
+  암호화폐 거래소 다중 서버 환경에서 1분 단위 차트 배치를 처리할 때 Redisson 분산 락에서 겪은 커넥션 풀 병목 현상을 분석하고, MySQL Named Lock(GET_LOCK/RELEASE_LOCK) 및 REQUIRES_NEW 트랜잭션 격리로 전환해 해결한 실무 경험을 정리합니다.
 ---
-정말 오랜만에 블로그를 쓰는 것 같다. 쓰고 싶은 것들이 한 트럭인데 생각만하다가 흘러간 세월이 벌써 이렇게된듯..
 
-틈틈이 이제 써 봐야겠다.
+## 1. 다중 서버 환경에서의 병행 제어(Concurrency Control)
 
-## **1\. 병행제어**
+실무에서 동시성과 데이터 정합성 관리는 매우 중요하며, 특히 금융·가상자산 거래소 도메인에서는 작은 중복 처리나 Race Condition도 큰 이슈로 이어집니다.
 
-> **실무에서 동시성관리는 매우 중요하다. 특히나 내가 속한 팀인 거래소팀에서는 더욱 중요한 이슈이다.**  
-> **이번에 하나의 Redis 서버에서 과부하가 자주 일어나서 개선하는 방향으로 작업을 하다보니 거래소 차트그리는 쪽을 손보게 되었다. 밑의 그림은 대형 거래소 차트 예시이다.**
+![거래소 실시간 시세 차트 예시](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-1.png)
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 1](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-1.png)
+당시 제가 담당하던 거래소 차트 시스템은 **여러 대의 서버 인스턴스**가 1분 간격 스케줄러로 동작하며 BTC, ETH 등 코인 페어별 시세 데이터를 DB에 갱신하고 WebSocket으로 실시간 전달하는 구조였습니다.
 
-우리거래소는 코인 페어별로 (USDT, ETH, BTC) 등 차트를 그리는데 아무튼 각설하고 , 대충 차트를 그리는 서버가 여러개란 뜻이다. 각 서버는 1분 간격 스케쥴러로 동작하며, 차트를 그린다.
+문제는 **여러 서버가 동일한 시점의 1분 차트 배치를 동시에 중복 실행해서는 안 된다**는 점이었습니다.
 
-차트그리기 전용 데이터를 다루는 DB가 별도로 존재하며, 차트를 그리기위해 DB값을 업데이트하고 웹소켓을 이용하여 프론트단으로 데이터를 보내 실시간으로 시세가 변하는 것을 보여주기 위함이고, **여러개의 서버**가 차트를 중복해서 그리거나 데이터를 보내면 안되므로 **병행제어가 필요했다.**
+- 자바의 `synchronized`나 `Atomic` 타입은 **단일 JVM 프로세스 내부의 스레드 간 경쟁**만 막아줄 뿐, 서로 다른 서버 인스턴스 간의 중복 실행은 제어할 수 없습니다.
+- 따라서 여러 서버가 공통으로 참조할 수 있는 외부 저장소 기반의 **분산 락(Distributed Lock)**이 반드시 필요했습니다.
 
-동시성관리를 위한 방법들은 여러개 있는데, JAVA 의 **syncronized** 메서드 블록을 이용한다던가 **Atomic** 타입을 사용해서 해결 할 수 있다. 
+---
 
-하지만 **이 방법은 같은 프로세스 내 에서 다른 스레드끼리 경쟁할때만 유효하고 애초에 서버가 다르면 결국 똑같은 문제를 발생시킨다.**
+## 2. 기존 방식: Redisson 분산 락과 발생한 병목 문제
 
-그래서 **병행제어를 위한 분산락**이 필요한데 두 가지 방법을 소개하려한다.
+기존에는 **Redisson** 클라이언트를 이용한 Redis 분산 락으로 배타 제어를 수행하고 있었습니다.
 
-## **2\. 분산락**
+![Redisson 분산 락 동작 구조](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-2.png)
 
-> **분산락은 대표적으로 Redis 나 주키퍼 , Mysql의 NamedLock 등이 있는데 기존엔 Redisson 클라이언트를 이용한 Lock 제어를 하였다.**
+원하는 Key로 락을 획득하면 일정 시간 또는 작업이 끝날 때까지 Redis에 락 키가 유지되어, 다른 서버 인스턴스가 중복 작업을 수행하지 않도록 막아줍니다.
 
-### **\[1\] Redisson** 
+![Redis 내부에 저장된 락 키 예시](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-3.png)
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 2](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-2.png)
+### 왜 Redisson 락을 교체하게 되었을까?
 
-**Redis 클라이언트는 분산락을 이용하기위해 Redisson을 이용한 상태이다.**
+당시 전체 아키텍처에서는 수많은 원격 호출 등으로 인해 Redis 서버 자체의 부하가 매우 높은 상태였고, Redisson 분산 락에서도 두 가지 문제가 겹쳐 발생했습니다.
 
-내가 원하는 key 값으로 락을걸면 정한 시간이나 동작이 완료될 때 까지 Redis 안에 key 값으로 락이 걸리게 되고
+1. **Redis 트랜잭션과 커넥션 점유**: Redis의 분산 락 제어(`WATCH` 등)가 진행되는 동안 커넥션을 점유하며 부하를 가중시킵니다.
+2. **커넥션 풀 경합으로 인한 락 획득 실패**: 다른 대량 트래픽 작업들과 한정된 Redis 커넥션 풀을 공유하다 보니, 정작 차트 스케줄러가 락을 획득하기 위한 커넥션 할당 자체가 실패하는 현상이 빈번했습니다.
 
-다른 서버들은 Redis에 접근할 때 이미 락이 걸려있기 때문에 중복작업을 하지 않게 된다.
+![한정된 Redisson ConnectionPoolSize 설정으로 인한 병목](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-4.png)
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 3](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-3.png)
+차트 서버가 4대 이상인 상황에서 한정된 `connectionPoolSize`를 두고 다른 작업과 경합이 벌어지자 락 획득 실패율이 높아졌고, Redis 의존도와 부하를 낮추기 위해 다른 분산 락 대안을 찾게 되었습니다.
 
-Redis 내부 예시
+> 참고: [Redis Transaction의 동작과 주의사항](https://sabarada.tistory.com/177)
 
-하지만 아까 말했듯이 ( Redis를 이용한 원격 함수호출요청이 몇십만, 백만 까지 넘쳐나는 등 .. )
+---
 
-**Redis 과부하를 줄이기 위한것이 목적이었기 때문에, 그리고 또 다른 문제점이 발견되어 Redisson 락을 버리기로 하였다.**
+## 3. 대안 적용: MySQL Named Lock 전환
 
-**1\. Redis의 락은 Redis Transaction 행위 중 하나이고, 이는 connection을 계속 점유한다.**
+마침 메인 DB로 MySQL 5.7 이상 버전을 사용하고 있었고, 우아한형제들 기술블로그([MySQL Named Lock을 활용한 분산 락](https://techblog.woowahan.com/2631/))의 사례를 참고해 추가 인프라 비용 없이 **MySQL Named Lock**으로 전환하기로 결정했습니다.
 
-**2\. 다른 작업의 connection 때문에 락을 획득하기위한 connection을 실패하게 되어 락 획득 자체가 실패한다.**
+![MySQL Named Lock 전환 후 서비스 구조](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-5.png)
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 4](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-4.png)
+![차트 배치 로직 락 적용 코드 1](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-6.png)
 
-위 코드와 같이 **한정된 connectionPoolSize 에 비해 차트를 그리는서버는 총 4개.. 즉 , 락을 잡고 처리하는데 병목이 발생**한다. 
+![차트 배치 로직 락 적용 코드 2](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-7.png)
 
-우선 기본적으로 Redis는 싱글스레드 기반이라 별 상관없다고 생각할 수 있겠지만 유일하게 Connection에 영향을 끼치는게 **Redis Transaction**이다. ( Redis Transaction 참고 : [https://sabarada.tistory.com/177](https://sabarada.tistory.com/177))
+### Native Query 기반 `ChartLockRepository` 구현
 
-락을 거는 행위는 Redis 의 WATCH 명령에 속하고 커넥션을 점유하게 되어 병목을 유발 시키거나 , Redis 의 다른 작업이 처리되느라 락 획득에 실패하는 경우가 발생하여서 다른 분산락을 이용하기로 하였다.
+JPA는 MySQL의 Named Lock 함수를 기본 문법으로 제공하지 않으므로 Native Query로 직접 호출하도록 구현했습니다.
 
-### **\[2\] MySQL NamedLock**
+![MySQL Named Lock Native Query 리포지토리](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-8.png)
 
-마침 DB도 mysql 5.7 이상 버전을 사용하고 있었고, Redis 와 같은 인프라 관련 유지보수 비용도 만만치 않은 상태인데다가 우형 기술블로그가 도움이 많이 되어서 **NamedLock**을 이용하기로 하였다. 
+사용한 MySQL 5.7+ 내장 락 함수는 다음 3가지입니다. ([MySQL Locking Functions 공식 문서](https://dev.mysql.com/doc/refman/5.7/en/locking-functions.html))
 
-( 참고 : [https://techblog.woowahan.com/2631/](https://techblog.woowahan.com/2631/))
+1. **`SELECT IS_USED_LOCK(:key)`**: 해당 이름의 락이 현재 점유 중인지 확인
+2. **`SELECT GET_LOCK(:key, :timeout)`**: 지정된 키 이름으로 락 획득 시도 (대기 타임아웃 초 단위 지정)
+3. **`SELECT RELEASE_LOCK(:key)`**: 작업 완료 후 락 명시적 해제
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 5](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-5.png)
+### 적용 결과 및 트랜잭션 격리 (`REQUIRES_NEW`)
 
-mysql NamedLock 으로 변경 후 코드
+`락 상태 확인 → 락 획득 → 비즈니스 트랜잭션 수행 → finally 블록에서 락 해제` 흐름으로 전환한 뒤에는 **더 이상 락 획득 실패 장애가 발생하지 않았으며, Redis 서버의 부하도 눈에 띄게 줄일 수 있었습니다.**
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 6](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-6.png)
+또한 배치 작업 중 특정 코인 페어의 처리가 실패하더라도 다른 정상 코인 차트 작업까지 함께 롤백되지 않도록, 개별 처리 메서드의 트랜잭션 전파 옵션을 **`@Transactional(propagation = Propagation.REQUIRES_NEW)`**로 분리해 장애 전파를 차단했습니다.
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 7](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-7.png)
+---
 
-(중간 트랜잭션 과정은 대충 생략 ... )
+## 4. 트러블슈팅 리마인드 (Named Lock의 Timeout 오해)
 
-**중요한 곳은 NamedLock과 관련된 chartLockRepository 이다.**
+당시 작업을 진행하며 GPT와 함께 점검했던 락 동작 특성 및 주의사항 기록입니다.
 
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 8](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-8.png)
+![MySQL Named Lock 동작 질의 1](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-9.png)
 
-우선, **JPA에서는 공식적으로 NamedLock 을 제공하지 않기때문에** native query를 이용해야 했다.
+![MySQL Named Lock 동작 질의 2](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-10.png)
 
-(관련 공식 레퍼런스 : [https://dev.mysql.com/doc/refman/5.7/en/locking-functions.html](https://dev.mysql.com/doc/refman/5.7/en/locking-functions.html))
+![MySQL Named Lock 동작 질의 3](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-11.png)
 
-MySql 의 네임드 락 관련 함수는 총 세 가지를 사용했는데 , 
-
-**1\. 락이 있는지 확인하는 쿼리 : select is\_used\_lock(key)**
-
-**2\. 락을 획득하는 쿼리 : select get\_lock(key, time)**
-
-**3\. 락을 반환하는 쿼리 : select release\_lock(key)**
-
-1 -> 2 -> 3 순서대로 락 관련 제어를 하였다.
-
-1 : 락이 있는지 먼저 물어보고
-
-2 : 락을 획득하여 트랜잭션을 처리 후
-
-3 : 마지막에 락을 다시 반환
-
-이렇게 방식을 바꾸고 나니, **락을 획득하는데 실패하는 경우가 이젠 더이상 나오지 않은데다가 Redis 의존을 떼어내어 부하를 조금 줄이게 되었다**. 중간에 **@Transactional 에 전파옵션을 Required\_new 로 지정해 논 곳이 있는데 , 배치 작업을 하다 중간에 실패해도 해당 코인 외 나머지 차트그리는 작업까지 롤백이 되면 안되므로 전파옵션도 바꾸게 되었다.**
-
-아래는 GPT 한테 도움받은 몇가지 질문들
-
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 9](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-9.png)
-
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 10](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-10.png)
-
-![\[Spring\] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락) 이미지 11](/images/posts/spring-concurrency-redisson-mysql-named-lock/image-11.png)
-
-반박시 님말 맞음....!!
-
-_아 .. 팀장님좀 뽑아줬으면.. 잘 하고 있는건지 모르겠다.._ 
-
-그런데, 분명 1분동안 락을 점유하도록 했는데 처리시간이 1분이상 걸린건 뭔지 모르겠다.. 아시는 분 댓글부탁드려요..ㅠ
+> **💡 회고: "GET_LOCK에 1분(60초)을 넘겼는데 왜 작업 시간이 1분을 초과해도 락이 풀리지 않았을까?"**  
+> 당시 가장 궁금했던 부분인데, **MySQL `GET_LOCK(str, timeout)`의 `timeout`은 Redis의 TTL(유지 시간)이 아니라 "락을 획득하기 위해 기다리는 대기 타임아웃(Wait Timeout)"**입니다!  
+> MySQL Named Lock은 한 번 획득하면 `RELEASE_LOCK()`을 호출하거나 해당 DB 커넥션 세션이 끊어질 때까지 **시간 제한 없이 계속 유지**됩니다. 또한 락을 쥐고 있는 동안 DB 커넥션을 점유하므로, 실무에서는 **Named Lock 전용 별도 DataSource(커넥션 풀)를 일반 비즈니스 DataSource와 분리**해 커넥션 고갈(Deadlock)을 예방하는 것이 안전합니다.

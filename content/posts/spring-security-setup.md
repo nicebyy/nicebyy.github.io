@@ -1,25 +1,25 @@
 ---
-title: '[SpringSecurity] 스프링 시큐리티 구성하기'
+title: '[Spring Security] 스프링 시큐리티 인증·인가 구성 및 UserDetailsService 구현 정리'
 date: '2022-06-07'
 category: Backend/Spring
 tags:
-  - spring security configure
-  - 스프링
-  - 스프링시큐리티 구성
+  - Spring Security
+  - WebSecurityConfigurerAdapter
+  - UserDetailsService
+  - PasswordEncoder
+  - BCrypt
 summary: >-
-  Spring Secutiry 구성하기 WebSecurityConfigurerAdapter > SpringSecutiry 의존성을 추가하게
-  되면 기본적으로 WebSecurityConfigurerAdapter 클래스가 실행. > WebSecurityCon...
+  Spring Security의 HTTP 보안 설정(HttpSecurity)과 주요 인가 메서드, 4가지 사용자 저장소(In-Memory, JDBC, LDAP, 커스텀 UserDetailsService) 구성 방법, 그리고 BCrypt PasswordEncoder 적용법을 정리합니다.
 ---
-# Spring Secutiry 구성하기
 
-### WebSecurityConfigurerAdapter
+## Spring Security 기본 구성 (`SecurityConfig`)
 
-> SpringSecutiry 의존성을 추가하게 되면 기본적으로 `WebSecurityConfigurerAdapter` 클래스가 실행.  
-> `WebSecurityConfigurerAdapter` 는 SpringSecutiry 의 웹(http) 보안 기능 초기화 및 설정들을 당담하는 내용이 담겨있고 인증/인가 관련 설정을 제공.
+Spring Security 의존성을 추가하면 모든 HTTP 요청에 대해 기본 인증 필터 체인이 동작합니다. 과거 Spring Boot 2.x 기반에서는 `WebSecurityConfigurerAdapter`를 상속해 `configure()` 메서드를 오버라이드하여 웹 보안 정책과 사용자 인증 방식을 구성했습니다.
 
-![\[SpringSecurity\] 스프링 시큐리티 구성하기 이미지 1](/images/posts/spring-security-setup/image-1.png)  
-   
-configure() 메서드를 Override 하여 설정정보를 구성할 수 있다.
+![Spring Security 보안 설정 구조](/images/posts/spring-security-setup/image-1.png)
+
+> **최신 버전 참고 (Spring Security 5.7+ / Spring Boot 3.x)**:  
+> 현재는 `WebSecurityConfigurerAdapter`가 deprecated 되었으며, **`SecurityFilterChain`을 `@Bean`으로 등록**하는 컴포넌트 기반 설정 방식이 표준입니다. 다만 내부 인가 메서드(`authorizeHttpRequests`, `formLogin`, `UserDetailsService`, `PasswordEncoder`)의 핵심 개념은 동일합니다.
 
 ```java
 @Configuration
@@ -28,252 +28,150 @@ configure() 메서드를 Override 하여 설정정보를 구성할 수 있다.
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsService userDetailsService;
+
     @Bean
-    public PasswordEncoder encoder(){
+    public PasswordEncoder encoder() {
         return new BCryptPasswordEncoder();
     }
 
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests()
-                .antMatchers("/design", "/orders")
-                .access("hasRole('ROLE_USER')")
-                .antMatchers("/", "/**").access("permitAll")
-                .and()
+            .authorizeRequests()
+                .antMatchers("/design", "/orders").hasRole("USER")
+                .antMatchers("/", "/**").permitAll()
+            .and()
                 .formLogin()
                 .loginPage("/login")
-                .and()
+            .and()
                 .logout()
                 .logoutSuccessUrl("/")
-                .and()
+            .and()
                 .csrf();
     }
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(encoder());
-    }
 
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+            .userDetailsService(userDetailsService)
+            .passwordEncoder(encoder());
+    }
 }
 ```
 
-### 참고 (구성 메소드)
-
-메소드
-
-하는 일
-
-access(String)
-
-인자로 전달된 SpEL 표현식이 true면 접근을 허용한다.
-
-anonymous()
-
-익명의 사용자에게 접근을 허용한다.
-
-authenticated()
-
-익명이 아닌 사용자로 인증된 경우 접근을 허용한다.
-
-denyAll()
-
-무조건 접근을 거부한다.
-
-fullyAuthenticated()
-
-익명이 아니거나 또는 remember-me가 아닌 사용자로 인증되면 접근을 허용한다.
-
-hasAnyAuthority(String...)
-
-지정된 권한 중 어떤 것이라도 사용자가 갖고 있으면 접근을 허용한다.
-
-hasAnyRole(String...)
-
-지정된 역할 중 어느 하나라도 사용자가 갖고 있으면 접근을 허용한다.
-
-hasAuthority(String)
-
-지정된 권한을 사용자가 갖고 있으면 접근을 허용한다.
-
-hasIpAddress(String)
-
-지정된 IP 주소로부터 요청이 오면 접근을 하용한다.
-
-hasRole(String)
-
-지정된 역할을 사용자가 갖고 있으면 접근을 허용한다.
-
-not()
-
-다른 접근 메소드들의 효력을 무효화한다.
-
-permitAll()
-
-무조건 접근을 허용한다.
-
-rememberMe()
-
-remember-me(이전 로그인 정보를 쿠키나 데이터베이스로 저장한 후 일정 기간 내에 다시 접근 시 저장된 정보로 자동 로그인됨)를 통해 인증된 사용자의 접근을 허용한다.
-
-authentication
-
-해당 사용자의 인증 객체
-
-denyAll
-
-항상 false를 산출한다.
-
-hasAnyRole(역할 내역)
-
-지정된 역할 중 어느 하나라도 해당 사용자가 갖고 있으면 true
-
-hasRole(역할)
-
-지정된 역할을 해당 사용자가 갖고 있으면 true
-
-hasIpAddress(IP 주소)
-
-지정된 IP 주소로부터 해당 요청이 온 것이면 true
-
-isAnonymous()
-
-해당 사용자가 익명 사용자이면 true
-
-isAuthenticated()
-
-해당 사용자가 익명이 아닌 사용자로 인증되었으면 true
-
-isFullyAuthenticated()
-
-해당 사용자가 익명이 아니거나 또는 remember-me가 아닌 사용자로 인증 되었으면 true
-
-isRememberMe()
-
-해당 사용자가 remember-me 기능으로 인증되었으면 true
-
-permitAll
-
-항상 true를 산출한다.
-
-principal
-
-해당 사용자의 principal 객체
-
-# 사용자 스토어 구성
-
-*   In-Memory 기반
-*   JDBC 기반
-*   LDAP 기반
-*   커스텀 사용자 명세 서비스
-
-## In-Memory 기반
-
-> 사용자 정보를 유지/관리 할 수 있는 곳 중 하나가 메모리  
-> 변경이 필요없는 사용자를 정해놓는 용도로 사용 ⇒ 테스트 목적
-
-```java
-@Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .inMemoryAuthentication()
-                .withUser("admin")
-                .password("{noop}1234")
-                .authorities("ADMIN")
-                .and()
-                .withUser("testuser")
-                .password("{noop}1234")
-                .authorities("USER");
-    }
-```
-
-## JDBC 기반
-
-> 사용자 정보를 RDBMS로 유지/관리 하려는 목적으로 사용.  
-> 기본으로 제공하는 Query를 커스터마이징 가능
-
-기본적으로 제공되는 쿼리로 가져오는 값 (username으로 검색)
-
-*   사용자 검색 : username, password, enabled
-*   권한 검색 : username, authority
-*   그룹 검색 : groupid, groupname, groupautority
-
-```java
-@Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.jdbcAuthentication()
-                .dataSource(dataSource)
-                .usersByUsernameQuery("""
-                        select username, password, enabled 
-                        from users 
-                        where username=?
-                        """)
-                .authoritiesByUsernameQuery("""
-                        select username, authority 
-                        from authorities 
-                        where username=?
-                        """)
-                .passwordEncoder(new NoEncodingPasswordEncoder());
-    }
-     */
-```
-
-## LDAP 기반
-
-> **Lightweight Directory Access Protocol** : 네트워크 상의 디렉토리 서비스 표준인 X.500의 DAP를 기반으로한 경량화(Lightweight) 된 DAP 버전으로 TCP/IP 계층과 관련되어있음.
-
-주로 사용자, 시스템, 네트워크, 서비스, 애플리케이션 등의 정보를 트리 구조로 저장하여 조회하거나 관리하는 용도나 특정 영역에서 이용자명과 패스워드를 확인하여 인증하는 용도.
-
-관련 기술블로그 : [https://www.blocko.io/developer/ldap-인증/](https://www.blocko.io/developer/ldap-%EC%9D%B8%EC%A6%9D/)
+### 주요 HTTP 인가 메서드 및 SpEL 표현식 정리
+
+| 메서드 / SpEL 표현식 | 설명 |
+| :--- | :--- |
+| `permitAll()` | 인증 여부와 무관하게 무조건 접근 허용 |
+| `denyAll()` | 무조건 접근 거부 |
+| `anonymous()` / `isAnonymous()` | 익명 사용자(미인증 사용자)에게만 접근 허용 |
+| `authenticated()` / `isAuthenticated()` | 로그인으로 인증된 사용자에게 접근 허용 |
+| `fullyAuthenticated()` / `isFullyAuthenticated()` | remember-me 자동 로그인이 아닌 직접 인증된 사용자에게만 허용 |
+| `rememberMe()` / `isRememberMe()` | remember-me 쿠키를 통해 자동 인증된 사용자에게 허용 |
+| `hasRole(String)` | 지정된 역할(자동 `ROLE_` 접두사 포함)을 가진 사용자에게 허용 |
+| `hasAnyRole(String...)` | 나열된 역할 중 하나라도 가지면 허용 |
+| `hasAuthority(String)` | 접두사 추가 없이 지정된 정확한 권한 문자열을 가진 사용자에게 허용 |
+| `hasAnyAuthority(String...)` | 나열된 권한 중 하나라도 가지면 허용 |
+| `hasIpAddress(String)` | 지정된 IP 대역에서 온 요청일 때만 허용 |
+| `access(String)` | 인자로 전달한 SpEL 표현식이 `true`일 때 접근 허용 (예: `hasRole('USER') and isFullyAuthenticated()`) |
+
+---
+
+## 사용자 스토어(User Store) 구성 4가지 방식
+
+Spring Security는 인증에 사용할 사용자 정보를 어디서 가져올지 크게 4가지 방식으로 구성할 수 있습니다.
+
+1. **In-Memory 기반** (테스트 및 고정 계정용)
+2. **JDBC 기반** (표준 RDBMS 쿼리 방식)
+3. **LDAP 기반** (사내 디렉토리 서버 연동용)
+4. **커스텀 `UserDetailsService`** (JPA 엔티티 연동 — **실무 표준**)
+
+### 1. In-Memory 기반
+변경이 필요 없는 소수의 테스트 계정을 메모리에 올려둘 때 사용합니다.
 
 ```java
 @Override
 protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-
-        auth.ldapAuthentication()
-                .userSearchBase("ou=people") // 사용자를 찾기위한 기준점 쿼리
-                .userSearchFilter("(uid={0})") // 사용자를 찾기위한 필터
-                .groupSearchBase("ou=groups") // 그룹을 찾기위한 기준점 쿼리
-                .groupSearchFilter("member={0}") // 그룹을 찾기위한 필터
-                .contextSource()
-                .root("dc=taco,dc=com") // ldap 서버 루트 경로 지정
-                .ldif("classpath:users.ldif") // ldif 파일을 지정
-                .and()
-                .passwordCompare()
-                .passwordEncoder(new BCryptPasswordEncoder())
-                .passwordAttribute("userPasscode");
-
-    }
+    auth
+        .inMemoryAuthentication()
+        .withUser("admin").password("{noop}1234").authorities("ADMIN")
+        .and()
+        .withUser("testuser").password("{noop}1234").authorities("USER");
+}
 ```
 
-### 커스텀 사용자 명세 서비스
-
-> 스프링에 내장된 사용자 스토어 외 사용자 명세 서비스를 커스터마이징해서 사용이 가능  
-> `UserDetails` 를 구현받는 엔티티를 생성해야함.
+### 2. JDBC 기반
+RDBMS 테이블에 저장된 사용자 정보를 SQL로 직접 조회합니다. 기본적으로 `username`을 조건으로 사용자(`username, password, enabled`), 권한(`username, authority`), 그룹을 조회하며 커스텀 SQL 지정도 가능합니다.
 
 ```java
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.jdbcAuthentication()
+        .dataSource(dataSource)
+        .usersByUsernameQuery("""
+                select username, password, enabled
+                from users
+                where username = ?
+                """)
+        .authoritiesByUsernameQuery("""
+                select username, authority
+                from authorities
+                where username = ?
+                """)
+        .passwordEncoder(encoder());
+}
+```
 
-import java.io.Serial;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+### 3. LDAP 기반
+**LDAP(Lightweight Directory Access Protocol)**는 네트워크상 디렉토리 서비스 표준(X.500 DAP)을 TCP/IP 기반으로 경량화한 트리 구조 저장·인증 프로토콜입니다. 주로 사내 통합 계정 관리 환경에서 사용됩니다. ([참고: LDAP 개념 정리](https://www.blocko.io/developer/ldap-%EC%9D%B8%EC%A6%9D/))
 
-import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
+```java
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    auth.ldapAuthentication()
+        .userSearchBase("ou=people")
+        .userSearchFilter("(uid={0})")
+        .groupSearchBase("ou=groups")
+        .groupSearchFilter("member={0}")
+        .contextSource()
+            .root("dc=taco,dc=com")
+            .ldif("classpath:users.ldif")
+        .and()
+        .passwordCompare()
+            .passwordEncoder(new BCryptPasswordEncoder())
+            .passwordAttribute("userPasscode");
+}
+```
 
+### 4. 커스텀 `UserDetailsService` 구현 (JPA 연동)
+
+실무에서는 JPA 엔티티가 `UserDetails`를 구현하거나 별도의 어댑터 클래스를 두고, `UserDetailsService`를 구현해 DB에서 회원을 조회하는 방식을 사용합니다.
+
+#### `UserDetails` 인터페이스 주요 메서드
+
+| 메서드명 | 리턴 타입 | 설명 |
+| :--- | :--- | :--- |
+| `getAuthorities()` | `Collection<? extends GrantedAuthority>` | 계정이 가진 권한 목록 반환 |
+| `getPassword()` | `String` | 암호화된 비밀번호 반환 |
+| `getUsername()` | `String` | 사용자 로그인 식별자(ID) 반환 |
+| `isAccountNonExpired()` | `boolean` | 계정 만료 여부 (`true`: 만료되지 않음) |
+| `isAccountNonLocked()` | `boolean` | 계정 잠금 여부 (`true`: 잠기지 않음) |
+| `isCredentialsNonExpired()` | `boolean` | 비밀번호 만료 여부 (`true`: 만료되지 않음) |
+| `isEnabled()` | `boolean` | 계정 활성화 여부 (`true`: 사용 가능) |
+
+#### 엔티티 · 리포지토리 · 서비스 · 회원가입 컨트롤러 예시
+
+```java
 @Entity
 @Data
-@NoArgsConstructor(access=AccessLevel.PUBLIC, force=true)
+@NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @RequiredArgsConstructor
 public class User implements UserDetails {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private final String username;
@@ -290,87 +188,27 @@ public class User implements UserDetails {
         return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
 }
 ```
 
-### 참고: UserDetails
-
-메소드명
-
-리턴타입
-
-설명
-
-getAuthorities()
-
-Collection<? extends GrantedAuthority>
-
-계정이 갖고있는 권한 목록을 리턴한다.
-
-getPassword()
-
-String
-
-계정의 비밀번호를 리턴한다.
-
-getUsername()
-
-String
-
-계정의 이름을 리턴한다.
-
-isAccountNonExpired()
-
-boolean
-
-계정이 만료되지 않았는 지 리턴한다. (true: 만료안됨)
-
-isAccountNonLocked()
-
-boolean
-
-계정이 잠겨있지 않았는 지 리턴한다. (true: 잠기지 않음)
-
-isCredentialNonExpired()
-
-boolean
-
-비밀번호가 만료되지 않았는 지 리턴한다. (true: 만료안됨)
-
-isEnabled()
-
-boolean
-
-계정이 활성화(사용가능)인 지 리턴한다. (true: 활성화)
-
 ```java
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    User findByUsername(String username);
+}
+
 @Service
 @RequiredArgsConstructor
 public class UserRepositoryUserDetailsService implements UserDetailsService {
+
     private final UserRepository userRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
         User user = userRepo.findByUsername(username);
         if (user != null) {
             return user;
@@ -378,39 +216,11 @@ public class UserRepositoryUserDetailsService implements UserDetailsService {
         throw new UsernameNotFoundException("User '" + username + "' not found");
     }
 }
+```
 
-@Repository
-public interface UserRepository extends JpaRepository<User,Long> {
-
-    User findByUsername(String username);
-}
-
-        @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests()
-                .antMatchers("/design", "/orders")
-                .access("hasRole('ROLE_USER')")
-                .antMatchers("/", "/**").access("permitAll")
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                .and()
-                .logout()
-                .logoutSuccessUrl("/")
-                .and()
-                .csrf();
-    }
-    @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-                .userDetailsService(userDetailsService)
-                .passwordEncoder(encoder());
-    }
-
+```java
 @Data
 public class RegistrationForm {
-
     private String username;
     private String password;
     private String fullname;
@@ -421,7 +231,11 @@ public class RegistrationForm {
     private String phone;
 
     public User toUser(PasswordEncoder passwordEncoder) {
-        return new User(username,passwordEncoder.encode(password),fullname, street, city, state, zip, phone);
+        return new User(
+            username,
+            passwordEncoder.encode(password),
+            fullname, street, city, state, zip, phone
+        );
     }
 }
 
@@ -429,6 +243,7 @@ public class RegistrationForm {
 @RequestMapping("/register")
 @RequiredArgsConstructor
 public class RegistrationController {
+
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
 
@@ -445,69 +260,20 @@ public class RegistrationController {
 }
 ```
 
-# password 암호화
+---
 
-> SpringSecurity5부터 의무적으로 `PasswordEncoder`를 이용하여 암호화를 하지 않으면 오류가 발생함. 암호화를 하면 DB에 저장될 때 암호화된 password가 저장이 됨.
+## PasswordEncoder (비밀번호 단방향 해싱)
 
-암호화된 사용자정보
+Spring Security 5부터는 보안을 위해 **`PasswordEncoder`를 통한 비밀번호 암호화가 의무화**되었습니다. 회원가입 시 반드시 `encode()`로 해싱해 저장해야 하며, 로그인 시에는 내부적으로 `matches(rawPwd, encodedPwd)`로 일치 여부를 검증합니다.
 
-ID
+실제로 `BCryptPasswordEncoder`로 저장된 DB 레코드는 다음과 같이 솔트(Salt)가 적용된 해시 문자열로 저장됩니다.
 
-CITY
+| ID | USERNAME | PASSWORD (BCrypt 해시) | FULLNAME | CITY |
+| :---: | :--- | :--- | :--- | :--- |
+| `1` | `user` | `$2a$10$GtCiKop4o9Vlm7CoKryHCuXVehCyNYB5krnMJBbfOylkVInzinc7K` | `user` | `aaa` |
 
-FULLNAME
-
-PASSWORD
-
-PHONE\_NUMBER
-
-STATE
-
-STREET
-
-USERNAME
-
-ZIP
-
-1
-
-aaa
-
-user
-
-$2a$10$GtCiKop4o9Vlm7CoKryHCuXVehCyNYB5krnMJBbfOylkVInzinc7K
-
-aaa
-
-aaa
-
-aaa
-
-user
-
-aaa
-
-### SpringSecutiry 암호화 모듈
-
-*   `BCryptPasswordEncoder` : bcrypt 해싱
-*   `NoOpPasswordEncoder` : 암호화 x
-*   `Pbkdf2PasswordEncoder` : PBKDF2 암호화
-*   `SCryptPasswordEncoder` : scrypt 해싱
-*   `StandardPasswordEncoder` : SHA-256
-
-```java
-public class NoEncodingPasswordEncoder implements PasswordEncoder {
-
-    @Override
-    public String encode(CharSequence rawPwd) {
-        return rawPwd.toString();
-    }
-
-    @Override
-    public boolean matches(CharSequence rawPwd, String encodedPwd) {
-        return rawPwd.toString().equals(encodedPwd);
-    }
-}
-```
-
-PasswordEncoder 의 encode 와 matches 메서드를 이용하여 암호화/비교를 수행함.
+### Spring Security 제공 주요 `PasswordEncoder` 구현체
+- **`BCryptPasswordEncoder`**: 가장 널리 쓰이는 BCrypt 해싱 (강력한 단방향 + 랜덤 Salt 내장)
+- **`Pbkdf2PasswordEncoder`**: PBKDF2 알고리즘 기반 암호화
+- **`SCryptPasswordEncoder`**: scrypt 해싱
+- **`NoOpPasswordEncoder`**: 암호화 미적용 (deprecated, 테스트 외 사용 금지)

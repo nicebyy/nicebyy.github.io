@@ -1,187 +1,149 @@
 ---
-title: '[Spring] Redisson Remote Service 분해해보기'
+title: '[Spring] Redisson Remote Service 내부 동작 원리와 한계 분석'
 date: '2023-06-25'
 category: Backend/Spring
 tags:
   - MSA
   - Redis
   - Redisson
-  - RedissonRemoteService
   - RemoteService
-  - 레디스
+  - JDK Dynamic Proxy
 summary: >-
-  Redisson > Reddison 은 Redis 의 클라이언트중 하나로 Jedis, Lecttuce 와 같은 ‘분산’ 서비스 또는 락을
-  중점으로 이용할 때 사용된다. 이번 포스팅은 락 관련은 넘어가고 Remote Service 에 대해 포스팅하고자 ...
+  Redis 기반 RPC 기능을 제공하는 Redisson Remote Service를 Spring Boot Gradle 멀티모듈 프로젝트로 직접 구현하고, 디버깅과 Codec 분석을 통해 JDK 동적 프록시 동작 원리와 Common 모듈 패키지 결합도 한계를 분석합니다.
 ---
-## **Redisson**
 
-> **Reddison** 은 **Redis 의 클라이언트**중 하나로 Jedis, Lecttuce 와 같은 ‘분산’ 서비스 또는 락을 중점으로 이용할 때 사용된다. 이번 포스팅은 락 관련은 넘어가고 Remote Service 에 대해 포스팅하고자 한다.
+## Redisson Remote Service란?
 
-## **Redisson Remote Service**
+**Redisson**은 Jedis, Lettuce와 달리 분산 환경에 특화된 고수준 자료구조와 분산 락(Distributed Lock), 분산 실행기 등을 제공하는 Redis 클라이언트입니다.
 
-> 기존의 다른 Redis 클라이언트로는 할 수 없었던 Redisson 의 분산 서비스의 특징이다.  
-> **RemoteService** 는 크게 서버 인스턴스와 클라이언트 인스턴스로 두 종류로 구성되어있다.
+그중 **Redisson Remote Service(`RRemoteService`)**는 다른 Redis 클라이언트에는 없는 독특한 기능으로, 별도의 HTTP/REST API나 gRPC 없이 **Redis를 매개체로 하여 서로 다른 서버 간에 Java 인터페이스 메서드를 원격 호출(RPC)**할 수 있게 해줍니다.
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 1](/images/posts/spring-redisson-remote-service/image-1.png)
+![Redisson Remote Service 기본 구조 1](/images/posts/spring-redisson-remote-service/image-1.png)
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 2](/images/posts/spring-redisson-remote-service/image-2.png)
+![Redisson Remote Service 기본 구조 2](/images/posts/spring-redisson-remote-service/image-2.png)
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 3](/images/posts/spring-redisson-remote-service/image-3.png)
-
-위 그림과 같이 아래 클라이언트 인스턴스가 호출하고자 하는 서비스 인터페이스를 가지고 호출을하면 서버측 인스턴스에서 요청을 받아들이는 방식으로 작동한다.
-
-## **프로젝트 생성**
-
-*   실행 환경 : springboot 3.1.0, Gradle, intellij, window10, Redis, Docker
-
-### **Redis 설치하기**
+![Redisson Remote Service 요청/응답 흐름](/images/posts/spring-redisson-remote-service/image-3.png)
 
 ---
 
-**docker-compose** 를 통해 간단하게 테스트용 로컬 레디스를 설치
+## 1. 로컬 테스트 환경 구축 (Docker + Redis)
 
-(관련 설명링크 : [https://learn.microsoft.com/ko-kr/azure/cognitive-services/containers/docker-compose-recipe](https://learn.microsoft.com/ko-kr/azure/cognitive-services/containers/docker-compose-recipe))
+- **개발 환경**: Spring Boot 3.1.0, Java 17, Gradle 멀티모듈, IntelliJ IDEA, Docker (WSL2), P3X Redis UI
 
-window의 wsl2 를 이용하여 docker 를 구동하였음.
+먼저 프로젝트 루트에 `docker-compose.yml`을 작성해 로컬 테스트용 Redis 컨테이너(`6379`)를 띄웁니다.
 
-(mac 을 사용한다면 brew 와 같은 패키지 관리자를 설치후 docker를 설치하면 됨)
-
-**docker-compose.yml**
-
-```bash
-version : '3.8'
-services :
-  redis-remoteService :
-    container_name : redis-remoteService
-    image : redis:latest
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  redis-remoteService:
+    container_name: redis-remoteService
+    image: redis:latest
     restart: always
-    ports: 
+    ports:
       - 6379:6379
 ```
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 4](/images/posts/spring-redisson-remote-service/image-4.png)
+![docker-compose 파일 구성](/images/posts/spring-redisson-remote-service/image-4.png)
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 5](/images/posts/spring-redisson-remote-service/image-5.png)
+![Docker 백그라운드 실행](/images/posts/spring-redisson-remote-service/image-5.png)
 
-프로젝트 최상단위치에 docker-compose 파일을 넣어두고 백그라운드로 실행.
+![Docker Desktop Redis 포트 6379 확인](/images/posts/spring-redisson-remote-service/image-6.png)
 
-6379 포트로 잘 돌아가는 것을 확인. (Docker Desktop)
+P3X Redis UI(또는 RedisInsight)로 로컬 Redis(`localhost:6379`)에 정상 접속되는지 확인해 둡니다.
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 6](/images/posts/spring-redisson-remote-service/image-6.png)
+![P3X Redis UI 커넥션 설정 1](/images/posts/spring-redisson-remote-service/image-7.png)
 
-**\- P3x Redis UI 툴로 확인**해보기 (혹은 Redis insight 를 추천)
-
-커넥션 설정
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 7](/images/posts/spring-redisson-remote-service/image-7.png)
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 8](/images/posts/spring-redisson-remote-service/image-8.png)
-
-### **SpringBoot 프로젝트 구성**
+![P3X Redis UI 커넥션 설정 2](/images/posts/spring-redisson-remote-service/image-8.png)
 
 ---
 
-> 스프링 프로젝트를 다음과 같이 **Gradle 멀티모듈 프로젝트**로 구성하였다. (이유는 나중에 설명)  
->   
-> 1\. 가장 바깥쪽 껍데기 Root 프로젝트인 **remoteService** 프로젝트  
-> 2\. 요청을 받아 처리하는 서버 모듈인 **redissonServer**  
-> 3\. 요청을 보내는 클라이언트 모듈인 **redissonClient**  
-> 4\. Server 와 Client 가 공통적으로 사용하는 코드가 담인 공통묘듈 **redissonCommon**
+## 2. Gradle 멀티모듈 프로젝트 구성
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 9](/images/posts/spring-redisson-remote-service/image-9.png)
+이번 실습 프로젝트는 다음과 같이 **Gradle 멀티모듈**로 분리해 구성했습니다. (굳이 공통 모듈을 둔 이유는 뒤에서 내부 직렬화 구조를 뜯어볼 때 명확히 드러납니다.)
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 10](/images/posts/spring-redisson-remote-service/image-10.png)
+1. **`remoteService` (Root)**: 서브모듈 공통 Gradle 설정
+2. **`redissonServer`**: 원격 요청을 수신해 실제 메서드를 실행하는 서버 (`7071`)
+3. **`redissonClient`**: 인터페이스를 통해 원격 메서드를 호출하는 클라이언트 (`7070`)
+4. **`redissonCommon`**: Server와 Client가 함께 공유하는 인터페이스 및 DTO 모듈
 
-*   **remoteService** \- build.gradle  
-    루트 프로젝트에서 하위 서브모듈들의 공통적인 dependency 들을 정의해준다.
+![Gradle 멀티모듈 디렉토리 구조 1](/images/posts/spring-redisson-remote-service/image-9.png)
 
-```bash
+![Gradle 멀티모듈 디렉토리 구조 2](/images/posts/spring-redisson-remote-service/image-10.png)
+
+### 루트 `build.gradle`
+```groovy
 buildscript {
-	ext{
-		springBootVersion = '3.1.0'
-	}
-	repositories {
-		mavenCentral();
-	}
-	dependencies {
-		classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
-		classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
-	}
+    ext {
+        springBootVersion = '3.1.0'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
+    }
 }
 
-// 하위 모든 프로젝트 공통 세팅
 subprojects {
-	repositories {
-		mavenCentral()
-	}
-	apply plugin: 'java'
-	apply plugin: 'idea'
-	apply plugin: 'org.springframework.boot'
-	apply plugin: 'io.spring.dependency-management'
+    repositories {
+        mavenCentral()
+    }
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
 
-	group 'com.example'
-	version '1.0-SNAPSHOT'
+    group 'com.example'
+    version '1.0-SNAPSHOT'
+    sourceCompatibility = '17'
 
-	sourceCompatibility = '17'
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+        annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
 
-	dependencies {
-		compileOnly 'org.projectlombok:lombok'
-		implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-		annotationProcessor 'org.projectlombok:lombok'
-		annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-		testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	}
-
-	tasks.named('test') {
-		useJUnitPlatform()
-	}
-	tasks.register("prepareKotlinBuildScriptModel"){}
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+    tasks.register("prepareKotlinBuildScriptModel") {}
 }
 ```
 
-*   **redissonServer** \- build.gradle
-
-```bash
-bootJar {
-    archiveFileName = 'redisson-client'
-}
-
+### `redissonServer` / `redissonClient` `build.gradle`
+```groovy
 dependencies {
     implementation project(path: ":redissonCommon", configuration: 'default')
-    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 ```
 
-*   **redissonCommon** \- build.gradle  
-    공통모듈은 독립으로 존재 하지않고 server 나 client 에 항상 종속적이므로 bootJar = false 로 함
+### `redissonCommon` `build.gradle`
+공통 모듈은 단독 실행 가능한 JAR가 아니므로 `bootJar`를 비활성화하고 일반 `jar`로 패키징합니다.
 
-```bash
-bootJar{enabled = false}
-jar{enabled = true}
-
-dependencies {
-}
+```groovy
+bootJar { enabled = false }
+jar { enabled = true }
 ```
 
-### **공통모듈 로드 확인하기**
+`ApplicationReadyEvent`를 이용해 서버 모듈 기동 시 `redissonCommon`의 `Member` 클래스가 정상적으로 로드되는지 먼저 검증했습니다.
+
+![공통 모듈 로드 확인 1](/images/posts/spring-redisson-remote-service/image-11.png)
+
+![공통 모듈 로드 확인 2](/images/posts/spring-redisson-remote-service/image-12.png)
 
 ---
 
-redissonCommon 프로젝트에 간단하게 ApplicationReadyEvent로 Member Entity 하나를 만들어서 redissonServer 모듈 실행 시 정상적으로 불러와지는지 확인해본다.
+## 3. 공통 인터페이스 & Server / Client 구현
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 11](/images/posts/spring-redisson-remote-service/image-11.png)
+### `redissonCommon`: 원격 서비스 인터페이스 정의
+Client가 호출하고 Server가 구현할 공통 인터페이스를 정의합니다.
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 12](/images/posts/spring-redisson-remote-service/image-12.png)
-
-### **Redisson Common Module 작업하기**
-
----
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 13](/images/posts/spring-redisson-remote-service/image-13.png)
-
-아까 추가한 Member 엔티티를 인자로 받아 이름을 바꿔주는 서비스인 RemoteMemberService의 인터페이스를 하나 만들겠다.
-
-*   **RemoteMemberServiceInterface.java**
+![redissonCommon 패키지 구성](/images/posts/spring-redisson-remote-service/image-13.png)
 
 ```java
 package com.example.redissoncommon.remote;
@@ -189,22 +151,16 @@ package com.example.redissoncommon.remote;
 import com.example.redissoncommon.entity.Member;
 
 public interface RemoteMemberServiceInterface {
-
-    public void renameMember(Member member, String newName);
+    Member renameMember(Member member, String newName);
 }
 ```
 
-> Redisson Remote Service 를 이용하기 위해선 Server 와 Client 가 같이 사용할 수 있는 인터페이스가 필요한데 Client쪽에서는 이 **RemoteMemberServiceInterface** 를 호출하는 방식으로 사용할 것이고 , Server 쪽에서는 **RedissonRemoteService 에 이 인터페이스와 인터페이스를 구현한 서비스 클래스를 등록**할 것이다.
+### `redissonServer`: 구현체 등록 및 Redisson 서버 모드
 
-### **Reddisson Server Module 작업하기**
+![redissonServer 패키지 구성](/images/posts/spring-redisson-remote-service/image-14.png)
 
----
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 14](/images/posts/spring-redisson-remote-service/image-14.png)
-
-*   **application.yml** (redissonServer)
-
-```bash
+```yaml
+# redissonServer application.yml
 server:
   port: 7071
 spring:
@@ -214,52 +170,21 @@ spring:
       host: redis://localhost
 ```
 
-*   **RemoteMemberService**.java
-
 ```java
-package com.example.redissonserver.service;
-
-import com.example.redissoncommon.entity.Member;
-import com.example.redissoncommon.remote.RemoteMemberServiceInterface;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 @Service
 @Slf4j
 public class RemoteMemberService implements RemoteMemberServiceInterface {
     @Override
-    public Member renameMember(Member member,String newName){
-        log.info("before rename => {} ",member);
+    public Member renameMember(Member member, String newName) {
+        log.info("before rename => {}", member);
         member.setName(newName);
-        log.info("after rename => {}",member);
+        log.info("after rename => {}", member);
         return member;
     }
 }
 ```
 
-> 아까 공통모듈 패키지에서 만들어놓은 RemoteMemberServiceInterface 를 구현하는 클래스를 서버쪽 모듈에 추가한다.
-
-*   **RedissonConfiguration.java  
-    **
-
 ```java
-package com.example.redissonserver.config;
-
-import com.example.redissoncommon.remote.RemoteMemberServiceInterface;
-import com.example.redissonserver.service.RemoteMemberService;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.redisson.Redisson;
-import org.redisson.api.RRemoteService;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
-
 @Configuration
 @EnableCaching
 @RequiredArgsConstructor
@@ -282,66 +207,40 @@ public class RedissonConfiguration {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    public void registerRemoteService(){
+    public void registerRemoteService() {
         RRemoteService remoteService = redissonClient().getRemoteService();
-        remoteService.register(RemoteMemberServiceInterface.class,remoteMemberService);
+        remoteService.register(RemoteMemberServiceInterface.class, remoteMemberService);
     }
 }
 ```
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 15](/images/posts/spring-redisson-remote-service/image-15.png)
+![Server RedissonConfiguration 실행 확인](/images/posts/spring-redisson-remote-service/image-15.png)
 
-여기선 간단하게 RedisClient 에 필요한 설정들과 등록할 RemoteService 메서드를 WAS 가 실행될 때 등록되게 해놓았다.
+#### Redisson Config의 4가지 주요 서버 모드
+1. **클러스터 모드 (`useClusterServers`)**: 여러 Redis 노드로 구성된 클러스터 환경
+   ![클러스터 모드](/images/posts/spring-redisson-remote-service/image-16.png)
+2. **센티넬 모드 (`useSentinelServers`)**: 장애 감지와 자동 Failover 고가용성 구성
+   ![센티넬 모드](/images/posts/spring-redisson-remote-service/image-17.png)
+3. **마스터-슬레이브 모드 (`useMasterSlaveServers`)**: 읽기/쓰기 분산 구성
+   ![마스터-슬레이브 모드](/images/posts/spring-redisson-remote-service/image-18.png)
+4. **싱글 서버 모드 (`useSingleServer`)**: 단일 Redis 서버 접속 (본 실습 구성)
+   ![싱글 서버 모드](/images/posts/spring-redisson-remote-service/image-19.png)
+   ![그 외 프록시/멀티 클러스터 옵션](/images/posts/spring-redisson-remote-service/image-20.png)
 
-설정부분에서 두 가지 특이사항이 있는데 첫 번째로 **Config** 부분이다. Config 부분에서 싱글서버로 등록할 때 여러 서버 형태를 체크해서 이미 존재하는지 확인한다.
+또한 `remoteService.register()` 호출 시 기본적으로는 **단일 워커 스레드**로 요청을 처리하지만, 동시 처리량을 높이려면 `workersAmount` 인자나 커스텀 `ExecutorService`를 전달해 멀티스레드로 처리할 수 있습니다.
 
-보다시피 서버형태는 총 4개이다.
+![workerAmount 멀티스레드 지정 옵션](/images/posts/spring-redisson-remote-service/image-21.png)
 
-1.**클러스터** 모드 : 말 그대로 여러개의 Redis로 구성되어있는 **레디스 클러스터**를 사용하는 경우이다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 16](/images/posts/spring-redisson-remote-service/image-16.png)
-
-2.**센티넬** 모드 : 다운되었을 때 고가용성을위한 **센티넬 모드**로 사용할 경우이다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 17](/images/posts/spring-redisson-remote-service/image-17.png)
-
-3.**마스터 슬레이브 모드** : **마스터-슬레이브 노드로 구성된 레디스 구성**일 경우이다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 18](/images/posts/spring-redisson-remote-service/image-18.png)
-
-4.**싱글 서버 모드** : 레디스 한 대로 모든 요청을 받는 용도로 사용할 경우 이다. 본 예제에서 사용할 모드이다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 19](/images/posts/spring-redisson-remote-service/image-19.png)
-
-그 외 프록시모드 , 멀티 클러스터 모드 등등 있는데 자세한건 공식 깃헙에 들어가면 나와있으니 참고.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 20](/images/posts/spring-redisson-remote-service/image-20.png)
-
-두 번째 특이사항은 **RRemoteService** 에다가 등록할 RemoteService 를 등록하는 과정인데 **기본 값은** 요청이 들어올 때 하나의 스레드로만 처리하게 하는 옵션을 가지고 있다.
-
-만약 **멀티스레드로** 동시에 여러개 처리를 원할 경우
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 21](/images/posts/spring-redisson-remote-service/image-21.png)
-
-사용할 workerAmount 수를 지정해 주면 된다.
-
-혹은 별도의 ExcutorService 를 등록하고 싶을 경우
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 22](/images/posts/spring-redisson-remote-service/image-22.png)
-
-이런식으로 등록해 주면 된다.
-
-### **클라이언트 모듈 작업하기**
+![ExecutorService 지정 옵션](/images/posts/spring-redisson-remote-service/image-22.png)
 
 ---
 
-> 클라이언트쪽에서는 간단하게 Member 객체를 생성하는 부분과 이름을 바꾸는 부분이 있는 Service 클래스와 요청을 받는 Controller 로 구성하였다.
+### `redissonClient`: 프록시 빈 등록 및 원격 호출
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 23](/images/posts/spring-redisson-remote-service/image-23.png)
+![redissonClient 패키지 구성](/images/posts/spring-redisson-remote-service/image-23.png)
 
-*   **application.yml** (redissonClient)
-
-```bash
+```yaml
+# redissonClient application.yml
 server:
   port: 7070
 spring:
@@ -351,22 +250,7 @@ spring:
       host: redis://localhost
 ```
 
-*   **RedissonConfiguration**.java  
-    
-
 ```java
-package com.example.redissonclient.config;
-
-import com.example.redissoncommon.remote.RemoteMemberServiceInterface;
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
-import org.redisson.api.RemoteInvocationOptions;
-import org.redisson.config.Config;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 @EnableCaching
 public class RedissonConfiguration {
@@ -386,87 +270,54 @@ public class RedissonConfiguration {
     }
 
     @Bean
-    public RemoteMemberServiceInterface remoteMemberService(){
-        // 호출할 RemoteMemberService 를 RedisClient 로 부터 호출 하는 부분
+    public RemoteMemberServiceInterface remoteMemberService() {
         return redissonClient()
                 .getRemoteService()
                 .get(RemoteMemberServiceInterface.class, RemoteInvocationOptions.defaults()
-//                        .noAck().noResult() // 변환 결과가 없을 경우 추가할 수 있는 옵션. blocking 이 걸리지 않는다.
+                        // 반환값이 필요 없는 Fire-and-Forget 방식이라면 .noAck().noResult() 지정 가능
                 );
     }
 }
 ```
 
-RemoteMemberService 를 Common 모듈의 인터페이스를 이용하여 **Bean 으로 설정과 동시에 컨테이너에 올리도록** 하였다. 사용하는 부분에서 저 인터페이스 빈을 사용하면 된다.
+> 기본 옵션인 `RemoteInvocationOptions.defaults()`는 **Ack와 반환값을 기다리는 동기 방식**이며 타임아웃 관련 설정을 커스터마이징할 수 있습니다. 반환값이 필요 없다면 `.noAck().noResult()`로 블로킹 없이 비동기 전송할 수 있습니다.
 
-**RemoteService** 를 호출할 때 **기본 값은 결과 값을 반환한다는 가정**에 있다. 만약 반환 값이 있다면 추가로 설정해 줘야 하는것이 시간 관련된 부분이다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 24](/images/posts/spring-redisson-remote-service/image-24.png)
-
-없다면 noAck() , noResult() 로 설정해 주면 된다.
-
-*   **MemberService**.java
+![RemoteInvocationOptions 타임아웃 옵션 확인](/images/posts/spring-redisson-remote-service/image-24.png)
 
 ```java
-package com.example.redissonclient.service;
-
-import com.example.redissoncommon.entity.Member;
-import com.example.redissoncommon.remote.RemoteMemberServiceInterface;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class MemberService {
 
     private final AtomicLong memberIdSequence = new AtomicLong(0L);
-    private final ConcurrentHashMap<Long,Member> memberDB = new ConcurrentHashMap<Long,Member>();
-
+    private final ConcurrentHashMap<Long, Member> memberDB = new ConcurrentHashMap<>();
     private final RemoteMemberServiceInterface remoteMemberServiceInterface;
 
-    public Member callRemoteRenameService(Member member,String name){
-
-        if(member==null)
+    public Member callRemoteRenameService(Member member, String name) {
+        if (member == null) {
             throw new IllegalArgumentException("couldn't find member");
-        return remoteMemberServiceInterface.renameMember(member,name);
+        }
+        return remoteMemberServiceInterface.renameMember(member, name);
     }
 
-    public Member findMemberById(Long id){
-        return Optional.ofNullable(memberDB.get(id))
-                .orElse(null);
+    public Member findMemberById(Long id) {
+        return memberDB.get(id);
     }
 
-    public Member createMember(String name){
+    public Member createMember(String name) {
         Member member = new Member(incrementSequence(), name);
-        memberDB.put(member.getId(),member);
+        memberDB.put(member.getId(), member);
         return member;
     }
 
-    private Long incrementSequence(){
+    private Long incrementSequence() {
         return memberIdSequence.incrementAndGet();
     }
 }
 ```
 
-여기서 중요한부분은 RemoteMemberServiceInterface 인터페이스의 메서드를 호출한다는 것이다.
-
-*   **MemberController**.java
-
 ```java
-package com.example.redissonclient.controller;
-
-import com.example.redissonclient.service.MemberService;
-import com.example.redissoncommon.entity.Member;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-
 @RequiredArgsConstructor
 @RestController
 @Slf4j
@@ -476,96 +327,81 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/create")
-    public Member createMember(@RequestParam String name){
+    public Member createMember(@RequestParam String name) {
         Member member = memberService.createMember(name);
-        log.info("created member => {}",member);
+        log.info("created member => {}", member);
         return member;
     }
 
     @PostMapping("/rename")
-    public Member renameMember(@RequestParam Long id,@RequestParam String name){
+    public Member renameMember(@RequestParam Long id, @RequestParam String name) {
         Member findMember = memberService.findMemberById(id);
-        return memberService.callRemoteRenameService(findMember,name);
+        return memberService.callRemoteRenameService(findMember, name);
     }
 }
 ```
 
-### **Postman 으로 요청 테스트**
+---
+
+## 4. Postman 테스트 및 내부 동작 디버깅
+
+Postman으로 `7070` 클라이언트 서버에 Member 생성(`hello`) 후 이름 변경(`newHello`)을 요청하면, 실제로 `7071` 서버 모듈의 `renameMember()`가 실행되어 이름이 변경된 결과 객체를 반환합니다.
+
+![Postman Member 생성 요청](/images/posts/spring-redisson-remote-service/image-25.png)
+
+![Postman Remote rename 요청](/images/posts/spring-redisson-remote-service/image-26.png)
+
+![원격 메서드 실행 결과 응답 확인](/images/posts/spring-redisson-remote-service/image-27.png)
+
+### 어떻게 인터페이스 메서드 호출만으로 원격 실행이 될까?
+
+디버거로 `remoteMemberServiceInterface` 빈의 실제 구현체를 찍어보면, Redisson이 **JDK Dynamic Proxy**를 생성해 주입했음을 알 수 있습니다.
+
+![JDK 동적 프록시 객체 확인](/images/posts/spring-redisson-remote-service/image-28.png)
+
+메서드를 호출하는 순간 프록시의 `InvocationHandler`가 가로채어 호출 인터페이스 이름과 메서드 시그니처를 추출합니다.
+
+![InvocationHandler 동작 디버깅](/images/posts/spring-redisson-remote-service/image-29.png)
+
+그리고 `getRequestQueueName()`을 통해 요청을 적재할 Redis 큐 키를 생성합니다.
+
+![getRequestQueueName 내부 호출](/images/posts/spring-redisson-remote-service/image-30.png)
+
+![요청 큐 키 생성 1](/images/posts/spring-redisson-remote-service/image-31.png)
+
+![요청 큐 키 생성 2](/images/posts/spring-redisson-remote-service/image-32.png)
+
+실제로 `redissonServer`를 잠시 중단한 상태에서 Client 요청을 보내면, Redis 내부에 `{redisson_rs:...}` 형태로 요청 큐가 쌓이는 모습을 Redis UI에서 직접 확인할 수 있습니다.
+
+![서버 중단 후 요청 전송](/images/posts/spring-redisson-remote-service/image-33.png)
+
+![Redis UI에서 확인한 요청 큐 키](/images/posts/spring-redisson-remote-service/image-34.png)
+
+![직렬화된 요청 페이로드](/images/posts/spring-redisson-remote-service/image-35.png)
 
 ---
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 25](/images/posts/spring-redisson-remote-service/image-25.png)
+## 5. Codec 분석을 통해 발견한 구조적 한계
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 26](/images/posts/spring-redisson-remote-service/image-26.png)
+Redisson은 기본적으로 직렬화 코덱(Codec)으로 바이너리 포맷인 **Kryo**(`Kryo5Codec`)를 사용합니다.
 
-파라미터로 간단하게 hello 를 전달하여 새로운 Memer 객체를 생성한 후 newHello 로 이름을 바꾸는 테스트이다.
+![기본 Serializer 설정 확인](/images/posts/spring-redisson-remote-service/image-36.png)
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 27](/images/posts/spring-redisson-remote-service/image-27.png)
+내부 데이터를 사람이 읽을 수 있도록 `JsonJacksonCodec`으로 변경해 실제 Redis에 저장된 페이로드를 확인해 보았습니다.
 
-정상적으로 동작하는 것을 확인하였다. 그렇다면 어떻게 인터페이스의 메서드를 호출했는데 동작하는것인가?
+![JsonJacksonCodec 변경 설정](/images/posts/spring-redisson-remote-service/image-37.png)
 
-### **RemoteService 동작 살펴보기**
+![JSON 직렬화된 요청 내역 상세](/images/posts/spring-redisson-remote-service/image-38.png)
 
----
+결과를 보면 두 가지 중요한 사실을 발견할 수 있습니다.
 
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 28](/images/posts/spring-redisson-remote-service/image-28.png)
+1. Redis 요청 큐 Key 이름 자체가 **인터페이스의 전체 패키지 경로(FQCN)**를 포함하여 생성됩니다.
+2. 요청 페이로드 Value 안에도 **파라미터로 넘긴 `Member` 객체의 패키지 경로(`com.example.redissoncommon.entity.Member`)가 `@class` 타입 정보로 박혀 있습니다.**
 
-빈으로 올라와있는 인터페이스를 찍어보면 당연히 **jdk 동적 프록시**를 사용하고 있다.
+### 실무 도입 시 결론
 
-보통 빈 컨테이너로 올릴 때 인터페이스를 이용하면 jdk 동적 프록시를 사용하고 class 그대로 이용하면 aop 가 동작해 **CGLIB** 로 올라간다.
+- 위와 같은 강결합 구조 때문에 Server와 Client가 **동일한 패키지 경로의 인터페이스·DTO(`redissonCommon` 모듈)를 강제로 공유**해야만 원격 역직렬화가 정상 동작합니다.
+- 도메인 주도 설계(DDD)나 마이크로서비스(MSA) 관점에서 서비스 간 패키지 결합도가 강제되는 것은 큰 단점입니다. 만약 도입해야 한다면 도메인 엔티티를 직접 넘기지 말고 **원격 통신 전용 Common DTO 모듈을 별도로 격리**해 사용하는 것이 바람직합니다.
+- 초저지연 인메모리 RPC가 반드시 필요한 특수 트랜잭션 구간이 아니라면, 서비스 간 느슨한 결합을 유지할 수 있는 **전용 메시지 큐(Kafka, RabbitMQ)나 REST/gRPC 통신을 사용하는 편이 아키텍처 유지보수에 유리**해 보입니다.
 
-인터페이스 메서드를 사용하는 부분에 debug 를 찍어보면
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 29](/images/posts/spring-redisson-remote-service/image-29.png)
-
-InvocationalHandler 가 동작하여 remoteInterface 의 getName()을 찾아 맞는 메서드를 호출한다.
-
-그리고 getRequestQueueName 을 호출하는데
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 30](/images/posts/spring-redisson-remote-service/image-30.png)
-
-바로 이부분. ConcurrentCacheMap 으로 만들어진 요청큐 안에 특별한 키 값으로 요청을 넣는 것을 확인할 수 있다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 31](/images/posts/spring-redisson-remote-service/image-31.png)
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 32](/images/posts/spring-redisson-remote-service/image-32.png)
-
-확인해 보니 {redisson\_rs : ~~~ } 형태로 들어간다. 직접 확인해보기 위해 RemoteServer를 잠시 꺼보자. 그리고 Redis UI tool 에서 확인해보면
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 33](/images/posts/spring-redisson-remote-service/image-33.png)
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 34](/images/posts/spring-redisson-remote-service/image-34.png)
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 35](/images/posts/spring-redisson-remote-service/image-35.png)
-
-요런 모양으로 들어와 있는데 잘 보면 Key 값이 아까 본 모양이랑 똑같이 나와있다.
-
-**즉, 내부적으로 Key 를 생성할 때 결정자 중 하나가 “패키지 경로” 라는 것.**
-
-**실제로 value 로 나와있는 저 값들도 다시 디코딩을 해보면 호출하는 메서드의 패키지 위치라던지 필요한 파라미터 또한 패키지경로 까지 포함한 값으로 들어오게 되어있다.**
-
-**그래서 처음에 구조 설계를 할때 Common 공통 모듈을 생성한 것**이다.
-
-Server 와 Client 가 공통적으로 사용해야하는 **RemoteMemberServiceInterface** 가 Common 모듈 안에 있어야 RemoteServer 가 요청을 받은 후 에도 해당 패키지로 찾아가서 해당 메서드를 Call 할 수 있기 때문. 즉 , **공통 모듈 구조가 강제화 된다는 뜻이다**.
-
-이게 가장 큰 단점이라 만약 사용한다면 저 **Common 모듈을 원격 전용 모듈로서 따로 분리**하고 파라미터로 받는 Member 객체도 엔티티 그대로 사용하지 말고 별도의 Remote 전용 MemberDto 로 따로 컨버팅하고 사용하야 구조에 지나치게 의존적인 관계가 그나마 덜 해지는 것 같다.
-
-참고로, Redisson Config을 설정할 때 내부적으로 Serialier 를 **Kyro** 를 사용하고있다.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 36](/images/posts/spring-redisson-remote-service/image-36.png)
-
-저 Codec을 **JsonJacksonCodec** 으로 변경해서 데이터를 확인해보자.
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 37](/images/posts/spring-redisson-remote-service/image-37.png)
-
-![\[Spring\] Redisson Remote Service 분해해보기 이미지 38](/images/posts/spring-redisson-remote-service/image-38.png)
-
-보다시피 파라미터로 받는 Member 엔티티의 클래스 경로까지 모두 포함한다는 것이 보인다. 즉 , 도메인 주도 설계를 한 경우엔 쓰기 쉽지 않아 보이는 강제된 설계구조란 뜻이다.
-
-내부적으로 Serializer 를 재 정의 하거나, 혹은 한다 하더라도 어떤 예상치 못한 문제가 발생할 지 알 수 없으므로 도입하기 애매한 기술인 것 같다.
-
-결론적으로 만약 사용한다면 중요 트랜잭션로직의 속도를 중시한다면 인 메모리 기반 RemoteService 이므로 사용해도 괜찮겠지만 그게 아니라면 별도의 MessageQueue 를 이용하는 것이 좋아보인다.
-
-[https://github.com/nicebyy/RedissonRemoteService](https://github.com/nicebyy/RedissonRemoteService)
-
- [](https://github.com/nicebyy/RedissonRemoteService)
+> 실습 전체 소스 코드: [GitHub - nicebyy/RedissonRemoteService](https://github.com/nicebyy/RedissonRemoteService)

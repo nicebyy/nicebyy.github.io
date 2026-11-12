@@ -1,21 +1,24 @@
 ---
-title: '[Spring] Http 통신과 관련된 Annotations 간단 정리'
+title: '[Spring] Spring MVC HTTP 통신 핵심 애노테이션 총정리'
 date: '2022-06-16'
 category: Backend/Spring
 tags:
   - '@RequestParam'
-  - 스프링 annotation
+  - '@RequestBody'
+  - '@ModelAttribute'
+  - '@PathVariable'
+  - Spring MVC
 summary: >-
-  HTTP 통신과 관련된 Annotation들 @RequestMapping (요청을 받을 때) > 특정 URL에 요청을 보내면
-  Controller에서 이를 처리하는데, URL과 HTTP Method에 따라 맞는 요청을 받아 처리한다. Class 레벨에 ...
+  Spring MVC 컨트롤러에서 HTTP 요청을 매핑하고 데이터를 바인딩할 때 사용하는 @RequestMapping, @RequestParam, @ModelAttribute, @RequestBody, @PathVariable, @ResponseBody 등의 역할을 정리합니다.
 ---
-# **HTTP 통신과 관련된 Annotation들**
 
-## **@RequestMapping (요청을 받을 때)**
+## `@RequestMapping` (요청 URL 및 Method 매핑)
 
-> **특정 URL에 요청을 보내면 Controller에서 이를 처리하는데, URL과 HTTP Method에 따라 맞는 요청을 받아 처리한다.**
+클라이언트가 특정 URL로 HTTP 요청을 보내면 `DispatcherServlet`이 URL과 HTTP Method 조건에 맞는 컨트롤러 메서드를 찾아 실행합니다.
 
-```
+실무에서는 **클래스 레벨에 공통 Prefix 경로(`@RequestMapping("/orders")`)를 두고, 메서드 레벨에 HTTP Method별 단축 애노테이션(`@GetMapping`, `@PostMapping` 등)을 붙이는 방식**을 주로 사용합니다.
+
+```java
 @Controller
 @Slf4j
 @SessionAttributes("order")
@@ -23,188 +26,180 @@ summary: >-
 @RequestMapping("/orders")
 public class OrderController {
 
-    @GetMapping("/current") // @RequestMapping(value = "/current",method = RequestMethod.GET)
-    public String orderForm(@AuthenticationPrincipal User user,Order order){
-    ...
-
+    @GetMapping("/current") // @RequestMapping(value = "/current", method = RequestMethod.GET)과 동일
+    public String orderForm(@AuthenticationPrincipal User user, Order order) {
+        // ...
+        return "orderForm";
     }
 }
 ```
 
-**Class 레벨에 `@RequestMapping`을 걸어두고 Method레벨에 `@GetMapping` 같이 특정 HTTP Method를 알 수 있는 애노테이션을 붙이는 방식이 선호되는 방식**
+---
 
-## **HTTP Method 종류와 애노테이션**
+## HTTP Method별 매핑 애노테이션
 
-### **`@GetMapping`**
+### 1. `@GetMapping`
+- 주로 리소스 조회 요청(`GET`)을 처리하며, 추가 데이터는 URL 쿼리 스트링(`?limit=10&offset=0`)으로 전달받습니다.
+- `@RequestParam`이나 `@ModelAttribute`를 통해 파라미터를 바인딩한 뒤 View 이름 또는 데이터를 반환합니다.
 
-*   HTTP `Get` 방식의 Method를 처리
-*   Get Method 요청을 처리하는데 추가로 전달할 요청 관련 정보는 쿼리파라미터로 같이 전달
-*   HTTP Form 에 입력한 값은 쿼리 파라미터로 전달해서 view를 리턴하거나 정보를 리턴함
-*   `@RequestParam` 이나 `@ModelAttribute`를 통해 전달 받은 요청 파라미터를 처리
+```java
+// @RequestParam: String, int 등 단일(Primitive/Wrapper) 요청 파라미터 수신
+@GetMapping
+public String ordersForUser(
+        @AuthenticationPrincipal User user,
+        Model model,
+        @RequestParam int limit,
+        @RequestParam int offset) {
 
+    PageRequest pageable = PageRequest.of(offset, limit);
+    model.addAttribute("orders", orderRepository.findByUserOrderByPlacedAtDesc(user, pageable));
+
+    return "orderList";
+}
 ```
-// RequestParam : String, Integer 과 같은 primitive 타입
-    @GetMapping
-    public String ordersForUser(@AuthenticationPrincipal User user,Model model
-    , @RequestParam int limit,@RequestParam int offset){
 
-      PageRequest pageable = PageRequest.of(offset,limit);
-      model.addAttribute("orders",orderRepository.findByUserOrderByPlacedAtDesc(user,pageable));
-
-      return "orderList";
+```java
+// @ModelAttribute: 쿼리 파라미터나 Form 데이터를 자바 객체(DTO) 필드에 자동 바인딩
+@GetMapping("/current")
+public String orderForm(@AuthenticationPrincipal User user, @ModelAttribute Order order) {
+    if (order.getDeliveryName() == null) {
+        order.setDeliveryName(user.getFullname());
     }
+    if (order.getDeliveryStreet() == null) {
+        order.setDeliveryStreet(user.getStreet());
+    }
+    if (order.getDeliveryCity() == null) {
+        order.setDeliveryCity(user.getCity());
+    }
+    if (order.getDeliveryState() == null) {
+        order.setDeliveryState(user.getState());
+    }
+    if (order.getDeliveryZip() == null) {
+        order.setDeliveryZip(user.getZip());
+    }
+    return "orderForm";
+}
 ```
 
-```
-// ModelAttribute : object 타입
+### 2. `@PostMapping`
+- 리소스 생성 또는 데이터 전송(`POST`) 요청을 처리하며, 데이터를 **HTTP Request Body**에 담아 보낼 수 있습니다.
+- Form 전송(`application/x-www-form-urlencoded`)은 `@ModelAttribute`로, JSON API 본문(`application/json`)은 `@RequestBody`로 수신합니다.
 
-    @GetMapping("/current")
-    public String orderForm(@AuthenticationPrincipal User user,@ModelAttribute Order order){
-        if (order.getDeliveryName() == null) {
-            order.setDeliveryName(user.getFullname());
-        }
-        if (order.getDeliveryStreet() == null) {
-            order.setDeliveryStreet(user.getStreet());
-        }
-        if (order.getDeliveryCity() == null) {
-            order.setDeliveryCity(user.getCity());
-        }
-        if (order.getDeliveryState() == null) {
-            order.setDeliveryState(user.getState());
-        }
-        if (order.getDeliveryZip() == null) {
-            order.setDeliveryZip(user.getZip());
-        }
+```java
+// Form 파라미터 기반 POST 처리 (@ModelAttribute 생략 가능)
+@PostMapping
+public String processOrder(
+        @Valid Order order,
+        Errors errors,
+        SessionStatus sessionStatus,
+        @AuthenticationPrincipal User user) {
+
+    if (errors.hasErrors()) {
         return "orderForm";
     }
+
+    log.info("order submitted : {}", order);
+    order.setUser(user);
+    orderRepository.save(order);
+    sessionStatus.setComplete();
+    return "redirect:/";
+}
 ```
 
-### **`@PostMapping`**
+```java
+// JSON Body 기반 POST 처리 (@RequestBody 필수)
+@PostMapping
+public String processOrderJson(
+        @Valid @RequestBody Order order,
+        Errors errors,
+        SessionStatus sessionStatus,
+        @AuthenticationPrincipal User user) {
 
-*   HTTP `Post` 방식의 Method를 처리
-*   요청을 처리하는데 추가로 전달할 요청 관련 정보는 HTTP body에도 담아 전달
-*   HTTP Form 에 입력한 값은 Get방식과 마찬가지로 쿼리스트링 방식으로 전달해서 로직을 수행
-*   `@RequestBody` 나 `@ModelAttribute`를 통해 전달 받은 요청 파라미터를 처리
-*   전달 받은 데이터는 MessageConverter와 자바 reflection을 통해 객체 바인딩이 가능
-
-```
-    @PostMapping // ModelAttribute 사용 (파라미터 형태로 보내질 때)
-    public String processOrder(@Valid Order order, Errors errors, SessionStatus sessionStatus, @AuthenticationPrincipal User user){
-
-        if(errors.hasErrors()){
-            return "orderForm";
-        }
-
-        log.info("order submitted : {}",order);
-        order.setUser(user);
-        orderRepository.save(order);
-        sessionStatus.setComplete();
-        return "redirect:/";
+    if (errors.hasErrors()) {
+        return "orderForm";
     }
+    order.setUser(user);
+    orderRepository.save(order);
+    sessionStatus.setComplete();
+    return "redirect:/";
+}
 ```
 
-```
-    @PostMapping // RequestBody 사용 (Body에 데이터를 담아 보내질 때)
-    public String processOrder(@Valid @RequestBody Order order, Errors errors, SessionStatus sessionStatus, @AuthenticationPrincipal User user){
+### 3. `@PutMapping`, `@PatchMapping`, `@DeleteMapping`
+- HTML `<form>` 태그는 기본적으로 `GET`과 `POST`만 지원하지만, RESTful API 설계에서는 용도에 맞는 HTTP Method 애노테이션을 구분해 사용합니다.
+  - **`@PutMapping`**: 리소스 **전체 교체(수정)** 요청
+  - **`@PatchMapping`**: 리소스 **일부 필드 수정** 요청
+  - **`@DeleteMapping`**: 리소스 **삭제** 요청
 
-        if(errors.hasErrors()){
-            return "orderForm";
-        }
-        order.setUser(user);
-        orderRepository.save(order);
-        sessionStatus.setComplete();
-        return "redirect:/";
+---
+
+## 파라미터 바인딩 & 응답 관련 주요 애노테이션
+
+### `@RequestParam` vs `@ModelAttribute` vs `@RequestBody`
+
+| 애노테이션 | 수신 데이터 위치 | 내부 동작 원리 | 생략 가능 여부 |
+| :--- | :--- | :--- | :--- |
+| **`@RequestParam`** | 쿼리 파라미터 / Form 단일 값 | `ConversionService` 타입 변환 | 단순 타입(`String`, `int` 등)일 때 생략 가능 |
+| **`@ModelAttribute`** | 쿼리 파라미터 / Form 객체 | `WebDataBinder`를 통해 생성자·Setter에 바인딩 후 `Model`에 자동 등록 | 객체 타입일 때 생략 가능 |
+| **`@RequestBody`** | HTTP Message Body (JSON 등) | **`HttpMessageConverter`**(`MappingJackson2HttpMessageConverter`)로 역직렬화 | **생략 불가** |
+
+### `@PathVariable` (경로 변수)
+URL 쿼리 스트링(`?tacoNum=1`) 대신 URL 경로 자체의 일부를 변수로 추출할 때 사용합니다. (예: `/tacos/1`)
+
+```java
+@GetMapping("/{tacoNum}")
+@ResponseBody
+public Taco getTaco(@PathVariable Long tacoNum) {
+    return tacoRepository.findById(tacoNum).orElseThrow();
+}
+```
+
+### `@ResponseBody` (HTTP Body 직접 응답)
+`ViewResolver`를 통해 HTML 템플릿을 렌더링하는 대신, 반환 객체를 JSON/문자열로 직렬화하여 HTTP 응답 본문에 직접 담아 보냅니다. (`@RestController` = `@Controller` + `@ResponseBody`)
+
+```java
+@GetMapping("/list")
+@ResponseBody
+@ResponseStatus(HttpStatus.OK)
+public List<List<Taco>> getTacos(@AuthenticationPrincipal User user) {
+    Pageable pageable = PageRequest.of(0, orderProps.getPageSize());
+    List<Order> orders = orderRepository.findByUserOrderByPlacedAtDesc(user, pageable);
+
+    return orders.stream()
+            .map(Order::getTacos)
+            .collect(Collectors.toList());
+}
+```
+
+> 상태 코드와 커스텀 HTTP 헤더까지 세밀하게 제어해야 한다면 `ResponseEntity<T>`로 감싸 반환하는 것이 좋습니다.
+
+### `RedirectAttributes`
+PRG(Post-Redirect-Get) 패턴으로 리다이렉트할 때 경로 변수나 일회성 플래시 메시지(`addFlashAttribute`)를 안전하게 전달할 수 있습니다.
+
+```java
+@PostMapping
+public String processDesign(
+        @Valid Taco design,
+        Errors errors,
+        RedirectAttributes redirectAttributes) {
+    if (errors.hasErrors()) {
+        return "design";
     }
+
+    Taco savedTaco = tacoRepository.save(design);
+    redirectAttributes.addAttribute("tacoNum", savedTaco.getId());
+
+    return "redirect:/taco/{tacoNum}";
+}
 ```
 
-### **`@PutMapping`, `@PatchMapping`, `@DeleteMapping`**
+### 메서드 레벨에서의 `@ModelAttribute`
+컨트롤러 내부 메서드 위에 `@ModelAttribute("orders")`를 선언하면, 해당 컨트롤러의 **모든 요청 핸들러가 실행되기 전**에 반환값이 자동으로 `Model`에 담겨 뷰에서 공통으로 사용할 수 있습니다.
 
-*   `Html Form`은 `Get`과 `Post`만 동작하지만, PostMapping 처럼 동작하는 HTTP Method들이 있음
-*   `PutMapping` 과 `PatchMapping`은 수정관련 요청 Method인데 차이점은 부분수정vs전체수정
-*   `DeleteMapping`은 말 그대로 데이터를 삭제할 때 요청하는 Method
-
-### `@RequestParam`
-
-*   요청 파라미터를 받는 방식 중 하나로 primitive 타입만 받는다.
-*   보낼때 파마미터 변수와 메소드의 파라미터 변수와 같으면 생략이 가능함
-
-### `@ResponseBody` (데이터를 보낼 때)
-
-**ViewResolver를 통해 서버에서 view 를 렌더링해서 보여주는 응답을 할 수 있지만**
-
-**API서버로서 데이터를 보낼 때는 `String` 형식이나 `Json` 형식으로 body데이터를 보낼 수 있음**
-
+```java
+@ModelAttribute("orders")
+public List<Order> orders(@AuthenticationPrincipal User user) {
+    Pageable pageable = PageRequest.of(0, orderProps.getPageSize());
+    return orderRepository.findByUserOrderByPlacedAtDesc(user, pageable);
+}
 ```
-    @GetMapping("/list")
-    @ResponseBody
-    @ResponseStatus(HttpStatus.OK)
-    public ArrayList<List<Taco>> getTacos(@AuthenticationPrincipal User user){
-
-        Pageable pageable = PageRequest.of(0, orderProps.getPageSize());
-        List<Order> orders = orderRepository.findByUserOrderByPlacedAtDesc(user, pageable);
-
-        return orders.stream()
-                .map(Order::getTacos)
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
-```
-
-**헤더 설정이 필요한 경우 `HttpEnity` 형태로 return 도 가능함**
-
-## **`@PathVariable`**
-
-> **경로 변수라고도 하며 URL에 쿼리스트링 형식으로 데이터를 보내는 것과 다르게 URL 경로중 일부로 작용함.**  
-> **ex) [www.tacocloud.com/](http://www.taco.com/)taco/1**
-
-```
-    private final TacoRepository tacoRepository;
-    @GetMapping("/{tacoNum}")
-    @ResponseBody
-    public Taco getTaco(@PathVariable Long tacoNum){
-
-        return tacoRepository.findById(tacoNum).get();
-    }
-```
-
-**위와 같이 쿼리 스트링 형식이 아닌 경로에 포함된 변수로서 사용이 가능**
-
-## **`RedirectAttributes`**
-
-> **요청한 데이터와 관련되거나 포함된 URL을 다시 redirect해서 보여줄때 사용한다. 예를들어 PRG (post redirect get ) 방식으로 다시 Get을 요청 하게 만들 때 사용함**
-
-```
-    private final TacoRepository tacoRepository;
-
-    @PostMapping
-    public String processDesign(@Valid Taco design, Errors errors,RedirectAttributes redirectAttributes) {
-        if (errors.hasErrors()) {
-            return "design";
-        }
-
-        Taco savedTaco = tacoRepository.save(design);
-        redirectAttributes.addAttribute("tacoNum",savedTaco.getId());
-
-        return "redirect:/taco/{tacoNum}";
-    }
-```
-
-## **`@ModelAttribute`**
-
-> **ModeAttribute는 object 와 String 을 서로 변환, 역변환을 도와주는 타입 컨버터가 적용되어 있다. RequestBody와 차이점은 ModelAttribute는 요청 파라미터에만 적용이 된다. 그래서 Order를 쓸 때도 애노테이션을 생략해도 동작이 가능했음. (RequestBody는 불가능)**
-
-**`Jackson2HttpMessageConverter` 로 인해 컨버전이 동작하는데 reflection 기반이기 때문에 객체에 `getter`만 선언해도 동작이 됨**
-
-## **메소드레벨에서 `@ModelAttribute` 사용**
-
-```
-    @ModelAttribute("orders")
-    public List<Order> orders(@AuthenticationPrincipal User user){
-
-        Pageable pageable = PageRequest.of(0, orderProps.getPageSize());
-        List<Order> orders = orderRepository.findByUserOrderByPlacedAtDesc(user, pageable);
-        return orders;
-
-    }
-```
-
-**`@ModelAttribute`를 만약 메소드레���에서 사용하면 지정한 변수명은 모든 요청에대해 자동으로 `model.setAttribute()` 가 동작해서 model에 담기게 됨**

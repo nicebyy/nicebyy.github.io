@@ -1,34 +1,41 @@
 ---
-title: '[Spring] WebFlux 도입에 관한 이야기'
+title: '[Spring] WebFlux 도입에 관한 고민 — Spring MVC와의 비교 및 주의사항'
 date: '2022-11-03'
 category: Backend/Spring
 tags:
-  - spring webflux
-  - Webflux
-  - webflux 도입
+  - Spring WebFlux
+  - Reactive Streams
+  - Non-Blocking
+  - R2DBC
+  - 아키텍처
 summary: >-
-  > WebFlux 란 웹에서 Reactor의 스트리밍 처리를 담당하기 위해 Spring 5.0 부터 도입이 되었고 > non-blocking
-  에 기반한 reactive streams 를 back pressure 와 함께 처리하여 동시에 많은 요청을 처...
+  Spring 5.0에서 도입된 리액티브 웹 프레임워크 WebFlux의 동작 원리와 Spring MVC(명령형)와의 장단점 비교, 도입을 고려해야 할 실무 시나리오, 그리고 블로킹 DB(JDBC) 혼용 시 주의해야 할 병목 함정을 정리합니다.
 ---
-> **WebFlux 란 웹에서 Reactor의 스트리밍 처리를 담당하기 위해 Spring 5.0 부터 도입이 되었고**  
-> **non-blocking 에 기반한 reactive streams 를 back pressure 와 함께 처리하여 동시에 많은 요청을 처리하기 위한 목적으로 나왔다.  
-> **  
-> **이전의 Reactive streams는 low 레벨이기 때문에 API 에 있어서 유용하지 못했지만 Webflux에서 풍부한 라이브러리와 연산자들을 통해 서버사이드에 좀 더 집중할 수 있게 되었다.**
 
-![\[Spring\] WebFlux 도입에 관한 이야기 이미지 1](/images/posts/spring-webflux-introduction/image-1.png)
+## Spring WebFlux란?
 
-![\[Spring\] WebFlux 도입에 관한 이야기 이미지 2](/images/posts/spring-webflux-introduction/image-2.png)
+**WebFlux**는 웹 환경에서 Reactor 기반의 비동기 스트리밍 처리를 지원하기 위해 **Spring 5.0**부터 도입된 리액티브 웹 프레임워크입니다.
 
-## **WebFlux vs SpringMVC**
+**Non-Blocking I/O**와 **Reactive Streams(Backpressure 포함)** 규격을 기반으로 적은 스레드 리소스로도 동시 다발적인 대규모 요청을 효율적으로 처리하기 위해 설계되었습니다. 기존의 저수준 Reactive Streams API를 직접 다루는 대신, `Mono`·`Flux`와 풍부한 연산자(Operators)를 활용해 비동기 파이프라인을 선언적으로 작성할 수 있습니다.
 
-> **기본적으로 SpringMVC는 멀티스레드에 기반한 명령형 프로그래밍 방식이다.**  
-> **즉, 나타내고자 하는 기능을 분명하게 나눌 수 있고 디버깅이 쉬우며 유지보수가 편리하다.**  
->   
-> **그에 반해 WebFlux는 여러 Streams 복잡한 조합과 비동기적인 함수형 프로그래밍 방식을 채택하여 파이프라인을 구성하는 것이기 때문에 변경 추적이 쉽지 않을 뿐더러 변경 추적이 어렵다.**
+![Spring MVC vs WebFlux 스레드 모델](/images/posts/spring-webflux-introduction/image-1.png)
+
+![Reactive Streams와 Non-Blocking I/O 흐름](/images/posts/spring-webflux-introduction/image-2.png)
+
+---
+
+## Spring MVC vs Spring WebFlux
+
+기존의 **Spring MVC**는 요청당 하나의 스레드가 할당되는 멀티스레드 기반 **명령형(Imperative) 프로그래밍** 모델입니다. 비즈니스 로직을 단계별로 명확하게 나누어 작성할 수 있고, 스택 트레이스 디버깅이나 유지보수가 직관적이라는 큰 강점이 있습니다.
+
+반면 **WebFlux**는 비동기 스트림(`Mono`, `Flux`)을 조합해 파이프라인을 구성하는 **함수형·선언형 프로그래밍** 방식을 따릅니다. 스레드가 이벤트 루프 사이를 넘나들며 비동기로 실행되기 때문에, 스레드 로컬(`ThreadLocal`) 기반 컨텍스트 전파나 에러 스택 추적·디버깅 난이도가 상대적으로 높습니다.
 
 ```java
+// WebFlux 함수형 리액티브 파이프라인 예시
 basketFlux.concatMap(basket -> {
-    final Mono<List<String>> distinctFruits = Flux.fromIterable(basket).distinct().collectList();
+    final Mono<List<String>> distinctFruits =
+            Flux.fromIterable(basket).distinct().collectList();
+
     final Mono<Map<String, Long>> countFruitsMono = Flux.fromIterable(basket)
             .groupBy(fruit -> fruit)
             .concatMap(groupedFlux -> groupedFlux.count()
@@ -36,41 +43,44 @@ basketFlux.concatMap(basket -> {
                     final Map<String, Long> fruitCount = new LinkedHashMap<>();
                     fruitCount.put(groupedFlux.key(), count);
                     return fruitCount;
-                }) 
-            ) 
-            .reduce((accumulatedMap, currentMap) -> new LinkedHashMap<String, Long>() { {
-                putAll(accumulatedMap);
-                putAll(currentMap);
-            }})
-    return Flux.zip(distinctFruits, countFruitsMono, (distinct, count) -> new FruitInfo(distinct, count));
+                })
+            )
+            .reduce((accumulatedMap, currentMap) -> {
+                Map<String, Long> merged = new LinkedHashMap<>(accumulatedMap);
+                merged.putAll(currentMap);
+                return merged;
+            });
+
+    return Flux.zip(distinctFruits, countFruitsMono, FruitInfo::new);
 }).subscribe(System.out::println);
 ```
 
-(Webflux 예시코드)
+---
 
-## **그럼에도 WebFlux를 쓰는이유**
+## 그럼에도 WebFlux 도입을 고려할 만한 4가지 환경
 
-> 그렇다면 왜 굳이 SpringMVC대신 Webflux 를 쓰려고할까.  
-> 단순히 많은 요청을 더 잘 처리하기 위해서 혹은 반전이 일어날만한 성능 기대를 위해 도입을 해야하나?
+단순히 "최신 기술이라서" 혹은 "무조건 빨라질 것 같아서" WebFlux를 도입하기보다, 다음과 같이 아키텍처 특성이 맞물릴 때 진가를 발휘합니다.
 
-실제로 초당 500개 정도의 요청을 받는다면 사용을 고려할 만하다고 하지만 여러 글들을 찾아 본 결과 다음과 같은 환경이면 도입할만 하다고 판단하는 것 같다.
+1. **데이터를 실시간 스트리밍(SSE, WebSocket 등)으로 지속 전송해야 하는 경우**
+2. **비즈니스 로직 대부분이 외부 업스트림 API 호출 응답을 대기하는 I/O 중심 서비스인 경우** (예: API Gateway, BFF 오케스트레이션 서버)
+3. **여러 외부 API를 병렬로 호출하고 결과를 취합해 내려주는 집계 시스템**
+4. **대량의 동시 연결에서 발생하는 스레드 컨텍스트 스위칭 비용과 메모리 점유율 부담을 줄여야 하는 경우**
 
-1.  **데이터를 스트리밍으로 지속적으로 보내줘야 하는 경우**
-2.  **대부분 비즈니스 로직이 다른 업스트림 호출이 반환되기를 기다리는 경우 (ex. 오케스트레이션, API 게이트 웨이)**
-3.  **여러 API를 호출하는 로직 그리고 이를 위합하여 전달하는 시스템일 경우**
-4.  **빈번한 컨텍스트 스위칭으로 인해 늘어난 IO 수행시간으로 인해 CPU와 메모리에 부하가 심한경우 (무거운 스레드)**
+---
 
-## **WebFlux에 맞게 쓰려면**
+## WebFlux를 제대로 쓰기 위한 핵심 원칙: End-to-End Non-Blocking
 
-> **webflux는 기본적으로 비동기이기 때문에 그에 맞는 환경이 갖춰진 상태에서 도입을 해야 적절하게 잘 썼다 라고 얘기할 수 있을 것 같다.**  
->   
-> **예를들어 Tmax 사의 Tibero DB와 Rxjava, Webflux를 이용하여 교통정보를 실시간 스트림으로 보내주는 작업을 하는 친구가 있는데 DB가 계속 죽는다고 얘기를 했었다.**  
-> **그 원인이 기본적으로 RDB는 블로킹을 동반한 동기성 DB 이기 때문이다.**  
-> **아무리 서버로직에서 비동기로 처리하더라도 DB가 비동기가 아니면 결국 병목은 똑같이 걸리기 때문.**  
-> **따라서 Webflux 를 사용하려면 이와 관련된 DB는 Redis 나 R2DBC와 같은 Nosql 기반 DB를 선택하는 것도 방법이 되겠다.**  
-> **이러한 이유로 우리회사 같은경우 단순 호출을 기반으로 진행된 챗봇 프로젝트에선 webflux와 redis를 이용하여 개발을 했었다. (현재는 보류)**  
->   
-> **https://www.youtube.com/watch?v=I0zMm6wIbRI**  
-> **어느 머기업에서 Webflux를 도입했다가 오히려 느렸던 이유에 대해 설명해논 영상이있다. 블록킹코드가 하나라도 있으면 Webflux 도입하는 의미가 퇴색된다는 것이다. 즉 모든 코드들은 가능한 비동기 Non-blocking으로 개발해야 한다.**
+WebFlux는 애플리케이션 전체 파이프라인이 비동기 Non-Blocking으로 흐를 때만 의도한 성능을 낼 수 있습니다.
 
-![\[Spring\] WebFlux 도입에 관한 이야기 이미지 3](/images/posts/spring-webflux-introduction/image-3.png)
+> 주변 지인이 **전통적인 RDB(JDBC)와 WebFlux를 결합해** 실시간 교통정보 스트림을 전송하는 시스템을 구축했다가 **DB 커넥션 고갈 및 응답 지연으로 장애**를 겪은 사례가 있었습니다.  
+> 아무리 웹 컨트롤러 단에서 WebFlux로 비동기 처리를 하더라도, 내부에서 호출하는 **JDBC 기반 RDB 드라이버가 블로킹(Blocking) 방식으로 동작하면 결국 이벤트 루프 스레드가 블로킹되면서 심각한 병목**이 발생하기 때문입니다.
+
+따라서 WebFlux를 도입할 때는 데이터 저장소 계층까지 논블로킹 스택을 맞추어야 합니다.
+- RDB가 필요하다면 JDBC 대신 **R2DBC(Reactive Relational Database Connectivity)** 사용
+- **Redis(Lettuce Reactive)**, **MongoDB Reactive** 등 Non-Blocking 드라이버를 지원하는 저장소 활용
+
+실제로 사내에서 외부 API 호출을 중계하는 챗봇 프로젝트를 진행했을 때도, 이러한 이유 때문에 RDB 대신 **WebFlux + Reactive Redis** 조합으로 아키텍처를 설계해 운영했던 경험이 있습니다.
+
+> 참고 영상: [어느 기업에서 WebFlux를 도입했다가 오히려 성능이 느려졌던 이유 (YouTube)](https://www.youtube.com/watch?v=I0zMm6wIbRI) — **파이프라인 어딘가에 블로킹 코드가 단 하나라도 섞여 있으면 WebFlux 도입의 의미가 퇴색됩니다.**
+
+![Spring MVC와 WebFlux 선택 기준 요약](/images/posts/spring-webflux-introduction/image-3.png)

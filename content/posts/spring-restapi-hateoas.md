@@ -1,86 +1,60 @@
 ---
-title: '[Spring] RestAPI와 Hateoas로 링크 삽입하기'
+title: '[Spring] REST API 성숙도 Level 3 — Spring HATEOAS로 하이퍼미디어 링크 삽입하기'
 date: '2022-06-19'
 category: Backend/Spring
 tags:
-  - restapi
-  - spring hateoas
+  - REST API
+  - Spring HATEOAS
+  - Hypermedia
   - 스프링 인 액션
 summary: >-
-  Hateoas > 기존의 API 응답 방법에서 만약 특정 URL에 대한 요청을 했는데, 해당 URL이 바뀌었다면 404 NotFound를
-  반환하기 때문에 이를 동적으로 Hypermedia 링크를 삽입된 응답을 반환하기 위한 메커니즘이 Hateoas 이...
+  REST API 성숙도 모델의 최고 단계인 HATEOAS 개념을 이해하고, Spring HATEOAS의 EntityModel·CollectionModel·RepresentationModelAssembler를 활용해 응답 JSON에 동적 하이퍼링크(_links)를 삽입하는 방법을 정리합니다.
 ---
-# **Hateoas**
 
-> 기존의 API 응답 방법에서 **만약 특정 URL에 대한 요청을 했는데, 해당 URL이 바뀌었다면** 404 NotFound를 반환하기 때문에 이를 동적으로 Hypermedia 링크를 삽입된 응답을 반환하기 위한 메커니즘이 Hateoas 이다.  
->   
-> 
-> **Hateoas**(Hypermedia As The Engine Of Application State)는 **Hypermedia를 Application의 상태를 관리하기 위해 도입된 개념**. 즉 , 클라이언트는 서버와 동적으로 상호작용이 가능하도록 해야함. ⇒ **요청에 필요한 URI를 응답에 포함시켜 반환**
+## HATEOAS란?
 
-## **RestAPI 구현레벨**
+기존의 일반적인 REST API 응답 방식에서는 클라이언트가 특정 리소스 URI를 하드코딩해 두어야 합니다. 만약 서버의 API URI 경로가 변경되면 클라이언트는 `404 Not Found` 에러를 마주하게 됩니다.
 
-![\[Spring\] RestAPI와 Hateoas로 링크 삽입하기 이미지 1](/images/posts/spring-restapi-hateoas/image-1.png)
+**HATEOAS (Hypermedia As The Engine Of Application State)**는 서버가 응답 데이터를 내려줄 때 **현재 리소스와 연관된 다음 작업(상태 전이)을 수행할 수 있는 동적 URI 링크(`_links`)를 함께 포함**시켜, 클라이언트가 서버와 동적으로 상호작용할 수 있도록 만드는 REST 아키텍처의 핵심 제약 조건입니다.
 
-RestAPI에도 구현 레벨이 있는데 **Hateoas 는 마지막 Level3** 의 단계이다. \[[참고링크](https://velog.io/@younge/REST-API-%EC%84%B1%EC%88%99%EB%8F%84-%EB%AA%A8%EB%8D%B8-Maturity-Model-eqqyjqff)\]
+---
 
-### **의존성 추가하기**
+## REST API 성숙도 모델 (Richardson Maturity Model)
 
-```clean
+![REST API 성숙도 모델 Level 0~3](/images/posts/spring-restapi-hateoas/image-1.png)
+
+리처드슨의 REST 성숙도 모델에서 **HATEOAS는 가장 높은 Level 3 단계**에 해당합니다. ([참고: REST API 성숙도 모델](https://velog.io/@younge/REST-API-%EC%84%B1%EC%88%99%EB%8F%84-%EB%AA%A8%EB%8D%B8-Maturity-Model-eqqyjqff))
+
+### 의존성 추가 및 Spring Boot 2.2+ 클래스명 변경
+
+```groovy
+// build.gradle
 implementation 'org.springframework.boot:spring-boot-starter-hateoas'
 ```
 
-**참고)** **스프링부트 2.2 이상 부터는 기존 Resource 에서 EntityModel로 바뀌었음**
+Spring Boot 2.2(Spring HATEOAS 1.0) 이상부터는 기존 클래스 명칭이 직관적인 `Model` 접미사로 개편되었습니다.
 
-이전버전
+| Spring Boot 2.2 이전 | Spring Boot 2.2 이후 (현재 표준) |
+| :--- | :--- |
+| `ResourceSupport` | `RepresentationModel` |
+| `Resource` | `EntityModel` |
+| `Resources` | `CollectionModel` |
+| `PagedResources` | `PagedModel` |
+| `ResourceAssembler` | `RepresentationModelAssembler` |
+| `ControllerLinkBuilder` | `WebMvcLinkBuilder` |
 
-2.2이후
+---
 
-ResourceSupport
+## 1. 컨트롤러에서 직접 하이퍼링크(`_links`) 추가하기
 
-RepresentationalModel
-
-Resource
-
-EntityModel
-
-Resource
-
-CollectionModel
-
-PagedResources
-
-PagedModel
-
-ResourceAssembler
-
-RepresentationalModelAssembler
-
-ControllerLinkBuilder
-
-WebMvcLinkBuilder
-
-   
- 
-
-## **리소스에 하이퍼링크 추가하기**
-
-> 반환타입이 List 타입이므로 CollectionModel.of() 메서드를 이용해서 반환한다.
-> 
->    
-> **linkTo** 메서드 안에 특정 Controller를 지정함으로써 해당 Controller의 요청에 대한 삽입할 Link를 생성할 수 있다. ⇒ URI 가 변경되어도 변경된 URI에 대한 링크가 반환이 된다.  
->   
-> 
-> linkTo 안에 **methodOn**을 이용해서 특정 메서드를 지정할 수도 있음
-
-   
-**DesignTacoApiController.class**
+리스트 형태의 데이터를 반환할 때는 `CollectionModel.of()`로 감싸고, `WebMvcLinkBuilder`의 `linkTo(methodOn(...))`를 이용해 특정 컨트롤러 메서드의 URI를 동적으로 추출해 링크를 삽입합니다. URI가 변경되더라도 코드 수정 없이 항상 올바른 링크가 생성됩니다.
 
 ```java
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping(path = "/api/design",produces = "application/json")
+@RequestMapping(path = "/api/design", produces = "application/json")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class DesignTacoApiController {
@@ -88,12 +62,11 @@ public class DesignTacoApiController {
     private final TacoRepository tacoRepository;
 
     @GetMapping("/recent")
-    public CollectionModel<Taco> recentTacos(){
+    public CollectionModel<Taco> recentTacos() {
         PageRequest pageRequest = PageRequest.of(0, 12, Sort.by("createdAt").descending());
-
         List<Taco> tacos = tacoRepository.findAll(pageRequest).getContent();
-        CollectionModel<Taco> recentResources = CollectionModel.of(tacos);
 
+        CollectionModel<Taco> recentResources = CollectionModel.of(tacos);
         Link link = linkTo(methodOn(DesignTacoApiController.class).recentTacos())
                 .withRel("recents");
         recentResources.add(link);
@@ -103,120 +76,94 @@ public class DesignTacoApiController {
 }
 ```
 
+**응답 JSON 결과**:
 ```json
 {
-    "_embedded": {
-        "tacoList": [
-            {
-                "id": 2,
-                "createdAt": "2022-06-18T19:07:13.816+00:00",
-                "name": "taco123",
-                "ingredients": [
-                    {
-                        "id": "FLTO",
-                        "name": "Flour Tortilla",
-                        "type": "WRAP"
-                    },
-                    {
-                        "id": "GRBF",
-                        "name": "Ground Beef",
-                        "type": "PROTEIN"
-                    },
-                    {
-                        "id": "JACK",
-                        "name": "Monterrey Jack",
-                        "type": "CHEESE"
-                    },
-                    {
-                        "id": "LETC",
-                        "name": "Lettuce",
-                        "type": "VEGGIES"
-                    },
-                    {
-                        "id": "SLSA",
-                        "name": "Salsa",
-                        "type": "SAUCE"
-                    }
-                ]
-            }
+  "_embedded": {
+    "tacoList": [
+      {
+        "id": 2,
+        "createdAt": "2022-06-18T19:07:13.816+00:00",
+        "name": "taco123",
+        "ingredients": [
+          { "id": "FLTO", "name": "Flour Tortilla", "type": "WRAP" },
+          { "id": "GRBF", "name": "Ground Beef", "type": "PROTEIN" }
         ]
-    },
-    "_links": {
-        "recents": {
-            "href": "http://localhost:8080/api/design/recent"
-        }
+      }
+    ]
+  },
+  "_links": {
+    "recents": {
+      "href": "http://localhost:8080/api/design/recent"
     }
+  }
 }
 ```
 
-## **리소스 어셈블러**
+---
 
-> **taco가 만약 여러개라면 반복문을 통해 여러개의 Link 객체를 만들어 삽입해야 하므로 RepresentationalModelAssembler를 구현한 Assembler를 만들어서 해결한다.  
->   
-> **
-> 
-> **게다가 TacoList를 보면 id값이 노출되어 있는데, 클라이언트 입장에서는 id값을 알 필요가 없기 때문에 별도의 RepresentationalModel을 상속받은 유틸리티 class를 생성하여 \_self 링크가 이를 대체하게 한다.**
+## 2. `RepresentationModelAssembler`로 각 항목마다 링크 생성하기
 
-   
-**TacoResources.class**
+컬렉션 내 **개별 Taco 아이템 각각에도 `self` 링크**를 붙이려면 반복문 대신 `RepresentationModelAssembler`를 구현하는 것이 깔끔합니다.
+
+또한 엔티티의 내부 DB PK(`id`)를 그대로 노출하는 대신, `RepresentationModel`을 상속한 전용 리소스 DTO(`TacoResources`)를 만들어 `_links.self.href`로 리소스 주소를 대체할 수 있습니다.
+
+### 리소스 모델 DTO (`TacoResources`)
+`@Relation`을 사용하면 JSON `_embedded` 내부의 컬렉션 키 이름(예: `tacoList` → `tacos`)을 원하는 이름으로 깔끔하게 지정할 수 있습니다.
 
 ```java
-@Relation(value = "taco",collectionRelation = "tacos")
+@Relation(value = "taco", collectionRelation = "tacos")
 public class TacoResources extends RepresentationModel<TacoResources> {
 
     @Getter
     private final String name;
 
     @Getter
-    private final Date createAt;
+    private final Date createdAt;
 
     @Getter
     private final List<Ingredients> ingredients;
 
     public TacoResources(Taco taco) {
-        this.name=taco.getName();
-        this.createAt=taco.getCreatedAt();
-        this.ingredients=taco.getIngredients();
+        this.name = taco.getName();
+        this.createdAt = taco.getCreatedAt();
+        this.ingredients = taco.getIngredients();
     }
 }
 ```
 
-참고로, **@Relation** 으로 이름을 지정해주면 json안에 임의로 생성된 tacoList 변수명을 다른 변수명으로 지정해 줄 수 있음
-
-**어셈블러 TacoResourceAssembler.class**
+### 어셈블러 구현 (`TacoResourceAssembler`)
+- `toModel()`: 단일 엔티티를 `EntityModel<TacoResources>`로 변환하고 개별 `self` 링크를 추가
+- `toCollectionModel()`: 전체 컬렉션에 대한 공통 링크(`self`, `recents`)를 추가
 
 ```java
 @Component
-public class TacoResourceAssembler implements RepresentationModelAssembler<Taco, EntityModel<TacoResources>> {
+public class TacoResourceAssembler
+        implements RepresentationModelAssembler<Taco, EntityModel<TacoResources>> {
 
     @Override
     public EntityModel<TacoResources> toModel(Taco taco) {
-
-        return EntityModel.of(new TacoResources(taco),
+        return EntityModel.of(
+                new TacoResources(taco),
                 linkTo(methodOn(DesignTacoApiController.class).findTacoById(taco.getId())).withSelfRel()
         );
     }
 
     @Override
-    public CollectionModel<EntityModel<TacoResources>> toCollectionModel(Iterable<? extends Taco> tacos) {
+    public CollectionModel<EntityModel<TacoResources>> toCollectionModel(
+            Iterable<? extends Taco> tacos) {
         return RepresentationModelAssembler.super.toCollectionModel(tacos).add(
-                        linkTo(DesignTacoApiController.class).withSelfRel(),
+                linkTo(DesignTacoApiController.class).withSelfRel(),
                 linkTo(methodOn(DesignTacoApiController.class).recentTacos()).withRel("recents")
         );
     }
-
 }
 ```
 
-**단일 객체**를 반환하는 toModel 에서는 taco ⇒ tacoResources로 변환하고 **EntityModel에 링크를 삽입하여 반환**한다.
-
-**컬렉션**을 반환하는 toCollectionModel 에서는 tacos ⇒ CollectionModel로 변환하는데, **컬렉션으로 반환될 수 있는 모든 경우를 지정하여 각각에 맞는 Link가 삽입**될 수 있도록 한다.
-
-**컨트롤러 DesignTacoApiController.class**
-
+### 컨트롤러 적용
 ```java
 @RestController
-@RequestMapping(path = "/api/design",produces = "application/json")
+@RequestMapping(path = "/api/design", produces = "application/json")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class DesignTacoApiController {
@@ -225,92 +172,63 @@ public class DesignTacoApiController {
     private final TacoResourceAssembler assembler;
 
     @GetMapping("/recent")
-    public CollectionModel<EntityModel<TacoResources>> recentTacos(){
+    public CollectionModel<EntityModel<TacoResources>> recentTacos() {
         PageRequest pageRequest = PageRequest.of(0, 12, Sort.by("createdAt").descending());
-
         List<Taco> tacos = tacoRepository.findAll(pageRequest).getContent();
 
         return assembler.toCollectionModel(tacos);
     }
 
-    @GetMapping
-    public List<Taco> findAll(){
-        return tacoRepository.findAll();
-    }
-
     @GetMapping("/{id}")
-    public ResponseEntity<Taco> findTacoById(@PathVariable Long id){
-        Optional<Taco> findTaco = tacoRepository.findById(id);
-
-        return findTaco.map(taco -> new ResponseEntity<>(taco, HttpStatus.OK))
+    public ResponseEntity<Taco> findTacoById(@PathVariable Long id) {
+        return tacoRepository.findById(id)
+                .map(taco -> new ResponseEntity<>(taco, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
     }
 }
 ```
 
-컨트롤러에서는 어셈블러를 컴포넌트로 주입받아 사용하면 된다.
-
+**응답 JSON 결과**:
 ```json
 {
-    "_embedded": {
-        "tacos": [
-            {
-                "name": "taco1",
-                "createAt": "2022-06-18T19:31:40.148+00:00",
-                "ingredients": [
-                    {
-                        "id": "FLTO",
-                        "name": "Flour Tortilla",
-                        "type": "WRAP"
-                    },
-                    {
-                        "id": "GRBF",
-                        "name": "Ground Beef",
-                        "type": "PROTEIN"
-                    },
-                    {
-                        "id": "CHED",
-                        "name": "Cheddar",
-                        "type": "CHEESE"
-                    },
-                    {
-                        "id": "TMTO",
-                        "name": "Diced Tomatoes",
-                        "type": "VEGGIES"
-                    },
-                    {
-                        "id": "SLSA",
-                        "name": "Salsa",
-                        "type": "SAUCE"
-                    }
-                ],
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8080/api/design/2"
-                    }
-                }
-            }
-        ]
-    },
-    "_links": {
-        "self": {
-            "href": "http://localhost:8080/api/design"
-        },
-        "recents": {
-            "href": "http://localhost:8080/api/design/recent"
+  "_embedded": {
+    "tacos": [
+      {
+        "name": "taco1",
+        "createdAt": "2022-06-18T19:31:40.148+00:00",
+        "ingredients": [
+          { "id": "FLTO", "name": "Flour Tortilla", "type": "WRAP" },
+          { "id": "GRBF", "name": "Ground Beef", "type": "PROTEIN" }
+        ],
+        "_links": {
+          "self": {
+            "href": "http://localhost:8080/api/design/2"
+          }
         }
+      }
+    ]
+  },
+  "_links": {
+    "self": {
+      "href": "http://localhost:8080/api/design"
+    },
+    "recents": {
+      "href": "http://localhost:8080/api/design/recent"
     }
+  }
 }
 ```
 
-## **객체안의 객체에 링크를 삽입하기**
+---
 
-> Taco 안에 Ingredients 객체에 대한 링크도 나타낼 수 있는데 기존 **TacoResources라는 유틸리티 클래스에 Ingrerdients의 어셈블러를 넣어줘서** 추가적인 링크를 삽입할 수 있다.
+## 3. 중첩된 하위 객체(`Ingredient`)에도 링크 삽입하기
+
+`TacoResources` 내부에 포함된 `ingredients` 리스트 역시 일반 `List<Ingredient>` 대신 `CollectionModel<EntityModel<IngredientResources>>`로 변환하면, 중첩 객체 안에서도 각각의 상세 URI를 참조할 수 있습니다.
 
 ```java
 @Getter
 @Setter
-@Relation(value = "ingredient",collectionRelation = "ingredients")
+@Relation(value = "ingredient", collectionRelation = "ingredients")
 public class IngredientResources extends RepresentationModel<IngredientResources> {
 
     private String name;
@@ -324,73 +242,21 @@ public class IngredientResources extends RepresentationModel<IngredientResources
 ```
 
 ```java
-@Relation(value = "taco",collectionRelation = "tacos")
-public class TacoResources extends RepresentationModel<TacoResources> {
-
-    private static final IngredientResourceAssembler ingredientResourceAssembler = new IngredientResourceAssembler();
-
-    @Getter
-    private final String name;
-
-    @Getter
-    private final Date createAt;
-
-    @Getter
-    private final CollectionModel<EntityModel<IngredientResources>> ingredients;
-
-    public TacoResources(Taco taco) {
-        this.name=taco.getName();
-        this.createAt=taco.getCreatedAt();
-        this.ingredients=ingredientResourceAssembler.toCollectionModel(taco.getIngredients());
-    }
-}
-```
-
-**List 타입의 컬렉션 필드 대신에 CollectionModel을 필드로 대체한다.**
-
-**컨트롤러 IngredientController.class**
-
-```java
-@RestController
-@RequestMapping(path="/ingredients", produces="application/json")
-@CrossOrigin(origins="*")
-@RequiredArgsConstructor
-public class IngredientController {
-
-    private IngredientRepository ingredientRepository;
-
-    @GetMapping
-    public Iterable<Ingredient> findAllIngredients() {
-        return ingredientRepository.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Ingredient> findIngredientById(@PathVariable String id){
-        Optional<Ingredient> findIngredient = ingredientRepository.findById(id);
-
-        return findIngredient.map(ingredient -> new ResponseEntity<>(ingredient, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
-    }
-
-}
-```
-
-   
-**어셈블러 IngredientResourceAssembler.class**
-
-```java
-public class IngredientResourceAssembler implements RepresentationModelAssembler<Ingredient, EntityModel<IngredientResources>> {
+@Component
+public class IngredientResourceAssembler
+        implements RepresentationModelAssembler<Ingredient, EntityModel<IngredientResources>> {
 
     @Override
     public EntityModel<IngredientResources> toModel(Ingredient ingredient) {
-        return EntityModel.of(new IngredientResources(ingredient),
+        return EntityModel.of(
+                new IngredientResources(ingredient),
                 linkTo(methodOn(IngredientController.class).findIngredientById(ingredient.getId())).withSelfRel()
         );
     }
 
     @Override
-    public CollectionModel<EntityModel<IngredientResources>> toCollectionModel(Iterable<? extends Ingredient> ingredients) {
-
+    public CollectionModel<EntityModel<IngredientResources>> toCollectionModel(
+            Iterable<? extends Ingredient> ingredients) {
         return RepresentationModelAssembler.super.toCollectionModel(ingredients).add(
                 linkTo(IngredientController.class).withSelfRel()
         );
@@ -398,188 +264,97 @@ public class IngredientResourceAssembler implements RepresentationModelAssembler
 }
 ```
 
-```json
-{
-    "_embedded": {
-        "tacos": [
-            {
-                "name": "taco2",
-                "createAt": "2022-06-18T19:49:45.909+00:00",
-                "ingredients": {
-                    "_embedded": {
-                        "ingredients": [
-                            {
-                                "name": "Corn Tortilla",
-                                "type": "WRAP",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/COTO"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Ground Beef",
-                                "type": "PROTEIN",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/GRBF"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Monterrey Jack",
-                                "type": "CHEESE",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/JACK"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Diced Tomatoes",
-                                "type": "VEGGIES",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/TMTO"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Lettuce",
-                                "type": "VEGGIES",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/LETC"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Salsa",
-                                "type": "SAUCE",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/SLSA"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Sour Cream",
-                                "type": "SAUCE",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/SRCR"
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    "_links": {
-                        "self": {
-                            "href": "http://localhost:8080/ingredients"
-                        }
-                    }
-                },
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8080/api/design/4"
-                    }
-                }
-            },
-            {
-                "name": "taco1",
-                "createAt": "2022-06-18T19:49:33.849+00:00",
-                "ingredients": {
-                    "_embedded": {
-                        "ingredients": [
-                            {
-                                "name": "Flour Tortilla",
-                                "type": "WRAP",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/FLTO"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Ground Beef",
-                                "type": "PROTEIN",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/GRBF"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Carnitas",
-                                "type": "PROTEIN",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/CARN"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Cheddar",
-                                "type": "CHEESE",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/CHED"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Diced Tomatoes",
-                                "type": "VEGGIES",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/TMTO"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Lettuce",
-                                "type": "VEGGIES",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/LETC"
-                                    }
-                                }
-                            },
-                            {
-                                "name": "Salsa",
-                                "type": "SAUCE",
-                                "_links": {
-                                    "self": {
-                                        "href": "http://localhost:8080/ingredients/SLSA"
-                                    }
-                                }
-                            }
-                        ]
-                    },
-                    "_links": {
-                        "self": {
-                            "href": "http://localhost:8080/ingredients"
-                        }
-                    }
-                },
-                "_links": {
-                    "self": {
-                        "href": "http://localhost:8080/api/design/2"
-                    }
-                }
-            }
-        ]
-    },
-    "_links": {
-        "self": {
-            "href": "http://localhost:8080/api/design"
-        },
-        "recents": {
-            "href": "http://localhost:8080/api/design/recent"
-        }
+```java
+@Relation(value = "taco", collectionRelation = "tacos")
+public class TacoResources extends RepresentationModel<TacoResources> {
+
+    private static final IngredientResourceAssembler ingredientResourceAssembler =
+            new IngredientResourceAssembler();
+
+    @Getter
+    private final String name;
+
+    @Getter
+    private final Date createdAt;
+
+    @Getter
+    private final CollectionModel<EntityModel<IngredientResources>> ingredients;
+
+    public TacoResources(Taco taco) {
+        this.name = taco.getName();
+        this.createdAt = taco.getCreatedAt();
+        this.ingredients = ingredientResourceAssembler.toCollectionModel(taco.getIngredients());
     }
 }
 ```
 
-참고) \[[스프링 Hateoas 공식문서](https://docs.spring.io/spring-hateoas/docs/current/reference/html/)\]  
-출처: 스프링 인 액션
+```java
+@RestController
+@RequestMapping(path = "/ingredients", produces = "application/json")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+public class IngredientController {
+
+    private final IngredientRepository ingredientRepository;
+
+    @GetMapping
+    public Iterable<Ingredient> findAllIngredients() {
+        return ingredientRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Ingredient> findIngredientById(@PathVariable String id) {
+        return ingredientRepository.findById(id)
+                .map(ingredient -> new ResponseEntity<>(ingredient, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+    }
+}
+```
+
+**최종 중첩 응답 JSON 예시**:
+```json
+{
+  "_embedded": {
+    "tacos": [
+      {
+        "name": "taco2",
+        "createdAt": "2022-06-18T19:49:45.909+00:00",
+        "ingredients": {
+          "_embedded": {
+            "ingredients": [
+              {
+                "name": "Corn Tortilla",
+                "type": "WRAP",
+                "_links": {
+                  "self": { "href": "http://localhost:8080/ingredients/COTO" }
+                }
+              },
+              {
+                "name": "Ground Beef",
+                "type": "PROTEIN",
+                "_links": {
+                  "self": { "href": "http://localhost:8080/ingredients/GRBF" }
+                }
+              }
+            ]
+          },
+          "_links": {
+            "self": { "href": "http://localhost:8080/ingredients" }
+          }
+        },
+        "_links": {
+          "self": { "href": "http://localhost:8080/api/design/4" }
+        }
+      }
+    ]
+  },
+  "_links": {
+    "self": { "href": "http://localhost:8080/api/design" },
+    "recents": { "href": "http://localhost:8080/api/design/recent" }
+  }
+}
+```
+
+---
+
+> 참고: [Spring HATEOAS 공식 문서](https://docs.spring.io/spring-hateoas/docs/current/reference/html/) / 도서 *스프링 인 액션*

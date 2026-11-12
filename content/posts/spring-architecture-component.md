@@ -1,93 +1,83 @@
 ---
-title: Spring 구조와 Component
+title: '[Spring] Spring 컨테이너 구조와 Bean 등록 전략 (자동 vs 수동)'
 date: '2022-05-07'
 category: Backend/Spring
 tags:
-  - 스프링 구조
-  - 스프링 인 액션
-  - 스프링이란
+  - Spring 구조
+  - ApplicationContext
+  - DI 컨테이너
+  - CGLIB
+  - Bean 등록
 summary: >-
-  스프링 구조 어플리케이션은 기본적으로 Components 간의 상호작용으로 동작하는데 Component 또는 Bean 형태로 스프링
-  컨테이너인 ApplicationContext 라는 DI 컨테이너에 올려두고 관리 되는 구조. --- Applicatio...
----
-# 스프링 구조
-
-**어플리케이션**은 기본적으로 `Components` 간의 상호작용으로 동작하는데  
-`Component` 또는 `Bean` 형태로 스프링 컨테이너인 `ApplicationContext` 라는 DI 컨테이너에 올려두고 관리 되는 구조.
-
+  스프링 애플리케이션의 핵심인 ApplicationContext DI 컨테이너와 빈(Bean) 등록 방식, @Configuration의 CGLIB 프록시 싱글톤 보장 원리, 그리고 수동/자동 빈 등록 기준을 정리합니다.
 ---
 
-### ApplicationContext 와 Bean 등록
+## 스프링 컨테이너(ApplicationContext)의 구조
 
-> 빈을 등록하는 방법은 위와 같이 `annotation` 기반으로 등록하거나 `xml` 파일로 등록할 수 있다.  
-> 위와 같이 스프링 컨테이너에 빈을 등록하면 실제 어플리케이션이 동작할 때  
-> 의존성 주입 (DI) 을 기반으로 해서 스프링이 관리하는 빈으로 변경되어 수행된다.
+스프링 애플리케이션은 기본적으로 수많은 **컴포넌트(Component / Bean)** 간의 의존성 주입(DI)과 상호작용으로 동작합니다. 이 객체들의 생성, 생명주기, 의존관계를 관리하는 중심 컨테이너가 바로 **`ApplicationContext`**입니다.
+
+---
+
+## Java Config 기반 Bean 등록과 CGLIB 싱글톤 보장
+
+`@Configuration` 애노테이션이 붙은 설정 클래스 내부에서 `@Bean` 메서드를 정의하면 스프링 컨테이너에 빈이 등록됩니다.
 
 ```java
-@Configuration // Coonfiguration 또한 Component 이다.
+@Configuration // @Configuration 내부에도 @Component가 포함되어 있음
 public class AppConfig {
 
     @Bean
     public UserService userService() {
-        return new UserService(memberRepository());
+        return new UserService(userRepository());
     }
 
     @Bean
     public UserRepository userRepository() {
         return new UserRepository();
     }
-
 }
 ```
 
-빈 이름
+스프링 컨테이너는 등록된 빈을 내부적으로 **빈 이름(Key) — 빈 객체(Value)** 맵 형태로 보관합니다.
 
-빈 객체
+| 빈 이름 (Bean Name) | 빈 객체 참조 (Singleton Instance) |
+| :--- | :--- |
+| `userService` | `UserService@x01` |
+| `userRepository` | `UserRepository@x02` |
 
-userService
+### 등록된 빈 클래스 확인 (`EnhancerBySpringCGLIB`)
 
-UserService@x01
-
-userRepository
-
-UserRepository@x02
-
-### 등록한 bean 출력해보기
+실제로 스프링 컨테이너에서 `AppConfig` 빈을 조회해 클래스 타입을 출력해 보면 흥미로운 결과를 볼 수 있습니다.
 
 ```java
-ApplicationContext ac = new
-AnnotationConfigApplicationContext(AppConfig.class);
+ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
 
 AppConfig bean = ac.getBean(AppConfig.class);
 System.out.println("bean = " + bean.getClass());
-//출력: bean = AppConfig$$EnhancerBySpringCGLIB$$bd479d70
+// 출력: class hello.core.AppConfig$$EnhancerBySpringCGLIB$$bd479d70
 ```
 
-> 실제로 `annotation` 으로 등록한 `bean` 을 출력해보면 `EnhancerBySpringCGLIB` 라는 것이 출력이 된다. 즉, 스프링이 관리하는 bean 형태로 변환이 되어서 DI 컨테이너에 관리되고 있다는 것.
-
-`@Autowired` 를 필드, 메서드, 생성자에 붙여줌으로 써 필요한 `Component` 를 주입받을 수 있다.
+> **왜 `CGLIB` 프록시 객체가 출력될까?**  
+> 순수 자바 코드만 보면 `userService()` 호출 시 `userRepository()`가 호출되어 매번 `new UserRepository()`가 새로 생성될 것처럼 보입니다. 하지만 스프링은 **`CGLIB` 바이트코드 조작 라이브러리를 통해 `AppConfig`를 상속받은 프록시 클래스를 만들어 등록**함으로써, 이미 컨테이너에 등록된 빈이 있으면 새로 생성하지 않고 기존 인스턴스를 반환하여 **싱글톤(Singleton)을 완벽히 보장**합니다.
 
 ---
 
-### 빈을 등록하는 예시
+## 자동 빈 등록 vs 수동 빈 등록
 
-*   설정 정보 : `@Configuration`
-*   빈 : `@Bean`
-*   컴포넌트 : `@Component` ( `@Service` `@Repository` `@Controller` 등 )
+스프링은 `@Autowired`(생성자 주입 권장)를 통해 컨테이너에 등록된 빈을 필요한 곳에 자동으로 주입해 줍니다. 빈을 등록하는 방식은 크게 두 가지로 나뉩니다.
 
-위와 같이 보통 `bean`을 등록할 때 적절한 `annotation`을 붙여서 등록을 한다.  
-`@Bean` 형태로 등록하는 것은 `수동 bean` 을 등록하는 방법이고  
-그 외는 `자동 bean`을 등록하는 방법이다.
+- **자동 빈 등록**: `@Component` 및 이를 상속한 `@Service`, `@Repository`, `@Controller`, `@RestController`를 컴포넌트 스캔(`@ComponentScan`)으로 자동 등록
+- **수동 빈 등록**: `@Configuration` 클래스 안에서 `@Bean`을 선언해 직접 객체를 생성·반환하여 등록
 
-### 수동 bean 을 등록하는 기준
+### 실무에서의 수동 빈 등록 기준
 
-> 어플리케이션은 크게 **업무 로직**과 **기술 지원 로직**으로 나눌 수 있다.
-> 
-> **업무로직**은 `Service` `Repository` `Controller` 등 비즈니스 로직을 말한다. 만약 문제가 발생하면 어디서 발생했는지 명확히 파악하기가 쉽다.
-> 
-> **기술지원 로직**은 기술적인 문제나 `AOP`를 처리할 때 주로 사용된다. (log, DBconnetion 등 )  
-> 횡단 관심사 처리를 목적으로 어플리케이션 전반적으로 영향을 끼치기 때문에 만약 문제가 발생하면 어디서 발생했는지 명확하게 드러나지 않는다.
-> 
-> 따라서 이러한 기술지원 로직들은 수동빈 등록으로 설정정보에 바로 나타나게 하는 것이 유지보수에 유리하다.
+애플리케이션의 빈은 역할에 따라 **업무 로직(비즈니스 빈)**과 **기술 지원 로직(인프라 빈)**으로 나눌 수 있습니다.
 
-### 출처 : 인프런 스프링 백엔드 핵심기본, 스프링 인 액션
+| 구분 | 대상 | 권장 빈 등록 방식 | 이유 |
+| :--- | :--- | :--- | :--- |
+| **업무 로직 빈** | `Controller`, `Service`, `Repository` | **자동 빈 등록 (`@Component`)** | 비즈니스 요구사항에 따라 수가 많고 유사한 패턴을 가지므로 컴포넌트 스캔이 생산적이며 문제 지점 파악도 용이함 |
+| **기술 지원 빈** | DB 커넥션 설정, 공통 로깅, AOP, 보안(Security) 설정 | **수동 빈 등록 (`@Configuration` + `@Bean`)** | 애플리케이션 전반(횡단 관심사)에 광범위하게 영향을 미치므로 설정 파일 한곳에서 명확하게 드러나도록 관리하는 것이 유지보수에 유리함 |
+
+---
+
+> 참고: 인프런 *스프링 핵심 원리 - 기본편*, 도서 *스프링 인 액션*
