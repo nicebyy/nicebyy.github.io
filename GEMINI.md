@@ -72,10 +72,9 @@ GitHub Pages는 순수 정적 호스팅이므로 동적 서버 런타임이 동�
 블로그는 **사이버펑크 네온 다크 단일 테마(Permanent Dark Theme)**만을 지원하며, 화이트 모드는 영구 비활성화한다.
 
 1. **사이버펑크 타이포그래피 체계 준수**:
-   - 디스플레이/로고/스탯: **`Orbitron`** (`font-orbitron`)
-   - 서브헤딩/내비게이션/버튼: **`Chakra Petch`** (`font-chakra`)
-   - 코드/터미널: **`JetBrains Mono`** (`font-mono`)
-   - 한글 본문: **`Chakra Petch` + `Pretendard Variable`**
+   - 디스플레이/로고/제목: **`SF함박눈체`** (한글) + **`Orbitron`** (영문) (`font-cyber`, `font-orbitron`)
+   - 서브헤딩/내비게이션/본문: **`Orbit`** (JAMO SF 미래형 한글) + **`Oxanium`** / **`Chakra Petch`** (영문) (`font-sans`, `font-chakra`)
+   - 코드/터미널 콘솔/칩: **`NeoDunggeunmo Pro`** (네오둥근모) + **`Share Tech Mono`** / **`JetBrains Mono`** (`font-mono`, `font-pixel`)
 2. **네온 발광 및 명도 대비(Contrast) 검증**:
    - 딥 블랙/네이비 배경(`#05070e`) 위에서 시안(`#00f3ff`) / 핫핑크(`#ff007f`) / 에메랄드(`#00ff9d`) 네온 글로우 및 텍스트 시인성 100% 확보.
 3. **코드 블록 및 하이라이팅 가독성**:
