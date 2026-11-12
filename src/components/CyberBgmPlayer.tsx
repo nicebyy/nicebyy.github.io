@@ -11,6 +11,7 @@ import {
   Disc3,
   ChevronUp,
   Radio,
+  Repeat,
 } from "lucide-react";
 
 export interface Track {
@@ -39,6 +40,30 @@ export const PLAYLIST: Track[] = [
     genre: "Dark Synthwave",
     license: "Creative Commons",
   },
+  {
+    id: "newgameplus-per-aspera",
+    title: "Per Aspera Ad Astra",
+    artist: "NewGame+",
+    src: "/audio/newgameplus-per-aspera.mp3",
+    genre: "Dark Synthwave",
+    license: "Creative Commons",
+  },
+  {
+    id: "tempest-32-degrees",
+    title: "32 Degrees",
+    artist: "Tempest",
+    src: "/audio/tempest-32-degrees.mp3",
+    genre: "Darksynth",
+    license: "Creative Commons",
+  },
+  {
+    id: "duncan-avoid-mind-breach",
+    title: "Mind Breach",
+    artist: "Duncan Avoid",
+    src: "/audio/duncan-avoid-mind-breach.mp3",
+    genre: "Cybernetics Electro",
+    license: "CC-BY-NC-SA 4.0",
+  },
 ];
 
 // Gentle, calm ambient default volume (12%) so reading remains comfortable
@@ -64,24 +89,13 @@ export function CyberBgmPlayer() {
   const currentTrackIndexRef = useRef(0);
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unlockCleanupRef = useRef<(() => void) | null>(null);
+  const playRequestIdRef = useRef(0);
 
   const currentTrack = PLAYLIST[currentTrackIndex];
 
-  useEffect(() => {
-    volumeRef.current = volume;
-  }, [volume]);
-
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-  }, [isMuted]);
-
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
-
-  useEffect(() => {
-    currentTrackIndexRef.current = currentTrackIndex;
-  }, [currentTrackIndex]);
+  const getTargetVolume = useCallback(() => {
+    return isMutedRef.current ? 0 : volumeRef.current;
+  }, []);
 
   const clearFade = useCallback(() => {
     if (fadeIntervalRef.current) {
@@ -100,49 +114,108 @@ export function CyberBgmPlayer() {
   const startFadeIn = useCallback(
     (audio: HTMLAudioElement) => {
       clearFade();
-      const targetVol = isMutedRef.current ? 0 : volumeRef.current;
+      const targetVol = getTargetVolume();
       if (targetVol <= 0) {
         audio.volume = 0;
         return;
       }
 
-      const steps = 24;
+      const steps = 20;
       const stepTime = FADE_IN_DURATION_MS / steps;
       let currentStep = 0;
-      audio.volume = 0;
+      // Start at a gentle whisper (15% of target) rather than strict 0 so sound is never perceived as dead
+      const startVol = targetVol * 0.15;
+      audio.volume = startVol;
 
       fadeIntervalRef.current = setInterval(() => {
         currentStep += 1;
-        const latestTarget = isMutedRef.current ? 0 : volumeRef.current;
+        const latestTarget = getTargetVolume();
         const ratio = Math.min(1, currentStep / steps);
-        audio.volume = Number((latestTarget * ratio).toFixed(4));
+        audio.volume = Number(
+          (startVol + (latestTarget - startVol) * ratio).toFixed(4)
+        );
 
         if (currentStep >= steps) {
+          audio.volume = latestTarget;
           clearFade();
         }
       }, stepTime);
     },
-    [clearFade]
+    [clearFade, getTargetVolume]
   );
 
-  const attemptPlay = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio) return false;
+  // Core playback helper: imperative src + load() avoids React re-render race conditions
+  const playCurrentAudio = useCallback(
+    async (withFadeIn = false) => {
+      const audio = audioRef.current;
+      if (!audio) return false;
 
-    try {
-      audio.volume = 0;
-      await audio.play();
-      setIsPlaying(true);
-      isPlayingRef.current = true;
-      startFadeIn(audio);
-      clearInteractionUnlock();
-      return true;
-    } catch {
-      setIsPlaying(false);
-      isPlayingRef.current = false;
-      return false;
-    }
-  }, [startFadeIn, clearInteractionUnlock]);
+      const reqId = ++playRequestIdRef.current;
+      clearFade();
+      audio.volume = withFadeIn ? getTargetVolume() * 0.15 : getTargetVolume();
+
+      try {
+        await audio.play();
+        if (reqId !== playRequestIdRef.current) return false;
+
+        setIsPlaying(true);
+        isPlayingRef.current = true;
+        clearInteractionUnlock();
+
+        if (withFadeIn) {
+          startFadeIn(audio);
+        } else {
+          audio.volume = getTargetVolume();
+        }
+        return true;
+      } catch {
+        if (reqId === playRequestIdRef.current) {
+          setIsPlaying(false);
+          isPlayingRef.current = false;
+          // Ensure volume is restored cleanly even if play was blocked
+          audio.volume = getTargetVolume();
+        }
+        return false;
+      }
+    },
+    [clearFade, clearInteractionUnlock, getTargetVolume, startFadeIn]
+  );
+
+  const loadAndPlayTrack = useCallback(
+    async (index: number, shouldPlay = true, withFadeIn = false) => {
+      const safeIndex = (index + PLAYLIST.length) % PLAYLIST.length;
+      setCurrentTrackIndex(safeIndex);
+      currentTrackIndexRef.current = safeIndex;
+      setProgress(0);
+      setDuration(0);
+
+      try {
+        localStorage.setItem("kimgatta_bgm_track", String(safeIndex));
+      } catch {
+        // ignore
+      }
+
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      clearFade();
+      audio.pause();
+      audio.src = PLAYLIST[safeIndex].src;
+      audio.currentTime = 0;
+      audio.load();
+      audio.volume = getTargetVolume();
+
+      if (shouldPlay) {
+        try {
+          localStorage.removeItem("kimgatta_bgm_paused_by_user");
+        } catch {
+          // ignore
+        }
+        await playCurrentAudio(withFadeIn);
+      }
+    },
+    [clearFade, getTargetVolume, playCurrentAudio]
+  );
 
   // Restore saved settings & initialize gentle autoplay on mount
   useEffect(() => {
@@ -174,22 +247,23 @@ export function CyberBgmPlayer() {
       // ignore
     }
 
-    if (audioRef.current) {
-      audioRef.current.src = PLAYLIST[initialTrack].src;
-      audioRef.current.volume = volumeRef.current;
+    const audio = audioRef.current;
+    if (audio) {
+      audio.src = PLAYLIST[initialTrack].src;
+      audio.volume = volumeRef.current;
+      audio.load();
     }
 
     if (!userPaused) {
-      // Try immediate autoplay; if blocked by browser policy, unlock seamlessly on first interaction
-      attemptPlay().then((started) => {
+      // Try immediate autoplay with gentle fade-in; if blocked by browser, unlock on first interaction
+      playCurrentAudio(true).then((started) => {
         if (started) return;
 
         const handleFirstInteraction = (e: Event) => {
-          // Avoid double-triggering if user directly clicked inside the BGM player controls
           if (panelRef.current && panelRef.current.contains(e.target as Node)) {
             return;
           }
-          attemptPlay();
+          playCurrentAudio(true);
         };
 
         window.addEventListener("pointerdown", handleFirstInteraction, {
@@ -223,10 +297,12 @@ export function CyberBgmPlayer() {
       clearFade();
       clearInteractionUnlock();
     };
-  }, [attemptPlay, clearFade, clearInteractionUnlock]);
+  }, [clearFade, clearInteractionUnlock, playCurrentAudio]);
 
   // Sync volume immediately when user drags slider or toggles mute
   useEffect(() => {
+    volumeRef.current = volume;
+    isMutedRef.current = isMuted;
     if (audioRef.current && !fadeIntervalRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
@@ -247,34 +323,7 @@ export function CyberBgmPlayer() {
     };
   }, [isPanelOpen]);
 
-  const playTrackAtIndex = useCallback(
-    (index: number, shouldPlay = true) => {
-      const safeIndex = (index + PLAYLIST.length) % PLAYLIST.length;
-      setCurrentTrackIndex(safeIndex);
-      currentTrackIndexRef.current = safeIndex;
-
-      try {
-        localStorage.setItem("kimgatta_bgm_track", String(safeIndex));
-      } catch {
-        // ignore
-      }
-
-      if (audioRef.current) {
-        audioRef.current.src = PLAYLIST[safeIndex].src;
-        if (shouldPlay) {
-          try {
-            localStorage.removeItem("kimgatta_bgm_paused_by_user");
-          } catch {
-            // ignore
-          }
-          attemptPlay();
-        }
-      }
-    },
-    [attemptPlay]
-  );
-
-  // Audio event listeners
+  // Audio event listeners (progress, cyclic next-track on ended, safety volume check)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -286,24 +335,64 @@ export function CyberBgmPlayer() {
       }
     };
 
+    const onLoadedMetadata = () => {
+      if (audio.duration && !isNaN(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
+
+    const onPlaying = () => {
+      setIsPlaying(true);
+      isPlayingRef.current = true;
+      // Guarantee audible volume if fade-in is not active
+      if (!fadeIntervalRef.current) {
+        audio.volume = getTargetVolume();
+      }
+    };
+
+    const onPause = () => {
+      // Only reflect paused state if it wasn't triggered mid-switch
+      if (audio.ended) return;
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+    };
+
     const onEnded = () => {
-      playTrackAtIndex(currentTrackIndexRef.current + 1, true);
+      // Automatically cycle to next track (wraps from track 5 back to track 1) without zeroing volume
+      const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
+      loadAndPlayTrack(nextIdx, true, false);
+    };
+
+    const onError = () => {
+      if (isPlayingRef.current) {
+        const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
+        loadAndPlayTrack(nextIdx, true, false);
+      }
     };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnded);
+    audio.addEventListener("error", onError);
 
     return () => {
       audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("error", onError);
     };
-  }, [playTrackAtIndex]);
+  }, [getTargetVolume, loadAndPlayTrack]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
+      playRequestIdRef.current += 1;
       clearFade();
       clearInteractionUnlock();
       audio.pause();
@@ -320,16 +409,16 @@ export function CyberBgmPlayer() {
       } catch {
         // ignore
       }
-      attemptPlay();
+      playCurrentAudio(true);
     }
   };
 
   const handleNextTrack = () => {
-    playTrackAtIndex(currentTrackIndex + 1, isPlaying);
+    loadAndPlayTrack(currentTrackIndex + 1, isPlaying, false);
   };
 
   const handlePrevTrack = () => {
-    playTrackAtIndex(currentTrackIndex - 1, isPlaying);
+    loadAndPlayTrack(currentTrackIndex - 1, isPlaying, false);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -374,13 +463,8 @@ export function CyberBgmPlayer() {
 
   return (
     <div ref={panelRef} className="relative inline-flex items-center">
-      {/* Hidden Native Audio Element */}
-      <audio
-        ref={audioRef}
-        src={currentTrack.src}
-        preload="auto"
-        loop={PLAYLIST.length === 1}
-      />
+      {/* Native Audio Element (src managed imperatively for seamless gapless track transitions) */}
+      <audio ref={audioRef} preload="auto" />
 
       {/* Main Navbar Trigger Button */}
       <div
@@ -407,24 +491,34 @@ export function CyberBgmPlayer() {
           <div className="flex items-end gap-0.5 h-3 w-3.5 overflow-hidden">
             <span
               className={`w-0.5 rounded-full bg-neon-cyan transition-all duration-150 ${
-                isPlaying ? "h-full animate-[pulse_0.6s_ease-in-out_infinite]" : "h-1 bg-slate-600"
+                isPlaying
+                  ? "h-full animate-[pulse_0.6s_ease-in-out_infinite]"
+                  : "h-1 bg-slate-600"
               }`}
             />
             <span
               className={`w-0.5 rounded-full bg-neon-pink transition-all duration-150 ${
-                isPlaying ? "h-2/3 animate-[pulse_0.4s_ease-in-out_infinite_0.1s]" : "h-1 bg-slate-600"
+                isPlaying
+                  ? "h-2/3 animate-[pulse_0.4s_ease-in-out_infinite_0.1s]"
+                  : "h-1 bg-slate-600"
               }`}
             />
             <span
               className={`w-0.5 rounded-full bg-neon-green transition-all duration-150 ${
-                isPlaying ? "h-4/5 animate-[pulse_0.7s_ease-in-out_infinite_0.2s]" : "h-1 bg-slate-600"
+                isPlaying
+                  ? "h-4/5 animate-[pulse_0.7s_ease-in-out_infinite_0.2s]"
+                  : "h-1 bg-slate-600"
               }`}
             />
           </div>
 
           {/* Desktop Track Indicator */}
           <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] font-chakra tracking-wider text-slate-300 group-hover:text-white">
-            <span className={isPlaying ? "text-neon-cyan font-bold" : "text-slate-400"}>
+            <span
+              className={
+                isPlaying ? "text-neon-cyan font-bold" : "text-slate-400"
+              }
+            >
               {isPlaying ? "BGM //" : "BGM"}
             </span>
             <span className="max-w-[90px] truncate text-slate-300">
@@ -459,22 +553,34 @@ export function CyberBgmPlayer() {
                 // CYBER_AUDIO_DECK
               </span>
             </div>
-            <span
-              className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border ${
-                isPlaying
-                  ? "bg-emerald-500/20 text-neon-green border-emerald-500/50 shadow-[0_0_6px_#00ff9d]"
-                  : "bg-slate-800 text-slate-400 border-slate-700"
-              }`}
-            >
-              {isPlaying ? "ON AIR" : "STANDBY"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span
+                title="전곡 순환 반복 재생 활성화됨"
+                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30"
+              >
+                <Repeat className="w-2.5 h-2.5" />
+                <span>LOOP</span>
+              </span>
+              <span
+                className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border ${
+                  isPlaying
+                    ? "bg-emerald-500/20 text-neon-green border-emerald-500/50 shadow-[0_0_6px_#00ff9d]"
+                    : "bg-slate-800 text-slate-400 border-slate-700"
+                }`}
+              >
+                {isPlaying ? "ON AIR" : "STANDBY"}
+              </span>
+            </div>
           </div>
 
           {/* Current Track Display */}
           <div className="rounded-xl border border-white/10 bg-black/60 p-2.5 space-y-1">
             <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span className="text-neon-pink font-bold">{currentTrack.genre}</span>
-              <span className="text-[9px] bg-white/5 px-1 rounded text-slate-400 border border-white/10">
+              <span className="text-neon-pink font-bold">
+                {currentTrack.genre}
+              </span>
+              <span className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 border border-white/10">
+                0{currentTrackIndex + 1}/0{PLAYLIST.length} ·{" "}
                 {currentTrack.license}
               </span>
             </div>
@@ -500,7 +606,9 @@ export function CyberBgmPlayer() {
                 <div
                   className="h-full bg-gradient-to-r from-cyan-400 to-pink-500 transition-all duration-200"
                   style={{
-                    width: `${duration > 0 ? (progress / duration) * 100 : 0}%`,
+                    width: `${
+                      duration > 0 ? (progress / duration) * 100 : 0
+                    }%`,
                   }}
                 />
               </div>
@@ -578,28 +686,28 @@ export function CyberBgmPlayer() {
             </div>
           </div>
 
-          {/* Playlist selector */}
+          {/* Playlist selector (5 Tracks Cyclic) */}
           <div className="border-t border-cyan-500/20 pt-2 space-y-1">
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-              // PLAYLIST ({PLAYLIST.length})
+              // PLAYLIST ({PLAYLIST.length} TRACKS · CYCLIC)
             </p>
-            <div className="space-y-1 max-h-24 overflow-y-auto cyber-scrollbar">
+            <div className="space-y-1 max-h-36 overflow-y-auto cyber-scrollbar pr-0.5">
               {PLAYLIST.map((track, idx) => (
                 <button
                   key={track.id}
                   type="button"
-                  onClick={() => playTrackAtIndex(idx, true)}
-                  className={`w-full text-left px-2 py-1 rounded-lg text-[10px] flex items-center justify-between transition-all cursor-pointer ${
+                  onClick={() => loadAndPlayTrack(idx, true, false)}
+                  className={`w-full text-left px-2 py-1.5 rounded-lg text-[10px] flex items-center justify-between transition-all cursor-pointer ${
                     currentTrackIndex === idx
-                      ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 font-bold"
+                      ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 font-bold shadow-[0_0_8px_rgba(0,243,255,0.2)]"
                       : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
                   <span className="truncate">
-                    {idx + 1}. {track.title}
+                    0{idx + 1}. {track.title}
                   </span>
                   <span className="text-[9px] text-slate-400 shrink-0 ml-1">
-                    {track.genre.split(" ")[0]}
+                    {track.artist}
                   </span>
                 </button>
               ))}
