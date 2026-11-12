@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
+import { VisitorCounter } from "./VisitorCounter";
 
 interface TerminalLine {
   id: number;
@@ -298,6 +299,9 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </p>
             </div>
           </div>
+
+          {/* Live Visitor Telemetry Strip */}
+          <VisitorCounter variant="telemetry" />
 
           {/* Skill Progress Bars with Neon Glow */}
           <div className="space-y-2.5 pt-1">
