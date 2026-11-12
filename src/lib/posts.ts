@@ -50,7 +50,7 @@ function slugifyHeading(text: string): string {
 }
 
 function extractToc(markdown: string): TocItem[] {
-  const lines = markdown.split("\n");
+  const lines = markdown.split(/\r?\n/);
   const toc: TocItem[] = [];
   let inCodeBlock = false;
 

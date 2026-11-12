@@ -657,7 +657,7 @@ nextjs-portal [data-nextjs-toast],
 
 .prose-cyber h1,
 .prose-cyber h2 {
-  @apply font-cyber tracking-wide text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-10 mb-4 pb-2 border-b border-slate-200 dark:border-cyan-500/30 scroll-mt-24 flex items-center gap-2;
+  @apply font-cyber tracking-wide text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-10 mb-4 pb-2 border-b border-slate-200 dark:border-cyan-500/30 scroll-mt-24 flex flex-wrap items-center gap-2 min-w-0 break-words;
 }
 
 .dark .prose-cyber h1,
@@ -694,6 +694,8 @@ nextjs-portal [data-nextjs-toast],
 
 .prose-cyber a {
   @apply text-cyan-600 dark:text-neon-cyan font-medium underline underline-offset-4 hover:opacity-80 transition-opacity;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .prose-cyber blockquote {
@@ -705,7 +707,7 @@ nextjs-portal [data-nextjs-toast],
 }
 
 .prose-cyber pre {
-  @apply my-6 p-4 sm:p-5 rounded-2xl bg-[#090d16] text-slate-100 border border-slate-800 dark:border-cyan-500/35 overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed shadow-lg dark:shadow-neon-cyan;
+  @apply my-6 p-4 sm:p-5 rounded-2xl bg-[#090d16] text-slate-100 border border-slate-800 dark:border-cyan-500/35 max-w-full overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed shadow-lg dark:shadow-neon-cyan;
   -webkit-overflow-scrolling: touch;
 }
 

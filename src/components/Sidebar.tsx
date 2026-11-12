@@ -59,6 +59,7 @@ export function Sidebar({
 
   // Resizable sidebar width state & rock-solid pointer drag handler
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
+  const [hasHydrated, setHasHydrated] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarWidthRef = useRef(sidebarWidth);
   const isResizingRef = useRef(false);
@@ -76,7 +77,7 @@ export function Sidebar({
     isResizingRef.current = isResizing;
   }, [isResizing]);
 
-  // Restore saved width from localStorage on mount
+  // Restore saved width from localStorage on mount without transition jump
   useEffect(() => {
     try {
       const saved = localStorage.getItem("kimgatta_sidebar_width");
@@ -89,6 +90,9 @@ export function Sidebar({
     } catch {
       // ignore
     }
+    requestAnimationFrame(() => {
+      setHasHydrated(true);
+    });
   }, []);
 
   const handlePointerMoveInternal = (clientX: number) => {
@@ -703,12 +707,15 @@ export function Sidebar({
           width: isCollapsed ? 64 : sidebarWidth,
           minWidth: isCollapsed ? 64 : sidebarWidth,
           maxWidth: isCollapsed ? 64 : sidebarWidth,
+          flex: "0 0 auto",
         }}
-        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/25 bg-[#070b14]/90 backdrop-blur-md z-30 relative min-w-0 overflow-x-hidden ${
-          isResizing ? "transition-none select-none" : "transition-[width] duration-200"
+        className={`hidden lg:flex flex-col grow-0 shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/25 bg-[#070b14]/90 backdrop-blur-md z-30 min-w-0 ${
+          isResizing || !hasHydrated
+            ? "transition-none select-none"
+            : "transition-[width] duration-200"
         }`}
       >
-        <div className="flex-1 min-h-0 overflow-y-auto cyber-scrollbar flex flex-col min-w-0">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden cyber-scrollbar flex flex-col min-w-0">
           {sidebarContent(isCollapsed)}
         </div>
 

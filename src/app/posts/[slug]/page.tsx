@@ -97,7 +97,7 @@ export default async function PostDetailPage({
         </Link>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8 items-start">
+      <div className="flex flex-col xl:flex-row gap-8 items-start w-full min-w-0">
         {/* Main Article Column */}
         <article className="flex-1 min-w-0 w-full rounded-3xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-8 md:p-10 shadow-xl dark:shadow-[0_0_30px_rgba(0,243,255,0.15)] cyber-corner">
           {/* Post Header */}
@@ -136,7 +136,7 @@ export default async function PostDetailPage({
             </h1>
 
             {post.summary && (
-              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed break-words">
                 {post.summary}
               </p>
             )}
@@ -158,7 +158,7 @@ export default async function PostDetailPage({
 
           {/* Markdown Body */}
           <div
-            className="prose-cyber"
+            className="prose-cyber min-w-0 w-full max-w-full"
             dangerouslySetInnerHTML={{ __html: post.contentHtml }}
           />
 
@@ -167,7 +167,7 @@ export default async function PostDetailPage({
             {prevPost ? (
               <Link
                 href={`/posts/${prevPost.slug}`}
-                className="group p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-cyan-500/50 dark:hover:border-neon-cyan/50 bg-slate-50/70 dark:bg-white/[0.02] transition-all"
+                className="group min-w-0 block p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-cyan-500/50 dark:hover:border-neon-cyan/50 bg-slate-50/70 dark:bg-white/[0.02] transition-all"
               >
                 <span className="text-[11px] font-mono text-slate-400">
                   ← PREVIOUS LOG
@@ -183,7 +183,7 @@ export default async function PostDetailPage({
             {nextPost ? (
               <Link
                 href={`/posts/${nextPost.slug}`}
-                className="group p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-cyan-500/50 dark:hover:border-neon-cyan/50 bg-slate-50/70 dark:bg-white/[0.02] text-right transition-all"
+                className="group min-w-0 block p-4 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-cyan-500/50 dark:hover:border-neon-cyan/50 bg-slate-50/70 dark:bg-white/[0.02] text-right transition-all"
               >
                 <span className="text-[11px] font-mono text-slate-400">
                   NEXT LOG →

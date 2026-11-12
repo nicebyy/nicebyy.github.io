@@ -105,7 +105,7 @@ export function AppShell({
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="min-h-screen w-full max-w-full flex flex-col relative overflow-x-clip">
       <CyberCursor />
       <Navbar
         isSidebarCollapsed={isCollapsed}
@@ -115,7 +115,7 @@ export function AppShell({
         onSelectSection={setActiveSection}
       />
 
-      <div className="flex-1 flex relative z-10">
+      <div className="flex-1 w-full max-w-full min-w-0 flex relative z-10">
         <Sidebar
           posts={posts}
           isCollapsed={isCollapsed}
@@ -128,7 +128,7 @@ export function AppShell({
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-between">
-          <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <main className="flex-1 max-w-6xl w-full min-w-0 mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6">
             {children}
           </main>
 

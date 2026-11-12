@@ -122,7 +122,7 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
 
       {/* Desktop Sticky TOC Sidebar */}
       {toc.length > 0 && (
-        <aside className="hidden xl:block w-64 shrink-0">
+        <aside className="hidden xl:block w-64 min-w-[16rem] max-w-[16rem] shrink-0">
           <div className="sticky top-24 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#0b101e]/80 backdrop-blur-md p-4 space-y-3">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-900 dark:text-neon-cyan border-b border-slate-100 dark:border-white/10 pb-2">
               <ListTree className="w-4 h-4" />
