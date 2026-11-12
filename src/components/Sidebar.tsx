@@ -249,7 +249,7 @@ export function Sidebar({
                     onCloseMobile();
                     onSelectSection?.("about");
                   }}
-                  title="김까따 소개 (About)"
+                  title="kimkkatta 소개 (About)"
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
                   } py-2 rounded-xl text-xs font-mono transition-all ${
@@ -259,7 +259,7 @@ export function Sidebar({
                   }`}
                 >
                   <User className={`w-4 h-4 shrink-0 ${isAboutActive ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" : "text-slate-500"}`} />
-                  {!collapsed && <span>About 김까따</span>}
+                  {!collapsed && <span>About kimkkatta</span>}
                 </Link>
               </>
             );

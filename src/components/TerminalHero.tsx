@@ -26,7 +26,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     {
       id: 1,
       type: "accent",
-      text: `[SYSTEM: NEON_CITY_KERNEL] 김까따 OS v2.6.0 ONLINE // Type 'help' or click a command below.`,
+      text: `[SYSTEM: NEON_CITY_KERNEL] kimkkatta OS v2.6.0 ONLINE // Type 'help' or click a command below.`,
     },
     {
       id: 2,
@@ -63,7 +63,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         type: "output",
         text: [
           "⚡ AVAILABLE CYBER COMMANDS:",
-          "  whoami   — 운영자(김까따) 프로필 및 개발 철학 출력",
+          "  whoami   — 운영자(kimkkatta) 프로필 및 개발 철학 출력",
           "  skills   — 실시간 핵심 기술 스택 게이지 전송",
           "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
           "  status   — 나이트 시티 메인프레임 통신 상태 진단",

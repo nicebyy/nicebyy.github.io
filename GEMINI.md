@@ -1,4 +1,4 @@
-# Git Commit & Development Rules for nicebyy.github.io (김까따 DEV.LOG)
+# Git Commit & Development Rules for nicebyy.github.io (kimkkatta DEV.LOG)
 
 ## 1. 브랜치 운영 전략 (Branching Strategy: main - develop - feature)
 - 프로젝트는 **`main` - `develop` - `feature/*` (또는 `post/*`, `fix/*`)** 브랜치 전략을 준수한다.
@@ -97,7 +97,7 @@ GitHub Pages는 순수 정적 호스팅이므로 동적 서버 런타임이 동�
 1. **단일 진실 공급원 (Single Source of Truth)**:
    - 블로그 운영자 정보(닉네임, 역할, 소개글, 기술 스택, 소셜 링크, Giscus 설정)는 반드시 **`src/config/site.ts`**에서 중앙 관리한다.
 2. **닉네임 및 계정 식별 규칙**:
-   - **블로그 표시 닉네임**: `김까따` (로고, 헤더, 터미널 프롬프트, 자기소개 등 모든 화면 표시)
+   - **블로그 표시 닉네임**: `kimkkatta` (로고, 헤더, 터미널 프롬프트, 자기소개 등 모든 화면 표시)
    - **GitHub 계정 식별자**: `nicebyy` (GitHub 프로필 링크, 저장소 주소 `nicebyy/nicebyy.github.io`)
    - 임의로 표시 닉네임을 변경하거나 하드코딩하지 않는다.
 3. **문서 동기화**:
