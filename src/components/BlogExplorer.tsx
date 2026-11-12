@@ -152,7 +152,11 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
   return (
     <section id="posts" className="py-6 space-y-6 scroll-mt-20">
       {/* Control Bar: Search + Category Filter + View Mode */}
-      <div className="rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-5 shadow-md dark:shadow-[0_0_20px_rgba(0,243,255,0.1)] space-y-4 cyber-corner">
+      <div className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-5 shadow-md dark:shadow-[0_0_20px_rgba(0,243,255,0.1)] space-y-4 cyber-corner">
+        <span className="cyber-corner-bracket-tl" />
+        <span className="cyber-corner-bracket-tr" />
+        <span className="cyber-corner-bracket-bl" />
+        <span className="cyber-corner-bracket-br" />
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -223,7 +227,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
             <button
               type="button"
               onClick={() => handleCategorySelect("ALL")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none active:scale-95 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none cyber-chip active:scale-95 ${
                 selectedCategory === "ALL"
                   ? "bg-cyan-600 dark:bg-cyan-500/20 text-white dark:text-neon-cyan border border-cyan-600 dark:border-neon-cyan shadow-sm dark:shadow-neon-cyan font-bold"
                   : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-cyan-500/10 border border-transparent dark:hover:border-cyan-500/30"
@@ -241,7 +245,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                   key={node.fullPath}
                   type="button"
                   onClick={() => handleCategorySelect(node.fullPath)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none active:scale-95 ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none cyber-chip active:scale-95 ${
                     active
                       ? "bg-cyan-600 dark:bg-cyan-500/20 text-white dark:text-neon-cyan border border-cyan-600 dark:border-neon-cyan shadow-sm dark:shadow-neon-cyan font-bold"
                       : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-cyan-500/10 border border-transparent dark:hover:border-cyan-500/30"
@@ -264,7 +268,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               <button
                 type="button"
                 onClick={() => handleCategorySelect(activeRoot.fullPath)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer shrink-0 ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer shrink-0 cyber-chip ${
                   selectedCategory === activeRoot.fullPath
                     ? "bg-cyan-500/30 text-neon-cyan border border-cyan-500/60 font-bold shadow-[0_0_8px_rgba(0,243,255,0.4)]"
                     : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -279,7 +283,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                     key={child.fullPath}
                     type="button"
                     onClick={() => handleCategorySelect(child.fullPath)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer shrink-0 ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer shrink-0 cyber-chip ${
                       isChildActive
                         ? "bg-cyan-500/30 text-neon-cyan border border-cyan-500/60 font-bold shadow-[0_0_8px_rgba(0,243,255,0.4)]"
                         : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -310,9 +314,9 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                   key={tag}
                   type="button"
                   onClick={() => setSelectedTag(active ? null : tag)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none active:scale-95 ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none cyber-chip-pink active:scale-95 ${
                     active
-                      ? "bg-pink-600 dark:bg-pink-500/25 text-white dark:text-neon-pink border border-pink-500 shadow-sm dark:shadow-neon-pink font-bold"
+                      ? "bg-pink-600 dark:bg-pink-500/25 text-white dark:text-neon-pink border border-pink-500 shadow-sm dark:shadow-neon-pink font-bold animate-pulse"
                       : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-pink-600 dark:hover:text-neon-pink border border-slate-200/70 dark:border-white/10 dark:hover:border-pink-500/40"
                   }`}
                 >
@@ -326,7 +330,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               <button
                 type="button"
                 onClick={() => setIsTagsExpanded(!isTagsExpanded)}
-                className="px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none active:scale-95 flex items-center gap-1 bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-neon-pink border border-pink-500/30 hover:border-pink-500/60 shadow-sm dark:shadow-[0_0_8px_rgba(255,0,127,0.2)] font-semibold"
+                className="px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none cyber-chip-pink active:scale-95 flex items-center gap-1 bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-neon-pink border border-pink-500/30 hover:border-pink-500/60 shadow-sm dark:shadow-[0_0_8px_rgba(255,0,127,0.2)] font-semibold"
               >
                 {isTagsExpanded ? (
                   <>
@@ -379,9 +383,15 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
             <Link
               key={post.slug}
               href={`/posts/${post.slug}`}
-              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-corner"
+              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-box cyber-corner"
             >
-              <div className="space-y-3">
+              {/* 4-Corner Reticle Brackets */}
+              <span className="cyber-corner-bracket-tl" />
+              <span className="cyber-corner-bracket-tr" />
+              <span className="cyber-corner-bracket-bl" />
+              <span className="cyber-corner-bracket-br" />
+
+              <div className="space-y-3 relative z-10">
                 {/* Top Meta Row */}
                 <div className="flex items-center justify-between gap-2 text-xs font-mono">
                   <div className="flex items-center gap-2">
@@ -423,8 +433,8 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
 
                 {/* Title */}
                 <h2 className="text-lg sm:text-xl font-black font-cyber tracking-wide text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_10px_#00f3ff] transition-all leading-snug flex items-start justify-between gap-2">
-                  <span className="break-words min-w-0">{post.title}</span>
-                  <ArrowUpRight className="w-5 h-5 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-neon-cyan group-hover:drop-shadow-[0_0_8px_#00f3ff]" />
+                  <span className="break-words min-w-0 group-hover:hover-glitch">{post.title}</span>
+                  <ArrowUpRight className="w-5 h-5 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all text-neon-cyan group-hover:drop-shadow-[0_0_8px_#00f3ff]" />
                 </h2>
 
                 {/* Summary */}
@@ -453,7 +463,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
             <Link
               key={post.slug}
               href={`/posts/${post.slug}`}
-              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-cyan-500/[0.08] dark:hover:border-l-4 dark:hover:border-neon-cyan transition-all"
+              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-cyan-500/[0.08] dark:hover:border-l-4 dark:hover:border-neon-cyan hover:translate-x-1.5 transition-all"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 text-xs font-mono">
@@ -479,7 +489,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                   <span className="text-slate-400">{post.date}</span>
                   <span className="text-slate-400">· {post.readingTime}</span>
                 </div>
-                <h3 className="text-base sm:text-lg font-black font-cyber tracking-wide text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_8px_#00f3ff] transition-all truncate">
+                <h3 className="text-base sm:text-lg font-black font-cyber tracking-wide text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_8px_#00f3ff] transition-all truncate group-hover:hover-glitch">
                   {post.title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
@@ -495,7 +505,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                     #{tag}
                   </span>
                 ))}
-                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_6px_#00f3ff] ml-1" />
+                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_6px_#00f3ff] ml-1 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
               </div>
             </Link>
           ))}

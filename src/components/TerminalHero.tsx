@@ -133,7 +133,11 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     <section className="relative pt-2 pb-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left 7 cols: Interactive Cyber Terminal Window */}
-        <div className="lg:col-span-7 rounded-2xl border border-cyan-500/40 bg-slate-950 text-slate-100 shadow-xl shadow-neon-cyan overflow-hidden flex flex-col justify-between cyber-corner">
+        <div className="lg:col-span-7 rounded-2xl border border-cyan-500/40 bg-slate-950 text-slate-100 shadow-xl shadow-neon-cyan overflow-hidden flex flex-col justify-between cyber-corner relative group">
+          <span className="cyber-corner-bracket-tl" />
+          <span className="cyber-corner-bracket-tr" />
+          <span className="cyber-corner-bracket-bl" />
+          <span className="cyber-corner-bracket-br" />
           {/* Terminal Title Bar */}
           <div className="px-3.5 sm:px-4 py-2.5 bg-slate-900/95 border-b border-cyan-500/30 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
@@ -200,7 +204,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                   key={name}
                   type="button"
                   onClick={() => executeCommand(name)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer shrink-0 select-none active:scale-95 ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer shrink-0 select-none cyber-chip active:scale-95 ${
                     color === "pink"
                       ? "bg-pink-500/10 text-neon-pink border border-pink-500/40 hover:bg-pink-500/25 hover:shadow-neon-pink"
                       : color === "green"
@@ -239,8 +243,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         </div>
 
         {/* Right 5 cols: Developer Telemetry & Neon Dashboard Card */}
-        <div className="lg:col-span-5 rounded-2xl border border-pink-500/40 bg-[#0b101e]/95 p-5 sm:p-6 shadow-lg shadow-neon-pink flex flex-col justify-between space-y-5 cyber-corner">
-          <div className="space-y-3">
+        <div className="lg:col-span-5 rounded-2xl border border-pink-500/40 bg-[#0b101e]/95 p-5 sm:p-6 shadow-lg shadow-neon-pink flex flex-col justify-between space-y-5 cyber-box cyber-corner group relative">
+          <span className="cyber-corner-bracket-tl" />
+          <span className="cyber-corner-bracket-tr" />
+          <span className="cyber-corner-bracket-bl" />
+          <span className="cyber-corner-bracket-br" />
+          <div className="space-y-3 relative z-10">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-orbitron tracking-widest font-bold bg-pink-500/10 text-neon-pink border border-pink-500/40 shadow-[0_0_12px_rgba(255,0,127,0.3)]">
                 <Sparkles className="w-3.5 h-3.5 text-neon-pink animate-spin-slow" />

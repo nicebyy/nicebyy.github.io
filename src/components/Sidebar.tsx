@@ -299,13 +299,13 @@ export function Sidebar({
                   title="대시보드 홈"
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                  } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 ${
                     isDashboardActive
                       ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/30 hover:shadow-[0_0_10px_rgba(0,243,255,0.2)]"
                   }`}
                 >
-                  <Cpu className={`w-4 h-4 shrink-0 ${isDashboardActive ? "text-neon-cyan animate-pulse" : "text-slate-500"}`} />
+                  <Cpu className={`w-4 h-4 shrink-0 ${isDashboardActive ? "text-neon-cyan animate-pulse" : "text-slate-500 group-hover:text-neon-cyan"}`} />
                   {!collapsed && <span>Dashboard</span>}
                 </Link>
 
@@ -315,10 +315,10 @@ export function Sidebar({
                   title="전체 포스트 목록"
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                  } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 ${
                     isAllLogsActive
                       ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/30 hover:shadow-[0_0_10px_rgba(255,0,127,0.2)]"
                   }`}
                 >
                   <BookOpen className={`w-4 h-4 shrink-0 ${isAllLogsActive ? "text-neon-pink drop-shadow-[0_0_8px_rgba(255,0,127,0.7)]" : "text-slate-500"}`} />
@@ -345,10 +345,10 @@ export function Sidebar({
                   title="kimkkatta 소개 (About)"
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                  } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 ${
                     isAboutActive
                       ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/30 hover:shadow-[0_0_10px_rgba(168,85,247,0.2)]"
                   }`}
                 >
                   <User className={`w-4 h-4 shrink-0 ${isAboutActive ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" : "text-slate-500"}`} />
