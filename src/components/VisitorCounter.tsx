@@ -77,10 +77,16 @@ export function VisitorCounter({
     };
   }, [config?.enabled, config?.targetUrl]);
 
+  const legacyTotal = config?.legacyTotalHits ?? 0;
+  const legacyLabel = config?.legacySourceName ?? "Tistory";
   const isLoaded = stats !== null;
   const isError = stats?.source === "error";
+  const combinedTotal = legacyTotal + (stats?.totalHits ?? 0);
   const animatedToday = useAnimatedNumber(stats?.todayHits ?? 0, isLoaded && !isError);
-  const animatedTotal = useAnimatedNumber(stats?.totalHits ?? 0, isLoaded && !isError);
+  const animatedTotal = useAnimatedNumber(
+    combinedTotal,
+    isLoaded && (!isError || legacyTotal > 0)
+  );
 
   if (!config?.enabled) return null;
 
@@ -92,7 +98,9 @@ export function VisitorCounter({
   const totalDisplay = !isLoaded
     ? "..."
     : isError
-    ? "--"
+    ? legacyTotal > 0
+      ? `${animatedTotal.toLocaleString("en-US")}+`
+      : "--"
     : animatedTotal.toLocaleString("en-US");
 
   const statusLabel = !isLoaded
@@ -113,11 +121,16 @@ export function VisitorCounter({
     ? "bg-amber-400"
     : "bg-neon-green animate-pulse shadow-[0_0_6px_#00ff9d]";
 
-  const tooltipText = isLoaded && !isError
-    ? `방문자 수 — TODAY: ${todayDisplay} / TOTAL: ${totalDisplay}${
-        stats.isLocalPreview ? " (로컬 미리보기: 조회 전용)" : ""
-      }`
-    : "블로그 방문자 수 텔레메트리";
+  const tooltipText =
+    isLoaded && !isError
+      ? `방문자 수 — TODAY: ${stats.todayHits.toLocaleString("en-US")} / TOTAL: ${combinedTotal.toLocaleString("en-US")}${
+          legacyTotal > 0
+            ? ` (이전 ${legacyLabel} ${legacyTotal.toLocaleString("en-US")} + GitHub Pages ${stats.totalHits.toLocaleString("en-US")})`
+            : ""
+        }${stats.isLocalPreview ? " · 로컬 조회 전용" : ""}`
+      : isError && legacyTotal > 0
+      ? `방문자 수 — 이전 ${legacyLabel} 누적 ${legacyTotal.toLocaleString("en-US")}명 (실시간 통계 오프라인)`
+      : "블로그 방문자 수 텔레메트리";
 
   if (variant === "sidebar") {
     if (collapsed) {
@@ -129,7 +142,13 @@ export function VisitorCounter({
         >
           <Eye className="w-3.5 h-3.5 text-neon-cyan" />
           <span className="text-[9px] font-orbitron font-bold text-neon-pink tabular-nums leading-none">
-            {!isLoaded ? "··" : isError ? "--" : formatCompactCount(stats.totalHits)}
+            {!isLoaded
+              ? "··"
+              : isError
+              ? legacyTotal > 0
+                ? formatCompactCount(legacyTotal)
+                : "--"
+              : formatCompactCount(combinedTotal)}
           </span>
         </div>
       );
