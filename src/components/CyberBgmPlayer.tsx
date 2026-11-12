@@ -57,12 +57,12 @@ export const PLAYLIST: Track[] = [
     license: "Creative Commons",
   },
   {
-    id: "duncan-avoid-mind-breach",
-    title: "Mind Breach",
-    artist: "Duncan Avoid",
-    src: "/audio/duncan-avoid-mind-breach.mp3",
-    genre: "Cybernetics Electro",
-    license: "CC-BY-NC-SA 4.0",
+    id: "ghostrifter-deflector",
+    title: "Deflector",
+    artist: "Ghostrifter Official",
+    src: "/audio/ghostrifter-deflector.mp3",
+    genre: "Cyberpunk Synthwave",
+    license: "CC BY-SA 3.0",
   },
 ];
 
