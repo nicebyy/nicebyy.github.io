@@ -18,11 +18,6 @@ const IsolatedAtmosphere = dynamic(
   { ssr: false }
 );
 
-const LoneOperatorHud = dynamic(
-  () => import("./LoneOperatorHud").then((mod) => mod.LoneOperatorHud),
-  { ssr: false }
-);
-
 export type NavSection = "dashboard" | "posts" | "about";
 
 export function AppShell({
@@ -164,7 +159,6 @@ export function AppShell({
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col relative overflow-x-clip">
       <IsolatedAtmosphere />
-      <LoneOperatorHud />
       <CyberCursor />
       <Navbar
         isSidebarCollapsed={isCollapsed}
