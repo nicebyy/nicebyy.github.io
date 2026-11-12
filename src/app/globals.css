@@ -133,6 +133,112 @@ nextjs-portal [data-nextjs-toast],
 }
 
 
+/* =========================================================================
+   PCB Electric Circuit Current & Spark Animations
+   ========================================================================= */
+
+@keyframes electric-flow-forward {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes electric-flow-backward {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 1000;
+  }
+}
+
+@keyframes electric-spark-blink {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+}
+
+/* Electric Current Speeds */
+.electric-pulse-fast {
+  animation: electric-flow-forward 3.2s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+.electric-pulse-normal {
+  animation: electric-flow-forward 4.8s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+.electric-pulse-medium {
+  animation: electric-flow-forward 6s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+.electric-pulse-slow {
+  animation: electric-flow-forward 7.5s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+.electric-pulse-reverse {
+  animation: electric-flow-backward 4.2s linear infinite;
+  will-change: stroke-dashoffset;
+}
+
+/* Sparking Nodes */
+.circuit-spark-cyan {
+  color: #00f3ff;
+  animation: electric-spark-blink 2.2s ease-in-out infinite;
+}
+
+.circuit-spark-cyan-delay1 {
+  color: #00f3ff;
+  animation: electric-spark-blink 2.2s ease-in-out infinite -0.7s;
+}
+
+.circuit-spark-cyan-delay2 {
+  color: #00f3ff;
+  animation: electric-spark-blink 2.2s ease-in-out infinite -1.4s;
+}
+
+.circuit-spark-cyan-delay3 {
+  color: #00f3ff;
+  animation: electric-spark-blink 2.2s ease-in-out infinite -1.9s;
+}
+
+.circuit-spark-pink {
+  color: #ff007f;
+  animation: electric-spark-blink 2.6s ease-in-out infinite;
+}
+
+.circuit-spark-pink-delay1 {
+  color: #ff007f;
+  animation: electric-spark-blink 2.6s ease-in-out infinite -0.9s;
+}
+
+.circuit-spark-pink-delay2 {
+  color: #ff007f;
+  animation: electric-spark-blink 2.6s ease-in-out infinite -1.8s;
+}
+
+.circuit-spark-green {
+  color: #00ff9d;
+  animation: electric-spark-blink 3s ease-in-out infinite;
+}
+
+.circuit-spark-green-delay2 {
+  color: #00ff9d;
+  animation: electric-spark-blink 3s ease-in-out infinite -1.5s;
+}
+
 /* Cyberpunk Neon Grid & Scanline Background */
 .cyber-grid-bg {
   background-image: 
