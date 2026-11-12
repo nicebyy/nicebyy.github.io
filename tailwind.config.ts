@@ -10,20 +10,23 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: [
-          "Pretendard Variable",
-          "Pretendard",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "system-ui",
-          "sans-serif",
-        ],
+        orbitron: ["var(--font-orbitron)", "sans-serif"],
+        chakra: ["var(--font-chakra)", "sans-serif"],
         mono: [
+          "var(--font-mono)",
           "JetBrains Mono",
           "Fira Code",
           "Consolas",
           "Monaco",
           "monospace",
+        ],
+        sans: [
+          "var(--font-chakra)",
+          "Pretendard Variable",
+          "Pretendard",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "sans-serif",
         ],
       },
       colors: {

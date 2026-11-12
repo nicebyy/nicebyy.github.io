@@ -53,14 +53,13 @@ export function AppShell({
             {children}
           </main>
 
-          <footer className="border-t border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-[#060911]/80 backdrop-blur-md py-6 mt-12">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-slate-500 dark:text-slate-400">
+          <footer className="border-t border-cyan-500/20 bg-[#060911]/90 backdrop-blur-md py-6 mt-12">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-chakra tracking-wider text-slate-400">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-neon-cyan" />
+                <span className="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_#00f3ff]" />
                 <span>
                   © {new Date().getFullYear()} {siteConfig.author} (@
-                  {siteConfig.githubUsername}). Powered by Next.js & GitHub
-                  Pages.
+                  {siteConfig.githubUsername}). POWERED BY NEXT.JS & GITHUB PAGES.
                 </span>
               </div>
               <div className="flex items-center gap-4">
@@ -68,7 +67,7 @@ export function AppShell({
                   href={siteConfig.social.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-cyan-600 dark:hover:text-neon-cyan transition-colors"
+                  className="hover:text-neon-cyan drop-shadow-[0_0_8px_#00f3ff] transition-colors"
                 >
                   GITHUB // @{siteConfig.githubUsername}
                 </a>

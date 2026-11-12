@@ -353,22 +353,26 @@ export function Sidebar({
       </div>
 
       {/* Bottom Footer of Sidebar */}
-      <div className="p-3 border-t border-slate-200/80 dark:border-white/10">
+      <div className="p-2.5 border-t border-cyan-500/20">
         <a
           href={siteConfig.social.github}
           target="_blank"
           rel="noopener noreferrer"
           title="GitHub 저장소 열기"
           className={`flex items-center ${
-            collapsed ? "justify-center" : "justify-between"
-          } px-3 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.04] hover:bg-cyan-500/10 text-xs font-mono text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-neon-cyan border border-slate-200/80 dark:border-white/10 transition-all`}
+            collapsed ? "justify-center p-2.5" : "justify-between px-3 py-2"
+          } rounded-xl bg-black/50 hover:bg-cyan-500/15 text-xs font-chakra tracking-wider text-slate-300 hover:text-neon-cyan border border-cyan-500/30 hover:shadow-neon-cyan transition-all`}
         >
-          <span className="flex items-center gap-2 truncate">
-            <Github className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>github/{siteConfig.githubUsername}</span>}
-          </span>
-          {!collapsed && (
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          {collapsed ? (
+            <Github className="w-4 h-4 text-neon-cyan" />
+          ) : (
+            <>
+              <span className="flex items-center gap-2 truncate">
+                <Github className="w-4 h-4 text-neon-cyan shrink-0" />
+                <span>GITHUB // @{siteConfig.githubUsername}</span>
+              </span>
+              <span className="w-2 h-2 rounded-full bg-neon-green animate-pulse" />
+            </>
           )}
         </a>
       </div>
