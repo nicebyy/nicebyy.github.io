@@ -13,6 +13,8 @@ import {
   List,
   X,
   Flame,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, matchesCategoryPath } from "@/lib/categories";
@@ -86,11 +88,40 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
     );
   }, [categoryTree, selectedCategory]);
 
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    posts.forEach((p) => p.tags.forEach((t) => tagSet.add(t)));
-    return Array.from(tagSet);
+  // 태그별 포스트 빈도수 계산 및 내림차순 정렬
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    posts.forEach((p) => {
+      p.tags.forEach((t) => {
+        counts[t] = (counts[t] || 0) + 1;
+      });
+    });
+    return counts;
   }, [posts]);
+
+  const allTags = useMemo(() => {
+    const tags = Object.keys(tagCounts);
+    tags.sort((a, b) => {
+      const diff = tagCounts[b] - tagCounts[a];
+      if (diff !== 0) return diff;
+      return a.localeCompare(b);
+    });
+    return tags;
+  }, [tagCounts]);
+
+  const TAG_LIMIT = 12;
+  const [isTagsExpanded, setIsTagsExpanded] = useState(false);
+
+  const visibleTags = useMemo(() => {
+    if (isTagsExpanded || allTags.length <= TAG_LIMIT) {
+      return allTags;
+    }
+    const base = allTags.slice(0, TAG_LIMIT);
+    if (selectedTag && !base.includes(selectedTag)) {
+      base.push(selectedTag);
+    }
+    return base;
+  }, [allTags, isTagsExpanded, selectedTag]);
 
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
@@ -272,7 +303,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               <Tag className="w-3.5 h-3.5 text-neon-pink" />
               <span className="dark:text-neon-pink">TAGS:</span>
             </span>
-            {allTags.map((tag) => {
+            {visibleTags.map((tag) => {
               const active = selectedTag === tag;
               return (
                 <button
@@ -289,11 +320,33 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                 </button>
               );
             })}
+
+            {/* Expand / Collapse Button */}
+            {allTags.length > TAG_LIMIT && (
+              <button
+                type="button"
+                onClick={() => setIsTagsExpanded(!isTagsExpanded)}
+                className="px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none active:scale-95 flex items-center gap-1 bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-neon-pink border border-pink-500/30 hover:border-pink-500/60 shadow-sm dark:shadow-[0_0_8px_rgba(255,0,127,0.2)] font-semibold"
+              >
+                {isTagsExpanded ? (
+                  <>
+                    <span>접기</span>
+                    <ChevronUp className="w-3 h-3" />
+                  </>
+                ) : (
+                  <>
+                    <span>+{allTags.length - TAG_LIMIT} 더보기</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </>
+                )}
+              </button>
+            )}
+
             {selectedTag && (
               <button
                 type="button"
                 onClick={() => setSelectedTag(null)}
-                className="text-[11px] font-mono text-rose-500 hover:underline ml-1 shrink-0"
+                className="text-[11px] font-mono text-rose-500 hover:underline ml-1 shrink-0 cursor-pointer"
               >
                 [Reset Tag]
               </button>
