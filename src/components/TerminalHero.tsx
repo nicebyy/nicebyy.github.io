@@ -90,7 +90,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
       newLines.push({
         id: Date.now() + 1,
         type: "output",
-        text: `⚡ GITHUB TELEMETRY (@nicebyy | 2.05 MB analyzed):\n${skillLines}`,
+        text: `⚡ GITHUB TELEMETRY (@nicebyy | 28 repos [13 public + 15 private] | 29.8 MB analyzed):\n${skillLines}`,
       });
     } else if (cmd === "ls") {
       const list = posts
@@ -318,7 +318,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               <span className="text-neon-green text-[10px] font-orbitron font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
-                2.05 MB ANALYZED
+                28 REPOS // 29.8 MB
               </span>
             </div>
             <div className="space-y-2">

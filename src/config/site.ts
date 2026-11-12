@@ -15,11 +15,11 @@ export const siteConfig = {
     github: "https://github.com/nicebyy",
   },
   techStack: [
-    { name: "TypeScript", level: 61, bytes: "1.24 MB", color: "cyan" },
-    { name: "Java", level: 26, bytes: "533 KB", color: "purple" },
-    { name: "Kotlin", level: 5, bytes: "95 KB", color: "pink" },
-    { name: "JavaScript", level: 4, bytes: "65 KB", color: "amber" },
-    { name: "CSS / Style", level: 4, bytes: "73 KB", color: "green" },
+    { name: "TypeScript", level: 25, bytes: "4.48 MB", color: "cyan" },
+    { name: "Java", level: 21, bytes: "3.79 MB", color: "purple" },
+    { name: "JavaScript", level: 26, bytes: "4.64 MB", color: "amber" },
+    { name: "CSS / Style", level: 27, bytes: "4.90 MB", color: "green" },
+    { name: "Kotlin", level: 2, bytes: "278 KB", color: "pink" },
   ],
   // Giscus 댓글 설정 (https://giscus.app 에서 본인 저장소 정보 입력 후 아래 값 채우기)
   giscus: {

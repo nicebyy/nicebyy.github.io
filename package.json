@@ -6,7 +6,8 @@
     "dev": "next dev -p 3333",
     "build": "next build",
     "start": "next start -p 3333",
-    "lint": "next lint"
+    "lint": "next lint",
+    "telemetry": "node scripts/update-telemetry.js"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
