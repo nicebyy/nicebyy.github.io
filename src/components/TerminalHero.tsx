@@ -10,6 +10,8 @@ import {
   ChevronRight,
   CornerDownLeft,
   Flame,
+  Code2,
+  Github,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
@@ -81,13 +83,14 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         .map((s) => {
           const filled = Math.round(s.level / 10);
           const bar = "█".repeat(filled) + "░".repeat(10 - filled);
-          return `  ${s.name.padEnd(16, " ")} [${bar}] ${s.level}%`;
+          const byteInfo = "bytes" in s && s.bytes ? ` (${s.bytes})` : "";
+          return `  ${s.name.padEnd(14, " ")} [${bar}] ${String(s.level + "%").padStart(4, " ")}${byteInfo}`;
         })
         .join("\n");
       newLines.push({
         id: Date.now() + 1,
         type: "output",
-        text: `⚡ TECH STACK TELEMETRY:\n${skillLines}`,
+        text: `⚡ GITHUB TELEMETRY (@nicebyy | 2.05 MB analyzed):\n${skillLines}`,
       });
     } else if (cmd === "ls") {
       const list = posts
@@ -289,30 +292,97 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           </div>
 
           {/* Skill Progress Bars with Neon Glow */}
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2.5 pt-1">
             <div className="flex items-center justify-between text-[11px] font-chakra tracking-wider text-slate-400">
-              <span className="text-neon-cyan font-bold">// CORE STACK METRICS</span>
-              <span className="text-neon-green text-[10px] font-orbitron">OPTIMAL 100%</span>
+              <span className="text-neon-cyan font-bold flex items-center gap-1.5">
+                <Code2 className="w-3.5 h-3.5 text-neon-cyan shrink-0" />
+                <span>// GITHUB CODE METRICS</span>
+                <a
+                  href={`https://github.com/${siteConfig.githubUsername}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:text-cyan-200 transition-colors"
+                  title="GitHub Profile (@nicebyy)"
+                >
+                  <Github className="w-2.5 h-2.5" />
+                  <span>@{siteConfig.githubUsername}</span>
+                </a>
+              </span>
+              <span className="text-neon-green text-[10px] font-orbitron font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
+                2.05 MB ANALYZED
+              </span>
             </div>
             <div className="space-y-2">
-              {siteConfig.techStack.slice(0, 4).map((tech) => (
-                <div key={tech.name} className="space-y-1">
-                  <div className="flex justify-between text-xs font-chakra">
-                    <span className="text-slate-200 font-medium">
-                      {tech.name}
-                    </span>
-                    <span className="text-neon-cyan font-orbitron font-bold drop-shadow-[0_0_6px_#00f3ff]">
-                      {tech.level}%
-                    </span>
+              {siteConfig.techStack.map((tech) => {
+                const colorStyles = {
+                  cyan: {
+                    bar: "from-cyan-400 via-sky-500 to-blue-500 shadow-[0_0_8px_rgba(0,243,255,0.6)]",
+                    text: "text-neon-cyan",
+                    glow: "drop-shadow-[0_0_6px_#00f3ff]",
+                    badge: "text-cyan-300 bg-cyan-950/60 border-cyan-500/30",
+                  },
+                  purple: {
+                    bar: "from-purple-500 via-indigo-500 to-neon-pink shadow-[0_0_8px_rgba(168,85,247,0.6)]",
+                    text: "text-purple-400",
+                    glow: "drop-shadow-[0_0_6px_#c084fc]",
+                    badge: "text-purple-300 bg-purple-950/60 border-purple-500/30",
+                  },
+                  pink: {
+                    bar: "from-pink-500 via-rose-500 to-red-500 shadow-[0_0_8px_rgba(255,0,127,0.6)]",
+                    text: "text-neon-pink",
+                    glow: "drop-shadow-[0_0_6px_#ff007f]",
+                    badge: "text-pink-300 bg-pink-950/60 border-pink-500/30",
+                  },
+                  amber: {
+                    bar: "from-amber-400 via-yellow-500 to-orange-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]",
+                    text: "text-amber-400",
+                    glow: "drop-shadow-[0_0_6px_#fbbf24]",
+                    badge: "text-amber-300 bg-amber-950/60 border-amber-500/30",
+                  },
+                  green: {
+                    bar: "from-emerald-400 via-green-500 to-teal-500 shadow-[0_0_8px_rgba(0,255,157,0.6)]",
+                    text: "text-neon-green",
+                    glow: "drop-shadow-[0_0_6px_#00ff9d]",
+                    badge: "text-emerald-300 bg-emerald-950/60 border-emerald-500/30",
+                  },
+                }[tech.color || "cyan"] || {
+                  bar: "from-neon-cyan via-purple-500 to-neon-pink shadow-[0_0_8px_rgba(0,243,255,0.7)]",
+                  text: "text-neon-cyan",
+                  glow: "drop-shadow-[0_0_6px_#00f3ff]",
+                  badge: "text-cyan-300 bg-cyan-950/60 border-cyan-500/30",
+                };
+
+                return (
+                  <div key={tech.name} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs font-chakra">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-200 font-medium">
+                          {tech.name}
+                        </span>
+                        {"bytes" in tech && tech.bytes && (
+                          <span
+                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${colorStyles.badge}`}
+                          >
+                            {tech.bytes}
+                          </span>
+                        )}
+                      </div>
+                      <span
+                        className={`font-orbitron font-bold ${colorStyles.text} ${colorStyles.glow}`}
+                      >
+                        {tech.level}%
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${colorStyles.bar}`}
+                        style={{ width: `${Math.max(tech.level, 3)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-neon-cyan via-purple-500 to-neon-pink shadow-[0_0_8px_rgba(0,243,255,0.7)]"
-                      style={{ width: `${tech.level}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

@@ -55,10 +55,17 @@ export default function AboutPage() {
                 className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2"
               >
                 <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="font-bold text-slate-900 dark:text-white">
-                    {item.name}
-                  </span>
-                  <span className="text-cyan-600 dark:text-neon-cyan">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      {item.name}
+                    </span>
+                    {"bytes" in item && item.bytes && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-500/30">
+                        {item.bytes}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-cyan-600 dark:text-neon-cyan font-bold font-orbitron">
                     {item.level}%
                   </span>
                 </div>
