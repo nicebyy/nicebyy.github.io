@@ -137,9 +137,10 @@ export function Sidebar({
           <button
             type="button"
             onClick={onCloseMobile}
-            className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300"
+            aria-label="사이드바 닫기"
+            className="lg:hidden p-2 rounded-xl bg-white/5 hover:bg-cyan-500/20 text-slate-300 hover:text-neon-cyan border border-white/10 hover:border-cyan-500/40 transition-all cursor-pointer active:scale-95"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -383,7 +384,7 @@ export function Sidebar({
     <>
       {/* Desktop Sticky Collapsible Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-slate-200/80 dark:border-cyan-500/20 bg-white/85 dark:bg-[#070b14]/90 backdrop-blur-md transition-all duration-300 z-30 overflow-y-auto ${
+        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/20 bg-[#070b14]/90 backdrop-blur-md transition-all duration-300 z-30 overflow-y-auto ${
           isCollapsed ? "w-16" : "w-64"
         }`}
       >
@@ -394,10 +395,10 @@ export function Sidebar({
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
             onClick={onCloseMobile}
           />
-          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-white dark:bg-[#070b14] border-r border-slate-200 dark:border-cyan-500/30 shadow-2xl overflow-y-auto">
+          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-[#070b14] border-r border-cyan-500/40 shadow-2xl shadow-neon-cyan overflow-y-auto">
             {sidebarContent(false)}
           </aside>
         </div>

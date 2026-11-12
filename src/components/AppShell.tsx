@@ -49,14 +49,14 @@ export function AppShell({
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-between">
-          <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6">
             {children}
           </main>
 
-          <footer className="border-t border-cyan-500/20 bg-[#060911]/90 backdrop-blur-md py-6 mt-12">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-chakra tracking-wider text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_#00f3ff]" />
+          <footer className="border-t border-cyan-500/20 bg-[#060911]/90 backdrop-blur-md py-6 mt-8 sm:mt-12">
+            <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-chakra tracking-wider text-slate-400">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-center sm:text-left">
+                <span className="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_#00f3ff] shrink-0" />
                 <span>
                   © {new Date().getFullYear()} {siteConfig.author} (@
                   {siteConfig.githubUsername}). POWERED BY NEXT.JS & GITHUB PAGES.

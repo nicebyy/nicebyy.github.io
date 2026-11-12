@@ -20,6 +20,15 @@ nextjs-portal [data-nextjs-toast],
   display: none !important;
 }
 
+/* Mobile swipe scroll without visible scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Cyberpunk Neon Grid & Scanline Background */
 .cyber-grid-bg {
   background-image: 
@@ -141,6 +150,8 @@ nextjs-portal [data-nextjs-toast],
 /* Markdown Typography (.prose-cyber) */
 .prose-cyber {
   @apply text-slate-700 dark:text-slate-200 leading-relaxed text-[15px] sm:text-base space-y-5;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .prose-cyber h2 {
@@ -190,18 +201,24 @@ nextjs-portal [data-nextjs-toast],
 
 .prose-cyber pre {
   @apply my-6 p-4 sm:p-5 rounded-2xl bg-[#090d16] text-slate-100 border border-slate-800 dark:border-cyan-500/35 overflow-x-auto font-mono text-xs sm:text-sm leading-relaxed shadow-lg dark:shadow-neon-cyan;
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose-cyber img {
+  @apply max-w-full h-auto rounded-xl border border-slate-200 dark:border-cyan-500/30 my-4;
 }
 
 .prose-cyber table {
-  @apply w-full my-6 text-left border-collapse rounded-xl overflow-hidden border border-slate-200 dark:border-cyan-500/20 text-xs sm:text-sm;
+  @apply block w-full my-6 text-left border-collapse rounded-xl overflow-x-auto border border-slate-200 dark:border-cyan-500/20 text-xs sm:text-sm;
+  -webkit-overflow-scrolling: touch;
 }
 
 .prose-cyber th {
-  @apply bg-slate-100 dark:bg-white/5 px-4 py-3 font-mono font-bold text-slate-900 dark:text-neon-cyan border-b border-slate-200 dark:border-cyan-500/20;
+  @apply bg-slate-100 dark:bg-white/5 px-4 py-3 font-mono font-bold text-slate-900 dark:text-neon-cyan border-b border-slate-200 dark:border-cyan-500/20 whitespace-nowrap;
 }
 
 .prose-cyber td {
-  @apply px-4 py-3 border-b border-slate-100 dark:border-white/5;
+  @apply px-4 py-3 border-b border-slate-100 dark:border-white/5 whitespace-nowrap sm:whitespace-normal;
 }
 
 /* Highlight.js Cyberpunk syntax colors */

@@ -169,8 +169,8 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-xs font-mono text-slate-400 flex items-center gap-1 mr-1">
+        <div className="flex items-center gap-2 pt-1 overflow-x-auto no-scrollbar touch-pan-x pb-1 sm:pb-0 sm:flex-wrap">
+          <span className="text-xs font-mono text-slate-400 flex items-center gap-1 mr-1 shrink-0">
             <Folder className="w-3.5 h-3.5 text-neon-cyan" />
             <span className="dark:text-neon-cyan">CATEGORY:</span>
           </span>
@@ -181,7 +181,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none active:scale-95 ${
                   active
                     ? "bg-cyan-600 dark:bg-cyan-500/20 text-white dark:text-neon-cyan border border-cyan-600 dark:border-neon-cyan shadow-sm dark:shadow-neon-cyan font-bold"
                     : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-cyan-500/10 border border-transparent dark:hover:border-cyan-500/30"
@@ -196,8 +196,8 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
 
         {/* Tag Filter Pills */}
         {allTags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-cyan-500/15">
-            <span className="text-xs font-mono text-slate-400 flex items-center gap-1 mr-1">
+          <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-cyan-500/15 overflow-x-auto no-scrollbar touch-pan-x pb-1 sm:pb-0 sm:flex-wrap">
+            <span className="text-xs font-mono text-slate-400 flex items-center gap-1 mr-1 shrink-0">
               <Tag className="w-3.5 h-3.5 text-neon-pink" />
               <span className="dark:text-neon-pink">TAGS:</span>
             </span>
@@ -208,7 +208,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                   key={tag}
                   type="button"
                   onClick={() => setSelectedTag(active ? null : tag)}
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-mono transition-all cursor-pointer shrink-0 select-none active:scale-95 ${
                     active
                       ? "bg-pink-600 dark:bg-pink-500/25 text-white dark:text-neon-pink border border-pink-500 shadow-sm dark:shadow-neon-pink font-bold"
                       : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-pink-600 dark:hover:text-neon-pink border border-slate-200/70 dark:border-white/10 dark:hover:border-pink-500/40"
@@ -222,7 +222,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               <button
                 type="button"
                 onClick={() => setSelectedTag(null)}
-                className="text-[11px] font-mono text-rose-500 hover:underline ml-1"
+                className="text-[11px] font-mono text-rose-500 hover:underline ml-1 shrink-0"
               >
                 [Reset Tag]
               </button>
@@ -255,7 +255,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
             <Link
               key={post.slug}
               href={`/posts/${post.slug}`}
-              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-corner"
+              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-corner"
             >
               <div className="space-y-3">
                 {/* Top Meta Row */}
@@ -285,7 +285,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
 
                 {/* Title */}
                 <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_10px_#00f3ff] transition-all leading-snug flex items-start justify-between gap-2">
-                  <span>{post.title}</span>
+                  <span className="break-words min-w-0">{post.title}</span>
                   <ArrowUpRight className="w-5 h-5 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-neon-cyan group-hover:drop-shadow-[0_0_8px_#00f3ff]" />
                 </h2>
 

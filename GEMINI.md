@@ -123,3 +123,26 @@ GitHub Pages는 순수 정적 호스팅이므로 동적 서버 런타임이 동�
      git branch -d <브랜치명>
      git worktree prune
      ```
+
+---
+
+## 10. 모바일 반응형(Mobile Responsive) 및 터치 UX 검증 의무화 규칙 (Mandatory Mobile Responsiveness & Touch UX Standards)
+스마트폰, 태블릿, 데스크톱 등 다양한 디바이스 환경에서 완벽한 가독성과 사용성을 제공하기 위해 아래 모바일 반응형 및 터치 UX 원칙을 필수로 준수한다.
+
+1. **최소 뷰포트 지원 기준 (Minimum Viewport: 360px)**:
+   - 최소 360px(스마트폰 소형 화면: iPhone SE, Galaxy 기본형 등)부터 태블릿(768px~1024px), 데스크톱, 4K 울트라와이드 디스플레이까지 레이아웃 깨짐 없이 유연하게 적응해야 한다.
+2. **수평 스크롤 유출(Horizontal Overflow / Scroll Leak) 엄격 금지**:
+   - `body` 및 전체 레이아웃 컨테이너에서 화면 밖으로 콘텐츠가 삐져나와 원치 않는 가로 스크롤이 발생하지 않도록 `overflow-x: hidden` 및 `min-w-0`, `max-w-full`을 철저히 관리한다.
+   - 코드 블록(`<pre>`), 표(`<table>`), 긴 문자열/URL은 컨테이너 내부 수평 스크롤(`overflow-x-auto -webkit-overflow-scrolling: touch`) 또는 줄바꿈(`break-words`, `overflow-wrap: break-word`)으로 격리한다.
+3. **모바일 수평 스와이프 UX (Horizontal Swipe with `.no-scrollbar`)**:
+   - 카테고리 탭, 태그 필터 칩, 빠른 터미널 명령어 등 가로로 나열되는 버튼 그룹은 모바일 화면에서 세로로 과도하게 늘어지지 않도록 부드러운 가로 스와이프(`overflow-x-auto no-scrollbar touch-pan-x flex-nowrap sm:flex-wrap`)를 적용한다.
+4. **터치 타깃 및 인터랙션 피드백 (Touch Target & Feedback)**:
+   - 모든 클릭/터치 가능 요소(헤더 햄버거 메뉴, 닫기 버튼, 검색 아이콘, 탭/태그 칩 등)는 최소 40px 이상의 터치 영역(`p-2` 이상, 적절한 패딩)을 확보한다.
+   - 터치 시각 피드백으로 `active:scale-95` 또는 명확한 배경색/네온 테두리 변화를 제공하여 모바일 터치 조작감을 극대화한다.
+5. **모바일 사이드바 드로어(Sidebar Drawer) 동작 원칙**:
+   - 모바일 드로어가 열렸을 때 뒷배경은 `bg-black/80 backdrop-blur-md`로 부드럽게 블러 처리하고, 오버레이 터치 시 즉시 드로어를 닫는다.
+   - 드로어 내부의 내비게이션 링크, 카테고리 항목, 태그 항목, 최근 포스트를 탭하면 목적지로 이동함과 동시에 모바일 드로어가 자동으로 닫혀야 한다 (`onCloseMobile()` 연동).
+6. **모바일 타이포그래피 및 가독성 (Korean Typography Standard)**:
+   - 모바일 한글 본문은 어색한 글자 단위 쪼개짐을 방지하기 위해 `word-break: keep-all; overflow-wrap: break-word;`를 기본 적용한다.
+   - 본문 카드의 패딩은 작은 화면에서 여백 낭비를 줄이고 본문 영역을 넓히기 위해 `p-4 sm:p-8 md:p-10` 등 반응형 단계별 패딩을 적용한다.
+

@@ -62,7 +62,7 @@ export default async function PostDetailPage({
 
       <div className="flex flex-col xl:flex-row gap-8 items-start">
         {/* Main Article Column */}
-        <article className="flex-1 min-w-0 w-full rounded-3xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-6 sm:p-10 shadow-xl dark:shadow-[0_0_30px_rgba(0,243,255,0.15)] cyber-corner">
+        <article className="flex-1 min-w-0 w-full rounded-3xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-8 md:p-10 shadow-xl dark:shadow-[0_0_30px_rgba(0,243,255,0.15)] cyber-corner">
           {/* Post Header */}
           <header className="pb-6 mb-8 border-b border-slate-200 dark:border-cyan-500/20 space-y-4">
             <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
@@ -80,7 +80,7 @@ export default async function PostDetailPage({
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight break-words">
               {post.title}
             </h1>
 

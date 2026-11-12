@@ -127,6 +127,7 @@ export function Navbar({
             </Link>
           </nav>
 
+          {/* Desktop Search Button */}
           <button
             type="button"
             onClick={triggerSearchFocus}
@@ -138,6 +139,16 @@ export function Navbar({
             <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
               Ctrl K
             </kbd>
+          </button>
+
+          {/* Mobile Quick Search Button */}
+          <button
+            type="button"
+            onClick={triggerSearchFocus}
+            aria-label="포스트 검색"
+            className="sm:hidden p-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 text-neon-cyan border border-cyan-500/30 hover:shadow-neon-cyan transition-all cursor-pointer"
+          >
+            <Search className="w-4 h-4" />
           </button>
 
           <a
