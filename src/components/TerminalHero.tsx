@@ -343,24 +343,24 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
 
           {/* Skill Progress Bars with Neon Glow */}
           <div className="space-y-2.5 pt-1">
-            <div className="flex items-center justify-between text-[11px] font-chakra tracking-wider text-slate-400">
-              <span className="text-neon-cyan font-bold flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 text-[10px] sm:text-[11px] font-chakra tracking-wide text-slate-400">
+              <span className="text-neon-cyan font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
                 <Code2 className="w-3.5 h-3.5 text-neon-cyan shrink-0" />
-                <span>// GITHUB CODE METRICS</span>
+                <span>// CODE METRICS</span>
                 <a
                   href={`https://github.com/${siteConfig.githubUsername}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:text-cyan-200 transition-colors"
+                  className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/70 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 hover:text-cyan-200 transition-colors whitespace-nowrap shrink-0"
                   title="GitHub Profile (@nicebyy)"
                 >
-                  <Github className="w-2.5 h-2.5" />
+                  <Github className="w-2.5 h-2.5 shrink-0" />
                   <span>@{siteConfig.githubUsername}</span>
                 </a>
               </span>
-              <span className="text-neon-green text-[10px] font-orbitron font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
-                28 REPOS // 29.8 MB
+              <span className="text-neon-green text-[9.5px] sm:text-[10px] font-orbitron font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shrink-0" />
+                <span>28 REPOS · 29.8 MB</span>
               </span>
             </div>
             <div className="space-y-2">
