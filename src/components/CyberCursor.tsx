@@ -220,9 +220,9 @@ export function CyberCursor() {
     const onMouseDown = (e: MouseEvent) => {
       setIsClicking(true);
 
-      const target = e.target as HTMLElement | null;
+      const target = e.target as Element | null;
       const isInteractive = Boolean(
-        target?.closest(
+        target?.closest?.(
           'a, button, [role="button"], .cursor-pointer, [data-cyber-hover], summary, input, select, textarea'
         )
       );
@@ -307,7 +307,7 @@ export function CyberCursor() {
     };
 
     // Detect target cursor type
-    const evaluateTarget = (target: HTMLElement | null) => {
+    const evaluateTarget = (target: Element | null) => {
       if (document.body.classList.contains("is-resizing-sidebar")) {
         setCursorType("col-resize");
         return;
@@ -315,7 +315,7 @@ export function CyberCursor() {
 
       if (!target) return;
 
-      const isSeparator = target.closest(
+      const isSeparator = target.closest?.(
         '[role="separator"], .cursor-col-resize, [data-cursor="col-resize"]'
       );
       if (isSeparator) {
@@ -323,13 +323,13 @@ export function CyberCursor() {
         return;
       }
 
-      const textElement = target.closest("input, textarea, [contenteditable='true']");
+      const textElement = target.closest?.("input, textarea, [contenteditable='true']");
       if (textElement) {
         setCursorType("text");
         return;
       }
 
-      const clickable = target.closest(
+      const clickable = target.closest?.(
         'a, button, [role="button"], .cursor-pointer, [data-cyber-hover], summary, input[type="submit"], input[type="button"]'
       );
       if (clickable) {
@@ -341,7 +341,7 @@ export function CyberCursor() {
     };
 
     const onPointerOver = (e: PointerEvent) => {
-      evaluateTarget(e.target as HTMLElement | null);
+      evaluateTarget(e.target as Element | null);
     };
 
     // Main 60-120fps Animation Loop (HTML5 Canvas + Lerp Trail)
@@ -362,6 +362,10 @@ export function CyberCursor() {
       // 2. Canvas Circuit & EMP Effects Rendering
       const canvasEl = canvasRef.current;
       if (canvasEl) {
+        if (canvasEl.width !== window.innerWidth || canvasEl.height !== window.innerHeight) {
+          canvasEl.width = window.innerWidth;
+          canvasEl.height = window.innerHeight;
+        }
         const ctx = canvasEl.getContext("2d");
         if (ctx) {
           ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
