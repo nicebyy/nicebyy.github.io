@@ -20,6 +20,14 @@
   font-display: swap;
 }
 
+/* DNF 비트비트체 v2 (Authentic Cyberpunk Retro Arcade Pixel Font) */
+@font-face {
+  font-family: 'DNFBitBitv2';
+  src: url('https://cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf') format('opentype');
+  font-weight: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -176,20 +184,24 @@ nextjs-portal [data-nextjs-toast],
   overflow-wrap: break-word;
 }
 
+.prose-cyber h1,
 .prose-cyber h2 {
   @apply font-cyber tracking-wide text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-10 mb-4 pb-2 border-b border-slate-200 dark:border-cyan-500/30 scroll-mt-24 flex items-center gap-2;
 }
 
+.dark .prose-cyber h1,
 .dark .prose-cyber h2 {
   text-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
 }
 
+.prose-cyber h1::before,
 .prose-cyber h2::before {
   content: "##";
   @apply font-mono text-sm text-cyan-600 dark:text-neon-cyan opacity-80;
 }
 
-.prose-cyber h3 {
+.prose-cyber h3,
+.prose-cyber h4 {
   @apply font-cyber tracking-wide text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 mt-8 mb-3 scroll-mt-24;
 }
 

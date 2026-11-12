@@ -45,6 +45,12 @@ const config: Config = {
           "sans-serif",
         ],
         pixel: [
+          "'DNFBitBitv2'",
+          "'NeoDunggeunmo Pro'",
+          "monospace",
+        ],
+        bit: [
+          "'DNFBitBitv2'",
           "'NeoDunggeunmo Pro'",
           "monospace",
         ],
