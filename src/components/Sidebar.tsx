@@ -201,18 +201,6 @@ export function Sidebar({
     }
   };
 
-  const handleSetPresetWidth = (width: number) => {
-    if (isCollapsed) {
-      onSetCollapsed?.(false);
-    }
-    setSidebarWidth(width);
-    try {
-      localStorage.setItem("kimgatta_sidebar_width", String(width));
-    } catch {
-      // ignore
-    }
-  };
-
   // Hierarchical category tree
   const categoryTree = useMemo(() => buildCategoryTree(posts), [posts]);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
@@ -679,48 +667,7 @@ export function Sidebar({
       </div>
 
       {/* Bottom Footer of Sidebar */}
-      <div className="p-2.5 border-t border-cyan-500/20 space-y-2">
-        {!collapsed && (
-          <div className="flex flex-col gap-1.5 pb-1">
-            <div className="flex items-center justify-between text-[10px] font-mono text-cyan-400/80">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
-                WIDTH: {sidebarWidth}px
-              </span>
-              <button
-                type="button"
-                onClick={() => handleResetWidth()}
-                title="기본 크기(256px)로 복원"
-                className="text-[10px] text-pink-400 hover:text-neon-pink underline transition-colors cursor-pointer"
-              >
-                RESET
-              </button>
-            </div>
-            <div className="grid grid-cols-4 gap-1">
-              {[
-                { label: "180", width: 180, title: "축소 (180px)" },
-                { label: "256", width: 256, title: "기본 (256px)" },
-                { label: "340", width: 340, title: "넓게 (340px)" },
-                { label: "460", width: 460, title: "최대 (460px)" },
-              ].map((preset) => (
-                <button
-                  key={preset.width}
-                  type="button"
-                  onClick={() => handleSetPresetWidth(preset.width)}
-                  title={preset.title}
-                  className={`py-1 text-[10px] font-mono rounded-lg border transition-all cursor-pointer ${
-                    sidebarWidth === preset.width
-                      ? "bg-cyan-500/20 text-neon-cyan border-cyan-400 shadow-[0_0_6px_rgba(0,243,255,0.4)] font-bold"
-                      : "bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-cyan-500/30 hover:bg-cyan-500/10"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
+      <div className="p-2.5 border-t border-cyan-500/20">
         <a
           href={siteConfig.social.github}
           target="_blank"
