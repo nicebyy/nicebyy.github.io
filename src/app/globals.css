@@ -12,6 +12,14 @@
   }
 }
 
+/* Hide Next.js 15 local dev indicator badge */
+nextjs-portal [data-next-badge],
+nextjs-portal [aria-label*="Next.js"],
+nextjs-portal [data-nextjs-toast],
+#__next-build-watcher {
+  display: none !important;
+}
+
 /* Cyberpunk Neon Grid & Scanline Background */
 .cyber-grid-bg {
   background-image: 
