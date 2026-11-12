@@ -5,9 +5,10 @@
 - **`main` 브랜치**:
   - GitHub Pages 프로덕션 배포 전용 브랜치 (`.github/workflows/deploy.yml`을 통해 자동 빌드 및 배포).
   - 작업 중 검증되지 않은 코드를 **`main` 브랜치에 직접 커밋하거나 푸시하는 행위는 엄격히 금지**한다.
-  - 충분한 정적 빌드(`npm run build`) 및 검증이 완료된 안정화 버전만 병합(Merge)하여 배포한다.
+  - **`main` 브랜치로의 병합 및 프로덕션 푸시는 사용자가 직접 수행**하며, **에이전트는 `develop` 브랜치에만 푸시**한다.
 - **`develop` 브랜치**:
   - 일상 기능 개발, UI 개편, 구조 개선 등의 통합 브랜치.
+  - 에이전트 작업 완료 후 검증을 통과한 코드는 **`origin develop`**으로 푸시한다.
 - **`feature/*`, `post/*`, `fix/*` 브랜치**:
   - **신규 기능 개발**: `feature/<기능명>` 또는 `feat/<기능명>` (예: `feature/series-tag`, `feat/search-filter`)
   - **블로그 글 작성/수정**: `post/<글-슬러그>` (예: `post/nextjs-deepdive`)

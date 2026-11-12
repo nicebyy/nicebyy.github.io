@@ -18,7 +18,7 @@ export default function AboutPage() {
               <Terminal className="w-3.5 h-3.5 text-neon-cyan animate-pulse" />
               <span>OPERATOR PROFILE // {siteConfig.author.toUpperCase()}</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight dark:drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
+            <h1 className="text-2xl sm:text-4xl font-black font-cyber tracking-wide text-slate-900 dark:text-white tracking-tight dark:drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
               {siteConfig.author}
             </h1>
             <p className="font-mono text-sm text-pink-600 dark:text-neon-pink font-bold">
