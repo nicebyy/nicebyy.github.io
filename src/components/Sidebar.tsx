@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -28,6 +28,8 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  activeSection?: "dashboard" | "posts" | "about";
+  onSelectSection?: (section: "dashboard" | "posts" | "about") => void;
 }
 
 export function Sidebar({
@@ -36,6 +38,8 @@ export function Sidebar({
   onToggleCollapse,
   isMobileOpen,
   onCloseMobile,
+  activeSection = "dashboard",
+  onSelectSection,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -44,8 +48,9 @@ export function Sidebar({
   const [tagsOpen, setTagsOpen] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
+  // Specific categories (excluding ALL, since All Logs is in NAVIGATION)
   const categories = useMemo(() => {
-    const counts: Record<string, number> = { ALL: posts.length };
+    const counts: Record<string, number> = {};
     posts.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
@@ -58,11 +63,42 @@ export function Sidebar({
     return Array.from(set);
   }, [posts]);
 
+  useEffect(() => {
+    const handleBlogCat = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      if (custom.detail) {
+        setActiveCategory(custom.detail);
+        onSelectSection?.("posts");
+      }
+    };
+    window.addEventListener("blog-select-category", handleBlogCat);
+    return () => {
+      window.removeEventListener("blog-select-category", handleBlogCat);
+    };
+  }, [onSelectSection]);
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    onCloseMobile();
+    onSelectSection?.("dashboard");
+    if (pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.history.replaceState(null, "", "/");
+    }
+  };
+
+  const handleAllLogsClick = (e: React.MouseEvent) => {
+    onCloseMobile();
+    onSelectSection?.("posts");
+    handleSelectCategory("ALL");
+  };
+
   const handleSelectCategory = (category: string) => {
     setActiveCategory(category);
+    onSelectSection?.("posts");
     onCloseMobile();
     if (pathname !== "/") {
-      router.push("/");
+      router.push("/#posts");
       setTimeout(() => {
         window.dispatchEvent(
           new CustomEvent("sidebar-select-category", { detail: category })
@@ -74,13 +110,15 @@ export function Sidebar({
       );
       const el = document.getElementById("posts");
       el?.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", "/#posts");
     }
   };
 
   const handleSelectTag = (tag: string) => {
     onCloseMobile();
+    onSelectSection?.("posts");
     if (pathname !== "/") {
-      router.push("/");
+      router.push("/#posts");
       setTimeout(() => {
         window.dispatchEvent(
           new CustomEvent("sidebar-select-tag", { detail: tag })
@@ -92,6 +130,7 @@ export function Sidebar({
       );
       const el = document.getElementById("posts");
       el?.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", "/#posts");
     }
   };
 
@@ -151,80 +190,110 @@ export function Sidebar({
               // NAVIGATION
             </p>
           )}
-          <Link
-            href="/"
-            onClick={onCloseMobile}
-            title="대시보드 홈"
-            className={`flex items-center ${
-              collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-            } py-2 rounded-xl text-xs font-mono transition-all ${
-              pathname === "/"
-                ? "bg-cyan-500/15 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 dark:shadow-neon-cyan font-bold"
-                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-cyan-500/10 border border-transparent dark:hover:border-cyan-500/20"
-            }`}
-          >
-            <Cpu className="w-4 h-4 shrink-0 text-neon-cyan" />
-            {!collapsed && <span>Dashboard</span>}
-          </Link>
 
-          <Link
-            href="/#posts"
-            onClick={() => handleSelectCategory("ALL")}
-            title="전체 포스트 목록"
-            className={`flex items-center ${
-              collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-            } py-2 rounded-xl text-xs font-mono text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-pink-500/10 border border-transparent dark:hover:border-pink-500/20 transition-all`}
-          >
-            <BookOpen className="w-4 h-4 shrink-0 text-neon-pink" />
-            {!collapsed && (
-              <span className="flex-1 flex items-center justify-between">
-                <span>All Logs</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-pink-500/20 text-slate-700 dark:text-neon-pink border border-transparent dark:border-pink-500/30">
-                  {posts.length}
-                </span>
-              </span>
-            )}
-          </Link>
+          {(() => {
+            const isDashboardActive = activeSection === "dashboard" && pathname === "/";
+            const isAllLogsActive =
+              (activeSection === "posts" || pathname.startsWith("/posts/")) &&
+              activeCategory === "ALL";
+            const isAboutActive = pathname?.startsWith("/about") || activeSection === "about";
 
-          <Link
-            href="/about"
-            onClick={onCloseMobile}
-            title="김까따 소개 (About)"
-            className={`flex items-center ${
-              collapsed ? "justify-center px-2" : "gap-2.5 px-3"
-            } py-2 rounded-xl text-xs font-mono transition-all ${
-              pathname?.startsWith("/about")
-                ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/40 dark:shadow-neon-purple font-bold"
-                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-purple-500/10 border border-transparent dark:hover:border-purple-500/20"
-            }`}
-          >
-            <User className="w-4 h-4 shrink-0 text-purple-400" />
-            {!collapsed && <span>About 김까따</span>}
-          </Link>
+            return (
+              <>
+                <Link
+                  href="/"
+                  onClick={handleDashboardClick}
+                  title="대시보드 홈"
+                  className={`flex items-center ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                    isDashboardActive
+                      ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan font-bold"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+                  }`}
+                >
+                  <Cpu className={`w-4 h-4 shrink-0 ${isDashboardActive ? "text-neon-cyan animate-pulse" : "text-slate-500"}`} />
+                  {!collapsed && <span>Dashboard</span>}
+                </Link>
+
+                <Link
+                  href="/#posts"
+                  onClick={handleAllLogsClick}
+                  title="전체 포스트 목록"
+                  className={`flex items-center ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                    isAllLogsActive
+                      ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
+                  }`}
+                >
+                  <BookOpen className={`w-4 h-4 shrink-0 ${isAllLogsActive ? "text-neon-pink drop-shadow-[0_0_8px_rgba(255,0,127,0.7)]" : "text-slate-500"}`} />
+                  {!collapsed && (
+                    <span className="flex-1 flex items-center justify-between">
+                      <span>All Logs</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded transition-all ${
+                        isAllLogsActive
+                          ? "bg-pink-500/25 text-neon-pink border border-pink-500/50 shadow-[0_0_8px_rgba(255,0,127,0.4)] font-bold"
+                          : "bg-white/5 text-slate-400 border border-white/10"
+                      }`}>
+                        {posts.length}
+                      </span>
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  href="/about"
+                  onClick={() => {
+                    onCloseMobile();
+                    onSelectSection?.("about");
+                  }}
+                  title="김까따 소개 (About)"
+                  className={`flex items-center ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } py-2 rounded-xl text-xs font-mono transition-all ${
+                    isAboutActive
+                      ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
+                  }`}
+                >
+                  <User className={`w-4 h-4 shrink-0 ${isAboutActive ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" : "text-slate-500"}`} />
+                  {!collapsed && <span>About 김까따</span>}
+                </Link>
+              </>
+            );
+          })()}
         </div>
 
         {/* Categories Accordion (Expanded mode) or Icon (Collapsed mode) */}
         <div className="px-2.5 pt-2 border-t border-slate-200/70 dark:border-white/10">
           {collapsed ? (
             <div className="flex flex-col items-center gap-1.5">
-              {Object.entries(categories).map(([cat, count]) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleSelectCategory(cat)}
-                  title={`${cat} (${count})`}
-                  className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[10px] font-mono transition-all cursor-pointer ${
-                    activeCategory === cat
-                      ? "bg-cyan-500/20 text-cyan-600 dark:text-neon-cyan border border-cyan-500/40"
-                      : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                  }`}
-                >
-                  <Folder className="w-3.5 h-3.5" />
-                  <span className="text-[9px] leading-none mt-0.5">
-                    {cat.slice(0, 3)}
-                  </span>
-                </button>
-              ))}
+              {Object.entries(categories).map(([cat, count]) => {
+                const isSelected =
+                  activeCategory === cat &&
+                  activeSection === "posts" &&
+                  (pathname === "/" || pathname.startsWith("/posts/"));
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => handleSelectCategory(cat)}
+                    title={`${cat} (${count})`}
+                    className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[10px] font-mono transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-cyan-500/20 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan"
+                        : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                    }`}
+                  >
+                    <Folder className="w-3.5 h-3.5" />
+                    <span className="text-[9px] leading-none mt-0.5">
+                      {cat.slice(0, 3)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="space-y-1">
@@ -244,7 +313,10 @@ export function Sidebar({
               {catOpen && (
                 <div className="space-y-0.5 pt-0.5">
                   {Object.entries(categories).map(([cat, count]) => {
-                    const isSelected = activeCategory === cat && pathname === "/";
+                    const isSelected =
+                      activeCategory === cat &&
+                      activeSection === "posts" &&
+                      (pathname === "/" || pathname.startsWith("/posts/"));
                     return (
                       <button
                         key={cat}
@@ -252,19 +324,23 @@ export function Sidebar({
                         onClick={() => handleSelectCategory(cat)}
                         className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-cyan-500/15 text-cyan-700 dark:text-neon-cyan border border-cyan-500/30 font-semibold"
-                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                            ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan font-bold"
+                            : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
                         }`}
                       >
                         <span className="flex items-center gap-2 truncate">
                           {isSelected ? (
-                            <FolderOpen className="w-3.5 h-3.5 text-cyan-500 shrink-0" />
+                            <FolderOpen className="w-3.5 h-3.5 text-neon-cyan shrink-0 animate-pulse" />
                           ) : (
-                            <Folder className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                           )}
                           <span className="truncate">{cat}</span>
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          isSelected
+                            ? "bg-cyan-500/25 text-neon-cyan border border-cyan-500/40 font-bold"
+                            : "bg-white/5 text-slate-400 border border-white/10"
+                        }`}>
                           {count}
                         </span>
                       </button>

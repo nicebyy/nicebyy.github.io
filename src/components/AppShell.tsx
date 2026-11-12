@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
+
+export type NavSection = "dashboard" | "posts" | "about";
 
 export function AppShell({
   posts,
@@ -13,8 +16,10 @@ export function AppShell({
   posts: PostMeta[];
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
 
   useEffect(() => {
     const saved = localStorage.getItem("kimgatta_sidebar_collapsed");
@@ -22,6 +27,44 @@ export function AppShell({
       setIsCollapsed(true);
     }
   }, []);
+
+  // Update activeSection on pathname changes and on scroll
+  useEffect(() => {
+    if (pathname.startsWith("/about")) {
+      setActiveSection("about");
+      return;
+    }
+    if (pathname.startsWith("/posts/")) {
+      setActiveSection("posts");
+      return;
+    }
+
+    if (pathname === "/") {
+      if (typeof window !== "undefined" && window.location.hash === "#posts") {
+        setActiveSection("posts");
+      } else {
+        setActiveSection("dashboard");
+      }
+
+      const handleScroll = () => {
+        const postsEl = document.getElementById("posts");
+        if (!postsEl) return;
+        const rect = postsEl.getBoundingClientRect();
+        // When posts section top reaches upper half of viewport
+        if (rect.top <= 250) {
+          setActiveSection("posts");
+        } else {
+          setActiveSection("dashboard");
+        }
+      };
+
+      window.addEventListener("scroll", handleScroll, { passive: true });
+      handleScroll();
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+      };
+    }
+  }, [pathname]);
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
@@ -37,6 +80,8 @@ export function AppShell({
         isSidebarCollapsed={isCollapsed}
         onToggleSidebar={toggleCollapse}
         onOpenMobileSidebar={() => setIsMobileOpen(true)}
+        activeSection={activeSection}
+        onSelectSection={setActiveSection}
       />
 
       <div className="flex-1 flex relative z-10">
@@ -46,6 +91,8 @@ export function AppShell({
           onToggleCollapse={toggleCollapse}
           isMobileOpen={isMobileOpen}
           onCloseMobile={() => setIsMobileOpen(false)}
+          activeSection={activeSection}
+          onSelectSection={setActiveSection}
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-between">

@@ -20,17 +20,43 @@ interface NavbarProps {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   onOpenMobileSidebar?: () => void;
+  activeSection?: "dashboard" | "posts" | "about";
+  onSelectSection?: (section: "dashboard" | "posts" | "about") => void;
 }
 
 export function Navbar({
   isSidebarCollapsed,
   onToggleSidebar,
   onOpenMobileSidebar,
+  activeSection = "dashboard",
+  onSelectSection,
 }: NavbarProps) {
   const pathname = usePathname();
 
   const triggerSearchFocus = () => {
     window.dispatchEvent(new CustomEvent("focus-blog-search"));
+  };
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    onSelectSection?.("dashboard");
+    if (pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.history.replaceState(null, "", "/");
+    }
+  };
+
+  const handlePostsClick = (e: React.MouseEvent) => {
+    onSelectSection?.("posts");
+    if (pathname === "/") {
+      e.preventDefault();
+      const el = document.getElementById("posts");
+      el?.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", "/#posts");
+      window.dispatchEvent(
+        new CustomEvent("sidebar-select-category", { detail: "ALL" })
+      );
+    }
   };
 
   return (
@@ -98,8 +124,9 @@ export function Navbar({
           <nav className="hidden sm:flex items-center gap-1.5 font-chakra text-xs sm:text-sm mr-1">
             <Link
               href="/"
+              onClick={handleDashboardClick}
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                pathname === "/"
+                activeSection === "dashboard" && pathname === "/"
                   ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
               }`}
@@ -109,17 +136,23 @@ export function Navbar({
             </Link>
             <Link
               href="/#posts"
-              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20 transition-all tracking-wider"
+              onClick={handlePostsClick}
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+                activeSection === "posts" && (pathname === "/" || pathname.startsWith("/posts/"))
+                  ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
+              }`}
             >
               <BookOpen className="w-3.5 h-3.5 text-neon-pink" />
               <span>POSTS</span>
             </Link>
             <Link
               href="/about"
+              onClick={() => onSelectSection?.("about")}
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 pathname?.startsWith("/about")
-                  ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
+                  ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
               }`}
             >
               <User className="w-3.5 h-3.5 text-purple-400" />

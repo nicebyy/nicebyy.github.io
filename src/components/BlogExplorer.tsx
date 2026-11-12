@@ -104,6 +104,13 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
     });
   }, [posts, selectedCategory, selectedTag, searchQuery]);
 
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    window.dispatchEvent(
+      new CustomEvent("blog-select-category", { detail: cat })
+    );
+  };
+
   return (
     <section id="posts" className="py-6 space-y-6 scroll-mt-20">
       {/* Control Bar: Search + Category Filter + View Mode */}
@@ -180,7 +187,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleCategorySelect(cat)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 shrink-0 select-none active:scale-95 ${
                   active
                     ? "bg-cyan-600 dark:bg-cyan-500/20 text-white dark:text-neon-cyan border border-cyan-600 dark:border-neon-cyan shadow-sm dark:shadow-neon-cyan font-bold"
@@ -241,7 +248,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
             type="button"
             onClick={() => {
               setSearchQuery("");
-              setSelectedCategory("ALL");
+              handleCategorySelect("ALL");
               setSelectedTag(null);
             }}
             className="px-4 py-2 rounded-xl text-xs font-mono bg-cyan-500/15 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 hover:bg-cyan-500/25 dark:shadow-neon-cyan transition-all cursor-pointer"
