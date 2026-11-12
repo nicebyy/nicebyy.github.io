@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Volume2,
   VolumeX,
@@ -8,7 +8,6 @@ import {
   Pause,
   SkipForward,
   SkipBack,
-  Music,
   Disc3,
   ChevronUp,
   Radio,
@@ -42,10 +41,14 @@ export const PLAYLIST: Track[] = [
   },
 ];
 
+// Gentle, calm ambient default volume (12%) so reading remains comfortable
+const DEFAULT_BGM_VOLUME = 0.12;
+const FADE_IN_DURATION_MS = 1200;
+
 export function CyberBgmPlayer() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.35); // 35% default for gentle background listening
+  const [volume, setVolume] = useState(DEFAULT_BGM_VOLUME);
   const [isMuted, setIsMuted] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -54,16 +57,105 @@ export function CyberBgmPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
+  // Refs to prevent stale closures inside event listeners & fade intervals
+  const volumeRef = useRef(DEFAULT_BGM_VOLUME);
+  const isMutedRef = useRef(false);
+  const isPlayingRef = useRef(false);
+  const currentTrackIndexRef = useRef(0);
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const unlockCleanupRef = useRef<(() => void) | null>(null);
+
   const currentTrack = PLAYLIST[currentTrackIndex];
 
-  // Restore saved settings on mount
   useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    currentTrackIndexRef.current = currentTrackIndex;
+  }, [currentTrackIndex]);
+
+  const clearFade = useCallback(() => {
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+  }, []);
+
+  const clearInteractionUnlock = useCallback(() => {
+    if (unlockCleanupRef.current) {
+      unlockCleanupRef.current();
+      unlockCleanupRef.current = null;
+    }
+  }, []);
+
+  const startFadeIn = useCallback(
+    (audio: HTMLAudioElement) => {
+      clearFade();
+      const targetVol = isMutedRef.current ? 0 : volumeRef.current;
+      if (targetVol <= 0) {
+        audio.volume = 0;
+        return;
+      }
+
+      const steps = 24;
+      const stepTime = FADE_IN_DURATION_MS / steps;
+      let currentStep = 0;
+      audio.volume = 0;
+
+      fadeIntervalRef.current = setInterval(() => {
+        currentStep += 1;
+        const latestTarget = isMutedRef.current ? 0 : volumeRef.current;
+        const ratio = Math.min(1, currentStep / steps);
+        audio.volume = Number((latestTarget * ratio).toFixed(4));
+
+        if (currentStep >= steps) {
+          clearFade();
+        }
+      }, stepTime);
+    },
+    [clearFade]
+  );
+
+  const attemptPlay = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return false;
+
+    try {
+      audio.volume = 0;
+      await audio.play();
+      setIsPlaying(true);
+      isPlayingRef.current = true;
+      startFadeIn(audio);
+      clearInteractionUnlock();
+      return true;
+    } catch {
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      return false;
+    }
+  }, [startFadeIn, clearInteractionUnlock]);
+
+  // Restore saved settings & initialize gentle autoplay on mount
+  useEffect(() => {
+    let initialTrack = 0;
+    let userPaused = false;
+
     try {
       const savedVolume = localStorage.getItem("kimgatta_bgm_volume");
       if (savedVolume !== null) {
         const parsed = parseFloat(savedVolume);
         if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
           setVolume(parsed);
+          volumeRef.current = parsed;
         }
       }
 
@@ -71,17 +163,71 @@ export function CyberBgmPlayer() {
       if (savedTrack !== null) {
         const parsed = parseInt(savedTrack, 10);
         if (!isNaN(parsed) && parsed >= 0 && parsed < PLAYLIST.length) {
+          initialTrack = parsed;
           setCurrentTrackIndex(parsed);
+          currentTrackIndexRef.current = parsed;
         }
       }
+
+      userPaused = localStorage.getItem("kimgatta_bgm_paused_by_user") === "true";
     } catch {
       // ignore
     }
-  }, []);
 
-  // Update audio volume when state changes
-  useEffect(() => {
     if (audioRef.current) {
+      audioRef.current.src = PLAYLIST[initialTrack].src;
+      audioRef.current.volume = volumeRef.current;
+    }
+
+    if (!userPaused) {
+      // Try immediate autoplay; if blocked by browser policy, unlock seamlessly on first interaction
+      attemptPlay().then((started) => {
+        if (started) return;
+
+        const handleFirstInteraction = (e: Event) => {
+          // Avoid double-triggering if user directly clicked inside the BGM player controls
+          if (panelRef.current && panelRef.current.contains(e.target as Node)) {
+            return;
+          }
+          attemptPlay();
+        };
+
+        window.addEventListener("pointerdown", handleFirstInteraction, {
+          capture: true,
+          passive: true,
+        });
+        window.addEventListener("keydown", handleFirstInteraction, {
+          capture: true,
+          passive: true,
+        });
+        window.addEventListener("touchstart", handleFirstInteraction, {
+          capture: true,
+          passive: true,
+        });
+
+        unlockCleanupRef.current = () => {
+          window.removeEventListener("pointerdown", handleFirstInteraction, {
+            capture: true,
+          });
+          window.removeEventListener("keydown", handleFirstInteraction, {
+            capture: true,
+          });
+          window.removeEventListener("touchstart", handleFirstInteraction, {
+            capture: true,
+          });
+        };
+      });
+    }
+
+    return () => {
+      clearFade();
+      clearInteractionUnlock();
+    };
+  }, [attemptPlay, clearFade, clearInteractionUnlock]);
+
+  // Sync volume immediately when user drags slider or toggles mute
+  useEffect(() => {
+    if (audioRef.current && !fadeIntervalRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
@@ -101,6 +247,33 @@ export function CyberBgmPlayer() {
     };
   }, [isPanelOpen]);
 
+  const playTrackAtIndex = useCallback(
+    (index: number, shouldPlay = true) => {
+      const safeIndex = (index + PLAYLIST.length) % PLAYLIST.length;
+      setCurrentTrackIndex(safeIndex);
+      currentTrackIndexRef.current = safeIndex;
+
+      try {
+        localStorage.setItem("kimgatta_bgm_track", String(safeIndex));
+      } catch {
+        // ignore
+      }
+
+      if (audioRef.current) {
+        audioRef.current.src = PLAYLIST[safeIndex].src;
+        if (shouldPlay) {
+          try {
+            localStorage.removeItem("kimgatta_bgm_paused_by_user");
+          } catch {
+            // ignore
+          }
+          attemptPlay();
+        }
+      }
+    },
+    [attemptPlay]
+  );
+
   // Audio event listeners
   useEffect(() => {
     const audio = audioRef.current;
@@ -114,8 +287,7 @@ export function CyberBgmPlayer() {
     };
 
     const onEnded = () => {
-      // Play next track or loop
-      handleNextTrack();
+      playTrackAtIndex(currentTrackIndexRef.current + 1, true);
     };
 
     audio.addEventListener("timeupdate", onTimeUpdate);
@@ -125,67 +297,52 @@ export function CyberBgmPlayer() {
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("ended", onEnded);
     };
-  }, [currentTrackIndex]);
+  }, [playTrackAtIndex]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (isPlaying) {
+      clearFade();
+      clearInteractionUnlock();
       audio.pause();
       setIsPlaying(false);
+      isPlayingRef.current = false;
+      try {
+        localStorage.setItem("kimgatta_bgm_paused_by_user", "true");
+      } catch {
+        // ignore
+      }
     } else {
-      audio
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-        })
-        .catch(() => {
-          // Autoplay policy or load failure
-          setIsPlaying(false);
-        });
+      try {
+        localStorage.removeItem("kimgatta_bgm_paused_by_user");
+      } catch {
+        // ignore
+      }
+      attemptPlay();
     }
   };
 
   const handleNextTrack = () => {
-    const nextIndex = (currentTrackIndex + 1) % PLAYLIST.length;
-    setCurrentTrackIndex(nextIndex);
-    try {
-      localStorage.setItem("kimgatta_bgm_track", String(nextIndex));
-    } catch {
-      // ignore
-    }
-
-    if (audioRef.current) {
-      audioRef.current.src = PLAYLIST[nextIndex].src;
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    }
+    playTrackAtIndex(currentTrackIndex + 1, isPlaying);
   };
 
   const handlePrevTrack = () => {
-    const prevIndex = (currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
-    setCurrentTrackIndex(prevIndex);
-    try {
-      localStorage.setItem("kimgatta_bgm_track", String(prevIndex));
-    } catch {
-      // ignore
-    }
-
-    if (audioRef.current) {
-      audioRef.current.src = PLAYLIST[prevIndex].src;
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    }
+    playTrackAtIndex(currentTrackIndex - 1, isPlaying);
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    clearFade();
     const val = parseFloat(e.target.value);
     setVolume(val);
+    volumeRef.current = val;
     if (isMuted && val > 0) {
       setIsMuted(false);
+      isMutedRef.current = false;
+    }
+    if (audioRef.current) {
+      audioRef.current.volume = val;
     }
     try {
       localStorage.setItem("kimgatta_bgm_volume", String(val));
@@ -195,7 +352,15 @@ export function CyberBgmPlayer() {
   };
 
   const toggleMute = () => {
-    setIsMuted((prev) => !prev);
+    clearFade();
+    setIsMuted((prev) => {
+      const next = !prev;
+      isMutedRef.current = next;
+      if (audioRef.current) {
+        audioRef.current.volume = next ? 0 : volumeRef.current;
+      }
+      return next;
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -205,13 +370,15 @@ export function CyberBgmPlayer() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
+  const displayVolumePercent = Math.round((isMuted ? 0 : volume) * 100);
+
   return (
     <div ref={panelRef} className="relative inline-flex items-center">
       {/* Hidden Native Audio Element */}
       <audio
         ref={audioRef}
         src={currentTrack.src}
-        preload="metadata"
+        preload="auto"
         loop={PLAYLIST.length === 1}
       />
 
@@ -382,7 +549,7 @@ export function CyberBgmPlayer() {
             </div>
 
             {/* Volume Control */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={toggleMute}
@@ -399,12 +566,15 @@ export function CyberBgmPlayer() {
                 type="range"
                 min="0"
                 max="1"
-                step="0.05"
+                step="0.01"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
                 aria-label="볼륨 조절"
                 className="w-16 sm:w-20 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-400"
               />
+              <span className="text-[9px] text-cyan-300/80 w-7 text-right tabular-nums">
+                {displayVolumePercent}%
+              </span>
             </div>
           </div>
 
@@ -418,13 +588,7 @@ export function CyberBgmPlayer() {
                 <button
                   key={track.id}
                   type="button"
-                  onClick={() => {
-                    setCurrentTrackIndex(idx);
-                    if (audioRef.current) {
-                      audioRef.current.src = track.src;
-                      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-                    }
-                  }}
+                  onClick={() => playTrackAtIndex(idx, true)}
                   className={`w-full text-left px-2 py-1 rounded-lg text-[10px] flex items-center justify-between transition-all cursor-pointer ${
                     currentTrackIndex === idx
                       ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 font-bold"
