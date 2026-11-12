@@ -681,7 +681,19 @@ nextjs-portal [data-nextjs-toast],
 }
 
 .prose-cyber img {
-  @apply max-w-full h-auto rounded-xl border border-slate-200 dark:border-cyan-500/30 my-4;
+  @apply block mx-auto w-auto h-auto max-w-full rounded-xl border border-slate-200 dark:border-cyan-500/30 my-6 cursor-zoom-in transition-all duration-200;
+  max-height: 320px;
+}
+
+@media (min-width: 640px) {
+  .prose-cyber img {
+    max-width: min(100%, 600px);
+    max-height: 400px;
+  }
+}
+
+.prose-cyber img:hover {
+  @apply border-cyan-500/70 dark:border-neon-cyan shadow-[0_0_24px_rgba(0,243,255,0.25)];
 }
 
 .prose-cyber table {
