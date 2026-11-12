@@ -123,6 +123,7 @@ export function Sidebar({
 
     setIsResizing(true);
     isResizingRef.current = true;
+    document.body.classList.add("is-resizing-sidebar");
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -140,6 +141,7 @@ export function Sidebar({
     }
     setIsResizing(false);
     isResizingRef.current = false;
+    document.body.classList.remove("is-resizing-sidebar");
     try {
       localStorage.setItem("kimgatta_sidebar_width", String(sidebarWidthRef.current));
     } catch {
@@ -158,6 +160,7 @@ export function Sidebar({
     const onWindowUp = () => {
       setIsResizing(false);
       isResizingRef.current = false;
+      document.body.classList.remove("is-resizing-sidebar");
       try {
         localStorage.setItem("kimgatta_sidebar_width", String(sidebarWidthRef.current));
       } catch {
@@ -173,6 +176,7 @@ export function Sidebar({
     const prevCursor = document.body.style.cursor;
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
+    document.body.classList.add("is-resizing-sidebar");
 
     return () => {
       window.removeEventListener("pointermove", onWindowMove);
@@ -180,6 +184,7 @@ export function Sidebar({
       window.removeEventListener("pointercancel", onWindowUp);
       document.body.style.userSelect = prevUserSelect;
       document.body.style.cursor = prevCursor;
+      document.body.classList.remove("is-resizing-sidebar");
     };
   }, [isResizing]);
 
@@ -761,6 +766,7 @@ export function Sidebar({
         {/* Cyberpunk Neon Resizer Handle (Available both expanded & collapsed) */}
         <div
           role="separator"
+          data-cursor="col-resize"
           aria-orientation="vertical"
           aria-label="사이드바 너비 조절"
           title={

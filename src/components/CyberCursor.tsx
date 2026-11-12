@@ -2,268 +2,384 @@
 
 import React, { useEffect, useState, useRef } from "react";
 
-interface ClickRipple {
-  id: number;
-  x: number;
-  y: number;
-  color: "cyan" | "pink";
-}
+type CursorType = "default" | "pointer" | "text" | "col-resize";
 
 export function CyberCursor() {
   const [isEnabled, setIsEnabled] = useState(false);
+  const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
   const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isText, setIsText] = useState(false);
+  const [cursorType, setCursorType] = useState<CursorType>("default");
   const [isClicking, setIsClicking] = useState(false);
-  const [ripples, setRipples] = useState<ClickRipple[]>([]);
 
   const mousePos = useRef({ x: -100, y: -100 });
-  const ringPos = useRef({ x: -100, y: -100 });
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
+  const trailPos = useRef({ x: -100, y: -100 });
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const trailRef = useRef<HTMLDivElement>(null);
   const animFrameId = useRef<number | null>(null);
 
+  // Restore cursor mode from localStorage on mount & listen to toggle events
   useEffect(() => {
-    // Only enable on desktop pointer devices
+    try {
+      const saved = localStorage.getItem("kimgatta_cursor_mode");
+      if (saved === "native") {
+        setCursorMode("native");
+      }
+    } catch {
+      // ignore
+    }
+
+    const handleToggleEvent = (e: Event) => {
+      const custom = e as CustomEvent<"cyber" | "native">;
+      if (custom.detail) {
+        setCursorMode(custom.detail);
+      } else {
+        setCursorMode((prev) => (prev === "cyber" ? "native" : "cyber"));
+      }
+    };
+
+    window.addEventListener("toggle-cursor-mode", handleToggleEvent);
+    return () => {
+      window.removeEventListener("toggle-cursor-mode", handleToggleEvent);
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("kimgatta_cursor_mode", cursorMode);
+    } catch {
+      // ignore
+    }
+  }, [cursorMode]);
+
+  useEffect(() => {
+    // Only enable on desktop pointer fine devices and in cyber mode
     if (typeof window === "undefined") return;
     const isTouchDevice =
       window.matchMedia("(pointer: coarse)").matches ||
       ("ontouchstart" in window && !window.matchMedia("(pointer: fine)").matches);
 
-    if (isTouchDevice) {
+    if (isTouchDevice || cursorMode === "native") {
+      setIsEnabled(false);
+      document.body.classList.remove("cyber-cursor-active");
       return;
     }
 
     setIsEnabled(true);
     document.body.classList.add("cyber-cursor-active");
 
-    const onMouseMove = (e: MouseEvent) => {
-      mousePos.current.x = e.clientX;
-      mousePos.current.y = e.clientY;
+    const updatePosition = (clientX: number, clientY: number) => {
+      mousePos.current.x = clientX;
+      mousePos.current.y = clientY;
 
       if (!isVisible) {
         setIsVisible(true);
-        ringPos.current.x = e.clientX;
-        ringPos.current.y = e.clientY;
+        trailPos.current.x = clientX;
+        trailPos.current.y = clientY;
       }
 
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      // Synchronous DOM transform for zero input latency
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate3d(${clientX}px, ${clientY}px, 0)`;
       }
+    };
+
+    // Use { capture: true } so events are intercepted even during pointer capture / dragging
+    const onPointerMove = (e: PointerEvent) => {
+      updatePosition(e.clientX, e.clientY);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      updatePosition(e.clientX, e.clientY);
     };
 
     const onMouseEnter = () => setIsVisible(true);
     const onMouseLeave = () => setIsVisible(false);
 
-    const onMouseDown = (e: MouseEvent) => {
-      setIsClicking(true);
-      const isTargetInteractive = Boolean(
-        (e.target as HTMLElement)?.closest(
-          'a, button, input, textarea, select, [role="button"], .cursor-pointer, [data-cyber-hover]'
-        )
-      );
-
-      const newRipple: ClickRipple = {
-        id: Date.now() + Math.random(),
-        x: e.clientX,
-        y: e.clientY,
-        color: isTargetInteractive ? "pink" : "cyan",
-      };
-
-      setRipples((prev) => [...prev.slice(-4), newRipple]);
-    };
-
+    const onMouseDown = () => setIsClicking(true);
     const onMouseUp = () => setIsClicking(false);
 
-    // Interactive target detection
-    const onMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
+    // Detect target cursor type
+    const evaluateTarget = (target: HTMLElement | null) => {
+      if (document.body.classList.contains("is-resizing-sidebar")) {
+        setCursorType("col-resize");
+        return;
+      }
+
       if (!target) return;
+
+      const isSeparator = target.closest(
+        '[role="separator"], .cursor-col-resize, [data-cursor="col-resize"]'
+      );
+      if (isSeparator) {
+        setCursorType("col-resize");
+        return;
+      }
 
       const textElement = target.closest("input, textarea, [contenteditable='true']");
       if (textElement) {
-        setIsText(true);
-        setIsHovered(false);
+        setCursorType("text");
         return;
       }
-      setIsText(false);
 
       const clickable = target.closest(
         'a, button, [role="button"], .cursor-pointer, [data-cyber-hover], summary, input[type="submit"], input[type="button"]'
       );
-      setIsHovered(Boolean(clickable));
+      if (clickable) {
+        setCursorType("pointer");
+        return;
+      }
+
+      setCursorType("default");
     };
 
-    // Smooth lerp loop for the cyber HUD ring
-    const renderLoop = () => {
-      const lerpFactor = 0.22;
-      ringPos.current.x += (mousePos.current.x - ringPos.current.x) * lerpFactor;
-      ringPos.current.y += (mousePos.current.y - ringPos.current.y) * lerpFactor;
+    const onPointerOver = (e: PointerEvent) => {
+      evaluateTarget(e.target as HTMLElement | null);
+    };
 
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ringPos.current.x}px, ${ringPos.current.y}px, 0)`;
+    // Fast micro-trail lerp loop (35% lerp factor, ultra-lightweight)
+    const renderLoop = () => {
+      if (document.body.classList.contains("is-resizing-sidebar")) {
+        setCursorType("col-resize");
+      }
+
+      const lerp = 0.35;
+      trailPos.current.x += (mousePos.current.x - trailPos.current.x) * lerp;
+      trailPos.current.y += (mousePos.current.y - trailPos.current.y) * lerp;
+
+      if (trailRef.current) {
+        trailRef.current.style.transform = `translate3d(${trailPos.current.x}px, ${trailPos.current.y}px, 0)`;
       }
 
       animFrameId.current = requestAnimationFrame(renderLoop);
     };
 
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("pointermove", onPointerMove, { capture: true, passive: true });
+    window.addEventListener("mousemove", onMouseMove, { capture: true, passive: true });
+    window.addEventListener("pointerover", onPointerOver, { capture: true, passive: true });
     window.addEventListener("mouseenter", onMouseEnter);
     window.addEventListener("mouseleave", onMouseLeave);
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mouseover", onMouseOver, { passive: true });
+    window.addEventListener("mousedown", onMouseDown, { capture: true });
+    window.addEventListener("mouseup", onMouseUp, { capture: true });
 
     animFrameId.current = requestAnimationFrame(renderLoop);
 
     return () => {
       document.body.classList.remove("cyber-cursor-active");
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("pointermove", onPointerMove, { capture: true });
+      window.removeEventListener("mousemove", onMouseMove, { capture: true });
+      window.removeEventListener("pointerover", onPointerOver, { capture: true });
       window.removeEventListener("mouseenter", onMouseEnter);
       window.removeEventListener("mouseleave", onMouseLeave);
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mouseover", onMouseOver);
+      window.removeEventListener("mousedown", onMouseDown, { capture: true });
+      window.removeEventListener("mouseup", onMouseUp, { capture: true });
       if (animFrameId.current) {
         cancelAnimationFrame(animFrameId.current);
       }
     };
-  }, [isVisible]);
+  }, [isVisible, cursorMode]);
 
-  // Clean up ripples after animation duration
-  useEffect(() => {
-    if (ripples.length === 0) return;
-    const timer = setTimeout(() => {
-      setRipples((prev) => prev.slice(1));
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [ripples]);
-
-  if (!isEnabled) return null;
+  if (!isEnabled || cursorMode === "native") return null;
 
   return (
     <div
-      className={`pointer-events-none fixed inset-0 z-[999999] overflow-hidden transition-opacity duration-300 ${
+      className={`pointer-events-none fixed inset-0 z-[999999] overflow-hidden transition-opacity duration-200 ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
       aria-hidden="true"
     >
-      {/* 1. Immediate Center Pointer (Sharp Cyber Diamond) */}
-      <div
-        ref={dotRef}
-        className="fixed top-0 left-0 -ml-1 -mt-1 will-change-transform transition-[width,height,background-color,box-shadow] duration-150 ease-out"
-        style={{ transform: "translate3d(-100px, -100px, 0)" }}
-      >
-        {isText ? (
-          // Text input mode: vertical neon beam
-          <div className="w-0.5 h-4 -mt-1 bg-neon-cyan shadow-[0_0_8px_#00f3ff] animate-pulse" />
-        ) : (
-          // Standard / Hover mode: Cyber Diamond
-          <div
-            className={`w-2.5 h-2.5 rotate-45 transition-all duration-200 ${
-              isClicking
-                ? "scale-150 bg-white shadow-[0_0_15px_#fff]"
-                : isHovered
-                ? "scale-125 bg-neon-pink shadow-[0_0_12px_#ff007f]"
-                : "bg-neon-cyan shadow-[0_0_10px_#00f3ff]"
-            }`}
-          >
-            {/* Center core pixel */}
-            <div className="w-1 h-1 bg-white mx-auto my-auto mt-[2px] rounded-full" />
-          </div>
-        )}
-      </div>
-
-      {/* 2. Smooth Lerp Outer Cyber HUD Reticle */}
-      <div
-        ref={ringRef}
-        className="fixed top-0 left-0 will-change-transform transition-[opacity] duration-200"
-        style={{ transform: "translate3d(-100px, -100px, 0)" }}
-      >
-        {!isText && (
-          <div
-            className={`relative flex items-center justify-center transition-all duration-300 ease-out ${
-              isClicking
-                ? "-ml-3 -mt-3 w-6 h-6 scale-90"
-                : isHovered
-                ? "-ml-6 -mt-6 w-12 h-12 scale-110"
-                : "-ml-4 -mt-4 w-8 h-8 scale-100"
-            }`}
-          >
-            {/* Rotating Outer Ring with Dashes */}
-            <div
-              className={`absolute inset-0 rounded-full border border-dashed transition-colors duration-300 ${
-                isHovered
-                  ? "border-pink-400/80 animate-[spin_4s_linear_infinite] shadow-[0_0_15px_rgba(255,0,127,0.4)]"
-                  : "border-cyan-400/50 animate-[spin_10s_linear_infinite] shadow-[0_0_10px_rgba(0,243,255,0.25)]"
-              }`}
-            />
-
-            {/* 4 Corner HUD Crosshair Ticks */}
-            <div
-              className={`absolute -top-1 w-1.5 h-0.5 transition-colors duration-200 ${
-                isHovered ? "bg-neon-pink shadow-[0_0_6px_#ff007f]" : "bg-neon-cyan"
-              }`}
-            />
-            <div
-              className={`absolute -bottom-1 w-1.5 h-0.5 transition-colors duration-200 ${
-                isHovered ? "bg-neon-pink shadow-[0_0_6px_#ff007f]" : "bg-neon-cyan"
-              }`}
-            />
-            <div
-              className={`absolute -left-1 w-0.5 h-1.5 transition-colors duration-200 ${
-                isHovered ? "bg-neon-pink shadow-[0_0_6px_#ff007f]" : "bg-neon-cyan"
-              }`}
-            />
-            <div
-              className={`absolute -right-1 w-0.5 h-1.5 transition-colors duration-200 ${
-                isHovered ? "bg-neon-pink shadow-[0_0_6px_#ff007f]" : "bg-neon-cyan"
-              }`}
-            />
-
-            {/* Hover Mode Tech Corners (Lock-on target brackets) */}
-            {isHovered && (
-              <div className="absolute inset-[-4px] pointer-events-none animate-pulse">
-                <span className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-neon-pink" />
-                <span className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-neon-pink" />
-                <span className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-neon-pink" />
-                <span className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-neon-pink" />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* 3. Click Shockwave Ripples */}
-      {ripples.map((ripple) => (
+      {/* 1. Subtle Micro Laser Trail Dot */}
+      {cursorType !== "col-resize" && cursorType !== "text" && (
         <div
-          key={ripple.id}
-          className="fixed pointer-events-none will-change-transform"
-          style={{
-            left: ripple.x,
-            top: ripple.y,
-            transform: "translate(-50%, -50%)",
-          }}
+          ref={trailRef}
+          className="fixed top-0 left-0 -ml-[3px] -mt-[3px] will-change-transform pointer-events-none transition-opacity duration-150"
+          style={{ transform: "translate3d(-100px, -100px, 0)" }}
         >
-          {/* Shockwave expanding ring */}
-          <div
-            className={`w-4 h-4 rounded-full border-2 animate-ping ${
-              ripple.color === "pink"
-                ? "border-neon-pink shadow-[0_0_20px_#ff007f]"
-                : "border-neon-cyan shadow-[0_0_20px_#00f3ff]"
-            }`}
-            style={{ animationDuration: "500ms", animationIterationCount: 1 }}
-          />
-          {/* Central quick burst diamond */}
-          <div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rotate-45 border ${
-              ripple.color === "pink"
-                ? "border-pink-300 bg-pink-500/30"
-                : "border-cyan-300 bg-cyan-500/30"
-            } animate-pulse`}
-          />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400/50 shadow-[0_0_6px_#00f3ff]" />
         </div>
-      ))}
+      )}
+
+      {/* 2. Primary Cyber Pointer (Zero-latency direct transform) */}
+      <div
+        ref={cursorRef}
+        className="fixed top-0 left-0 will-change-transform pointer-events-none"
+        style={{ transform: "translate3d(-100px, -100px, 0)" }}
+      >
+        {/* Render contextual cursor shape */}
+        {cursorType === "col-resize" ? (
+          // Col-Resize: Neon Cyan Cyber Double-Arrow (Centered on cursor)
+          <div className="relative -ml-[14px] -mt-[10px] w-7 h-5 flex items-center justify-center animate-pulse">
+            <svg
+              width="28"
+              height="20"
+              viewBox="0 0 28 20"
+              fill="none"
+              className="drop-shadow-[0_0_8px_#00f3ff]"
+            >
+              {/* Dark backplate */}
+              <rect
+                x="1"
+                y="2"
+                width="26"
+                height="16"
+                rx="4"
+                fill="#05070e"
+                fillOpacity="0.9"
+                stroke="#00f3ff"
+                strokeWidth="1"
+                strokeOpacity="0.6"
+              />
+              {/* Left Arrow */}
+              <path
+                d="M7 6L3 10L7 14"
+                stroke="#00f3ff"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Center Splitter Bars */}
+              <line
+                x1="12"
+                y1="5"
+                x2="12"
+                y2="15"
+                stroke="#00f3ff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="16"
+                y1="5"
+                x2="16"
+                y2="15"
+                stroke="#00f3ff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              {/* Right Arrow */}
+              <path
+                d="M21 6L25 10L21 14"
+                stroke="#00f3ff"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Center pink core dot */}
+              <circle cx="14" cy="10" r="1.5" fill="#ff007f" />
+            </svg>
+          </div>
+        ) : cursorType === "text" ? (
+          // Text Caret Beam (Centered horizontally and vertically)
+          <div className="relative -ml-[6px] -mt-[10px] w-3 h-5 flex items-center justify-center">
+            <svg
+              width="12"
+              height="20"
+              viewBox="0 0 12 20"
+              fill="none"
+              className="drop-shadow-[0_0_6px_#00f3ff]"
+            >
+              <line
+                x1="2"
+                y1="2"
+                x2="10"
+                y2="2"
+                stroke="#00f3ff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="6"
+                y1="2"
+                x2="6"
+                y2="18"
+                stroke="#ffffff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="2"
+                y1="18"
+                x2="10"
+                y2="18"
+                stroke="#00f3ff"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        ) : cursorType === "pointer" ? (
+          // Interactive Hover: Hot Pink Cyber Stealth Arrow (Tip at 0, 0)
+          <div
+            className={`relative transition-transform duration-100 ease-out ${
+              isClicking ? "scale-90" : "scale-105"
+            }`}
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 22 22"
+              fill="none"
+              className="drop-shadow-[0_0_8px_#ff007f]"
+            >
+              {/* Dark Backing Arrow */}
+              <path
+                d="M1 1L17 12L10 13.5L7.5 19.5L1 1Z"
+                fill="#05070e"
+                stroke="#ff007f"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              {/* Inner Hot-Pink Blade */}
+              <path
+                d="M2.5 3.5L13.5 11L9 12.2L7 16.5L2.5 3.5Z"
+                fill="#ff007f"
+                fillOpacity="0.45"
+              />
+              {/* Sharp Tip Laser Pixel */}
+              <circle cx="1.5" cy="1.5" r="1.2" fill="#ffffff" />
+              {/* Tech Bracket */}
+              <path
+                d="M14 18L18 18L18 14"
+                stroke="#ff007f"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                className="animate-pulse"
+              />
+            </svg>
+          </div>
+        ) : (
+          // Default: Sharp Neon Cyan Cyber Stealth Arrow (Tip at 0, 0)
+          <div
+            className={`relative transition-transform duration-100 ease-out ${
+              isClicking ? "scale-90" : "scale-100"
+            }`}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              className="drop-shadow-[0_0_7px_#00f3ff]"
+            >
+              {/* Dark Backing Arrow */}
+              <path
+                d="M1 1L16 11L9.5 12.5L7 18.5L1 1Z"
+                fill="#05070e"
+                stroke="#00f3ff"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              {/* Inner Neon Cyan Blade */}
+              <path
+                d="M2.5 3.5L12.5 10.5L8 11.5L6 16L2.5 3.5Z"
+                fill="#00f3ff"
+                fillOpacity="0.35"
+              />
+              {/* Sharp Tip Laser Pixel */}
+              <circle cx="1.5" cy="1.5" r="1" fill="#ffffff" />
+            </svg>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

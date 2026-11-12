@@ -21,13 +21,29 @@ export function AppShell({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
+  const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
 
   useEffect(() => {
     const saved = localStorage.getItem("kimgatta_sidebar_collapsed");
     if (saved === "true") {
       setIsCollapsed(true);
     }
+    const savedCursor = localStorage.getItem("kimgatta_cursor_mode");
+    if (savedCursor === "native") {
+      setCursorMode("native");
+    }
   }, []);
+
+  const toggleCursorMode = () => {
+    const next = cursorMode === "cyber" ? "native" : "cyber";
+    setCursorMode(next);
+    try {
+      localStorage.setItem("kimgatta_cursor_mode", next);
+    } catch {
+      // ignore
+    }
+    window.dispatchEvent(new CustomEvent("toggle-cursor-mode", { detail: next }));
+  };
 
   // Update activeSection on pathname changes and on scroll
   useEffect(() => {
@@ -125,7 +141,23 @@ export function AppShell({
                   {siteConfig.githubUsername}). POWERED BY NEXT.JS & GITHUB PAGES.
                 </span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <button
+                  type="button"
+                  onClick={toggleCursorMode}
+                  title="마우스 커서 스타일 전환 (사이버펑크 / 시스템 기본)"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-[10px] font-mono text-slate-300 hover:text-neon-cyan transition-all cursor-pointer"
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      cursorMode === "cyber"
+                        ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
+                        : "bg-slate-500"
+                    }`}
+                  />
+                  <span>CURSOR: {cursorMode === "cyber" ? "CYBER" : "SYSTEM"}</span>
+                </button>
+
                 <a
                   href={siteConfig.social.github}
                   target="_blank"
