@@ -152,7 +152,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
   return (
     <section id="posts" className="py-6 space-y-6 scroll-mt-20">
       {/* Control Bar: Search + Category Filter + View Mode */}
-      <div className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-5 shadow-md dark:shadow-[0_0_20px_rgba(0,243,255,0.1)] space-y-4 cyber-corner">
+      <div className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white/95 dark:bg-[#0b101e]/95 p-4 sm:p-5 shadow-md dark:shadow-[0_0_20px_rgba(0,243,255,0.1)] flex flex-col gap-4 cyber-corner">
         <span className="cyber-corner-bracket-tl" />
         <span className="cyber-corner-bracket-tr" />
         <span className="cyber-corner-bracket-bl" />
