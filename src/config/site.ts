@@ -34,10 +34,13 @@ export const siteConfig = {
     inputPosition: "bottom",
     lang: "ko",
   },
-  // 방문자 수 카운터 설정 (hitscounter.dev 기반 정적 사이트 무료 카운터)
+  // 방문자 수 카운터 설정 (hitscounter.dev 기반 정적 사이트 무료 카운터 + 이전 Tistory 누적 합산)
   visitorCounter: {
     enabled: true,
     targetUrl: "https://nicebyy.github.io",
+    legacyTotalHits: 49561, // 이전 티스토리(katastrophe.tistory.com) 누적 방문자 수
+    legacySourceName: "Tistory",
+    legacySourceUrl: "https://katastrophe.tistory.com/",
   },
 };
 
