@@ -149,7 +149,7 @@ export function Sidebar({
                 <Terminal className="w-4 h-4 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-sm text-slate-900 dark:text-white dark:drop-shadow-[0_0_8px_#00f3ff] truncate">
+                <p className="font-cyber font-black text-sm text-slate-900 dark:text-white dark:drop-shadow-[0_0_8px_#00f3ff] truncate">
                   {siteConfig.author}
                 </p>
                 <p className="font-mono text-[11px] text-pink-600 dark:text-neon-pink truncate">

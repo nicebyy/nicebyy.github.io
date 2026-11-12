@@ -100,7 +100,7 @@ export function Navbar({
               <Terminal className="w-4 h-4" />
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="font-orbitron tracking-wider text-white group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff] transition-all">
+              <span className="font-cyber font-black tracking-wider text-white group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff] transition-all">
                 {siteConfig.author}
               </span>
               <span className="text-neon-cyan animate-pulse font-black font-mono">

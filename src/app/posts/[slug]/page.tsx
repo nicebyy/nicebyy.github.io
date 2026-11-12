@@ -80,7 +80,7 @@ export default async function PostDetailPage({
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white leading-tight break-words">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-cyber tracking-wide text-slate-900 dark:text-white leading-tight break-words">
               {post.title}
             </h1>
 

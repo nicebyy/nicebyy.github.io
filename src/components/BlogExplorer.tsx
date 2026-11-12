@@ -291,7 +291,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                 </div>
 
                 {/* Title */}
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_10px_#00f3ff] transition-all leading-snug flex items-start justify-between gap-2">
+                <h2 className="text-lg sm:text-xl font-black font-cyber tracking-wide text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_10px_#00f3ff] transition-all leading-snug flex items-start justify-between gap-2">
                   <span className="break-words min-w-0">{post.title}</span>
                   <ArrowUpRight className="w-5 h-5 shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-neon-cyan group-hover:drop-shadow-[0_0_8px_#00f3ff]" />
                 </h2>
@@ -332,7 +332,7 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
                   <span className="text-slate-400">{post.date}</span>
                   <span className="text-slate-400">· {post.readingTime}</span>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_8px_#00f3ff] transition-all truncate">
+                <h3 className="text-base sm:text-lg font-black font-cyber tracking-wide text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-neon-cyan dark:group-hover:drop-shadow-[0_0_8px_#00f3ff] transition-all truncate">
                   {post.title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">

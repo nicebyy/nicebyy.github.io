@@ -141,7 +141,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </div>
               <span className="ml-1 font-mono text-xs text-slate-300 flex items-center gap-1.5 truncate">
                 <TerminalIcon className="w-3.5 h-3.5 text-neon-cyan shrink-0 animate-pulse" />
-                <span className="text-neon-cyan font-bold font-orbitron shrink-0">{siteConfig.author}</span>
+                <span className="text-neon-cyan font-black font-cyber shrink-0">{siteConfig.author}</span>
                 <span className="text-slate-500">@</span>
                 <span className="text-slate-300 font-chakra truncate">cyber-node</span>
               </span>
@@ -248,8 +248,8 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
             </div>
 
-            {/* Neon Sign Header Title with Orbitron Font */}
-            <h1 className="text-2xl sm:text-3xl font-black font-orbitron tracking-wide text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.4)]">
+            {/* Neon Sign Header Title with Cyber SF Font */}
+            <h1 className="text-2xl sm:text-3xl font-black font-cyber tracking-wide text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.4)]">
               {siteConfig.title}
             </h1>
             <p className="text-xs sm:text-sm font-chakra text-slate-300 leading-relaxed">

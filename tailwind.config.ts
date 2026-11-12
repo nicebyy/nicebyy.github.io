@@ -10,23 +10,43 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        orbitron: ["var(--font-orbitron)", "sans-serif"],
-        chakra: ["var(--font-chakra)", "sans-serif"],
+        orbitron: [
+          "var(--font-orbitron)",
+          "SfHambakneun",
+          "Orbit",
+          "Oxanium",
+          "sans-serif",
+        ],
+        chakra: [
+          "var(--font-chakra)",
+          "Oxanium",
+          "Orbit",
+          "SfHambakneun",
+          "sans-serif",
+        ],
         mono: [
+          "'NeoDunggeunmo Pro'",
           "var(--font-mono)",
+          "'Share Tech Mono'",
           "JetBrains Mono",
-          "Fira Code",
-          "Consolas",
-          "Monaco",
           "monospace",
         ],
         sans: [
+          "Orbit",
           "var(--font-chakra)",
-          "Pretendard Variable",
-          "Pretendard",
-          "-apple-system",
-          "BlinkMacSystemFont",
+          "Oxanium",
           "sans-serif",
+        ],
+        cyber: [
+          "SfHambakneun",
+          "var(--font-orbitron)",
+          "Orbit",
+          "Oxanium",
+          "sans-serif",
+        ],
+        pixel: [
+          "'NeoDunggeunmo Pro'",
+          "monospace",
         ],
       },
       colors: {
