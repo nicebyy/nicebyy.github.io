@@ -21,13 +21,13 @@ export const siteConfig = {
     { name: "CSS / Style", level: 27, bytes: "4.90 MB", color: "green" },
     { name: "Kotlin", level: 2, bytes: "278 KB", color: "pink" },
   ],
-  // Giscus 댓글 설정 (https://giscus.app 에서 본인 저장소 정보 입력 후 아래 값 채우기)
+  // Giscus 댓글 설정 (https://giscus.app 연동 완료)
   giscus: {
     enabled: true,
     repo: "nicebyy/nicebyy.github.io" as `${string}/${string}`,
-    repoId: "", // 예: "R_kgDOM..." (비워두면 블로그 화면에 간편 연동 안내가 표시됩니다)
+    repoId: "R_kgDOVQT6aA",
     category: "General",
-    categoryId: "", // 예: "DIC_kwDOM..."
+    categoryId: "DIC_kwDOVQT6aM4DK9F1",
     mapping: "pathname",
     reactionsEnabled: "1",
     emitMetadata: "0",
