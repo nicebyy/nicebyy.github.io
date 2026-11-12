@@ -1,7 +1,7 @@
 ---
 title: '[Spring] 동시성 관리와 락 병행제어 (Redisson, Mysql 네임드락)'
 date: '2023-04-07'
-category: Spring
+category: Backend/Spring
 tags:
   - MYSQL
   - NamedLock

@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Websocket 과 ReverseProxy'
 date: '2023-08-11'
-category: Spring
+category: Backend/Spring
 tags:
   - apache reverseProxy
   - ReverseProxy

@@ -3,7 +3,7 @@ title: >-
   [JPA] org.springframework.beans.factory.UnsatisfiedDependencyException: Error
   creating bean with name
 date: '2022-04-10'
-category: JPA
+category: Backend/JPA
 tags:
   - JpaCustomRepository
 summary: >-

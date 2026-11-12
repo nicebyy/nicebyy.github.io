@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
+import { buildCategoryTree, CategoryNode } from "@/lib/categories";
 
 const MIN_SIDEBAR_WIDTH = 200;
 const MAX_SIDEBAR_WIDTH = 520;
@@ -135,14 +136,19 @@ export function Sidebar({
     }
   };
 
-  // Specific categories (excluding ALL, since All Logs is in NAVIGATION)
-  const categories = useMemo(() => {
-    const counts: Record<string, number> = {};
-    posts.forEach((p) => {
-      counts[p.category] = (counts[p.category] || 0) + 1;
-    });
-    return counts;
-  }, [posts]);
+  // Hierarchical category tree
+  const categoryTree = useMemo(() => buildCategoryTree(posts), [posts]);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({
+    Backend: true,
+  });
+
+  const toggleFolder = (folderName: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setExpandedFolders((prev) => ({
+      ...prev,
+      [folderName]: !prev[folderName],
+    }));
+  };
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -357,17 +363,18 @@ export function Sidebar({
         <div className="px-2.5 pt-2 border-t border-slate-200/70 dark:border-white/10">
           {collapsed ? (
             <div className="flex flex-col items-center gap-1.5">
-              {Object.entries(categories).map(([cat, count]) => {
+              {categoryTree.map((node) => {
                 const isSelected =
-                  activeCategory === cat &&
+                  (activeCategory === node.fullPath ||
+                    activeCategory.startsWith(node.fullPath + "/")) &&
                   activeSection === "posts" &&
                   (pathname === "/" || pathname.startsWith("/posts/"));
                 return (
                   <button
-                    key={cat}
+                    key={node.fullPath}
                     type="button"
-                    onClick={() => handleSelectCategory(cat)}
-                    title={`${cat} (${count})`}
+                    onClick={() => handleSelectCategory(node.fullPath)}
+                    title={`${node.name} (${node.count})`}
                     className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[10px] font-mono transition-all cursor-pointer ${
                       isSelected
                         ? "bg-cyan-500/20 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan"
@@ -376,7 +383,7 @@ export function Sidebar({
                   >
                     <Folder className="w-3.5 h-3.5" />
                     <span className="text-[9px] leading-none mt-0.5">
-                      {cat.slice(0, 3)}
+                      {node.name.slice(0, 3)}
                     </span>
                   </button>
                 );
@@ -399,38 +406,116 @@ export function Sidebar({
 
               {catOpen && (
                 <div className="space-y-0.5 pt-0.5">
-                  {Object.entries(categories).map(([cat, count]) => {
+                  {categoryTree.map((node) => {
+                    const hasChildren = node.children.length > 0;
+                    const isExpanded = Boolean(expandedFolders[node.name]);
+                    const isExactSelected = activeCategory === node.fullPath;
+                    const isChildSelected = activeCategory.startsWith(
+                      node.fullPath + "/"
+                    );
                     const isSelected =
-                      activeCategory === cat &&
+                      (isExactSelected || isChildSelected) &&
                       activeSection === "posts" &&
                       (pathname === "/" || pathname.startsWith("/posts/"));
+
                     return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => handleSelectCategory(cat)}
-                        className={`w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan font-bold"
-                            : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 truncate">
-                          {isSelected ? (
-                            <FolderOpen className="w-3.5 h-3.5 text-neon-cyan shrink-0 animate-pulse" />
-                          ) : (
-                            <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                          )}
-                          <span className="truncate">{cat}</span>
-                        </span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                          isSelected
-                            ? "bg-cyan-500/25 text-neon-cyan border border-cyan-500/40 font-bold"
-                            : "bg-white/5 text-slate-400 border border-white/10"
-                        }`}>
-                          {count}
-                        </span>
-                      </button>
+                      <div key={node.fullPath} className="space-y-0.5">
+                        <div
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-mono transition-all ${
+                            isSelected
+                              ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/40 shadow-neon-cyan font-bold"
+                              : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleSelectCategory(node.fullPath)}
+                            className="flex-1 flex items-center gap-2 truncate text-left cursor-pointer"
+                          >
+                            {isSelected ? (
+                              <FolderOpen className="w-3.5 h-3.5 text-neon-cyan shrink-0 animate-pulse" />
+                            ) : (
+                              <Folder className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                            )}
+                            <span className="truncate">{node.name}</span>
+                          </button>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span
+                              onClick={() => handleSelectCategory(node.fullPath)}
+                              className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer ${
+                                isSelected
+                                  ? "bg-cyan-500/25 text-neon-cyan border border-cyan-500/40 font-bold"
+                                  : "bg-white/5 text-slate-400 border border-white/10"
+                              }`}
+                            >
+                              {node.count}
+                            </span>
+                            {hasChildren && (
+                              <button
+                                type="button"
+                                onClick={(e) => toggleFolder(node.name, e)}
+                                className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-neon-cyan transition-colors cursor-pointer"
+                                title={
+                                  isExpanded
+                                    ? "서브카테고리 접기"
+                                    : "서브카테고리 펼치기"
+                                }
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3 h-3 text-neon-cyan" />
+                                ) : (
+                                  <ChevronRight className="w-3 h-3" />
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {hasChildren && isExpanded && (
+                          <div className="ml-3 pl-2.5 border-l border-cyan-500/20 space-y-0.5 pt-0.5">
+                            {node.children.map((child) => {
+                              const isChildActive =
+                                activeCategory === child.fullPath &&
+                                activeSection === "posts" &&
+                                (pathname === "/" ||
+                                  pathname.startsWith("/posts/"));
+                              return (
+                                <button
+                                  key={child.fullPath}
+                                  type="button"
+                                  onClick={() =>
+                                    handleSelectCategory(child.fullPath)
+                                  }
+                                  className={`w-full flex items-center justify-between px-2 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer ${
+                                    isChildActive
+                                      ? "bg-cyan-500/20 text-neon-cyan border border-cyan-500/50 shadow-[0_0_8px_rgba(0,243,255,0.3)] font-bold"
+                                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
+                                  }`}
+                                >
+                                  <span className="flex items-center gap-1.5 truncate">
+                                    <span className="text-[10px] text-cyan-500/60 font-mono">
+                                      └
+                                    </span>
+                                    <span className="truncate">
+                                      {child.name}
+                                    </span>
+                                  </span>
+                                  <span
+                                    className={`text-[9px] px-1.5 py-0.5 rounded ${
+                                      isChildActive
+                                        ? "bg-cyan-500/30 text-neon-cyan font-bold"
+                                        : "text-slate-500"
+                                    }`}
+                                  >
+                                    {child.count}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>

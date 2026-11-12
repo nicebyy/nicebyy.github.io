@@ -1,7 +1,7 @@
 ---
 title: '[SpringSecurity] 스프링 시큐리티 구성하기'
 date: '2022-06-07'
-category: Spring
+category: Backend/Spring
 tags:
   - spring security configure
   - 스프링

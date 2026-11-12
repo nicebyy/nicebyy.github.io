@@ -66,9 +66,23 @@ export default async function PostDetailPage({
           {/* Post Header */}
           <header className="pb-6 mb-8 border-b border-slate-200 dark:border-cyan-500/20 space-y-4">
             <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 font-bold dark:shadow-[0_0_10px_rgba(0,243,255,0.3)]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-cyan-500/10 text-cyan-700 dark:text-neon-cyan border border-cyan-500/40 font-bold dark:shadow-[0_0_10px_rgba(0,243,255,0.3)]">
                 <Folder className="w-3.5 h-3.5 text-neon-cyan" />
-                {post.category}
+                {post.category.includes("/") ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="opacity-80">
+                      {post.category.split("/")[0]}
+                    </span>
+                    <span className="text-[10px] text-cyan-500/60 font-mono">
+                      ❯
+                    </span>
+                    <span>
+                      {post.category.split("/").slice(1).join("/")}
+                    </span>
+                  </span>
+                ) : (
+                  <span>{post.category}</span>
+                )}
               </span>
               <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
                 <Calendar className="w-3.5 h-3.5" />

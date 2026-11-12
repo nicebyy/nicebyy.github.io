@@ -1,7 +1,7 @@
 ---
 title: '[Spring] RestAPI와 Hateoas로 링크 삽입하기'
 date: '2022-06-19'
-category: Spring
+category: Backend/Spring
 tags:
   - restapi
   - spring hateoas

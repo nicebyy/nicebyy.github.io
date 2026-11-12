@@ -1,7 +1,7 @@
 ---
 title: '[JPA] JPA 개요 및 영속성 컨텍스트'
 date: '2022-05-24'
-category: JPA
+category: Backend/JPA
 tags:
   - JPA개요
   - JPA란

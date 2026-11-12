@@ -3,7 +3,7 @@ title: >-
   [Spring] java.lang.NoSuchFieldError: Class
   com.sun.tools.javac.tree.JCTree$JCImport
 date: '2023-10-29'
-category: Spring
+category: Backend/Spring
 tags:
   - lombok 빌드실패
 summary: >-

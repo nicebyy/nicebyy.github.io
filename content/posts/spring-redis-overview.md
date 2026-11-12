@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Redis'
 date: '2022-09-17'
-category: Spring
+category: Backend/Spring
 tags:
   - Redis
   - Spring

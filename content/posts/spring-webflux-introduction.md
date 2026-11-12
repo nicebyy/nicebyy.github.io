@@ -1,7 +1,7 @@
 ---
 title: '[Spring] WebFlux 도입에 관한 이야기'
 date: '2022-11-03'
-category: Spring
+category: Backend/Spring
 tags:
   - spring webflux
   - Webflux

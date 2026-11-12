@@ -1,7 +1,7 @@
 ---
 title: '[SpringSecurity] 권한 설정 hasRole 오류와 prefix'
 date: '2022-06-02'
-category: Spring
+category: Backend/Spring
 tags:
   - 스프링시큐리티 hasrole
 summary: >-

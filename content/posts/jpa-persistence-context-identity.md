@@ -1,7 +1,7 @@
 ---
 title: '[JPA] 영속성 컨텍스트와 동일성보장'
 date: '2022-02-28'
-category: JPA
+category: Backend/JPA
 tags:
   - JPA 변경감지
   - JPA 엔티티 동일성

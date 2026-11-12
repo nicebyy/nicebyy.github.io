@@ -1,7 +1,7 @@
 ---
 title: '[JPA] (Auditing) @LastModifiedDate 동작 안함'
 date: '2022-03-03'
-category: JPA
+category: Backend/JPA
 tags:
   - '@LastModifiedDate'
   - auditing

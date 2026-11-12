@@ -1,7 +1,7 @@
 ---
 title: '[Spring] YML 한번 알고 가기'
 date: '2022-06-07'
-category: Spring
+category: Backend/Spring
 tags:
   - springboot YML
   - yml이란

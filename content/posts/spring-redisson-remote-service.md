@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Redisson Remote Service 분해해보기'
 date: '2023-06-25'
-category: Spring
+category: Backend/Spring
 tags:
   - MSA
   - Redis

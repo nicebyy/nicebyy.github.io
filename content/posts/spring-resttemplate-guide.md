@@ -1,7 +1,7 @@
 ---
 title: '[Spring] 스프링 RestTemplate'
 date: '2022-06-26'
-category: Spring
+category: Backend/Spring
 tags:
   - restapi
   - RestTemplate

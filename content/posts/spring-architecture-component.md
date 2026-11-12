@@ -1,7 +1,7 @@
 ---
 title: Spring 구조와 Component
 date: '2022-05-07'
-category: Spring
+category: Backend/Spring
 tags:
   - 스프링 구조
   - 스프링 인 액션

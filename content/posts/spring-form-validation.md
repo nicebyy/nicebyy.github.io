@@ -1,7 +1,7 @@
 ---
 title: '[Spring] 폼 유효성(validation) 검사하기'
 date: '2022-05-24'
-category: Spring
+category: Backend/Spring
 tags:
   - Form Validation
   - 백엔드

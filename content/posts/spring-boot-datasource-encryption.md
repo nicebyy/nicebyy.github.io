@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Springboot 개발 환경 분리 및 Datasource 암호화 하기'
 date: '2022-07-06'
-category: Spring
+category: Backend/Spring
 tags:
   - application.yml 암호화
   - Datasource 암호화

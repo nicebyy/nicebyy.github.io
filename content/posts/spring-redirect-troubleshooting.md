@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Spring Redirect 가 동작하지 않는 이유'
 date: '2022-11-07'
-category: Spring
+category: Backend/Spring
 tags:
   - Spring Redirect
   - 리다이렉션

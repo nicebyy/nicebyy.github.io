@@ -1,7 +1,7 @@
 ---
 title: '[Spring] Http 통신과 관련된 Annotations 간단 정리'
 date: '2022-06-16'
-category: Spring
+category: Backend/Spring
 tags:
   - '@RequestParam'
   - 스프링 annotation
