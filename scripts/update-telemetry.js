@@ -5,7 +5,7 @@ const path = require('path');
 async function main() {
   console.log('🔍 Fetching GitHub telemetry for @nicebyy (public + private)...');
 
-  let token = process.env.GITHUB_TOKEN;
+  let token = process.env.TELEMETRY_TOKEN || process.env.GITHUB_TOKEN;
   if (!token) {
     try {
       const creds = execSync('git credential fill', { input: 'protocol=https\nhost=github.com\n\n', stdio: ['pipe', 'pipe', 'ignore'] }).toString();
@@ -44,6 +44,11 @@ async function main() {
   const publicCount = allRepos.filter(r => !r.private).length;
   const privateCount = allRepos.filter(r => r.private).length;
   console.log(`📦 Found ${allRepos.length} owned repositories (${publicCount} public, ${privateCount} private).`);
+
+  if (allRepos.length === 0) {
+    console.warn('⚠️ No repositories retrieved from GitHub API. Preserving existing telemetry in src/config/site.ts.');
+    return;
+  }
 
   // 2. Fetch language breakdown
   const langTotals = {};
