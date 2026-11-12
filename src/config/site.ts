@@ -1,14 +1,15 @@
 export const siteConfig = {
-  title: "NICEBYY // DEV.LOG",
-  author: "nicebyy",
+  title: "김까따 // DEV.LOG",
+  author: "김까따",
+  githubUsername: "nicebyy",
   role: "Full-Stack & Frontend Developer",
   url: "https://nicebyy.github.io",
   githubRepo: "nicebyy/nicebyy.github.io",
   description:
-    "터미널 감성과 인터랙티브 웹 기술을 기록하는 nicebyy의 개발 로그 & 아카이브",
+    "터미널 감성과 인터랙티브 웹 기술을 기록하는 김까따의 개발 로그 & 아카이브",
   bio: "코드로 문제를 해결하고, 실험적인 웹 인터페이스와 아키텍처를 탐구합니다.",
   location: "Seoul, KR",
-  statusText: "SYSTEM.ONLINE // READY TO BUILD",
+  statusText: "SYSTEM.ONLINE // 김까따 NODE",
   email: "nicebyy@users.noreply.github.com",
   social: {
     github: "https://github.com/nicebyy",

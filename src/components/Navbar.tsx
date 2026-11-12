@@ -12,11 +12,24 @@ import {
   Cpu,
   BookOpen,
   User,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { siteConfig } from "@/config/site";
 
-export function Navbar() {
+interface NavbarProps {
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
+  onOpenMobileSidebar?: () => void;
+}
+
+export function Navbar({
+  isSidebarCollapsed,
+  onToggleSidebar,
+  onOpenMobileSidebar,
+}: NavbarProps) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
@@ -25,10 +38,37 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-cyan-500/20 bg-white/85 dark:bg-[#060911]/85 backdrop-blur-md transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-        {/* Left: Brand & System Status */}
-        <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-cyan-500/20 bg-white/85 dark:bg-[#060911]/85 backdrop-blur-md transition-colors">
+      <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        {/* Left: Sidebar Toggle + Brand & System Status */}
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Toggle */}
+          <button
+            type="button"
+            onClick={onOpenMobileSidebar}
+            aria-label="사이드바 메뉴 열기"
+            className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-cyan-500/15 text-slate-700 dark:text-neon-cyan border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+
+          {/* Desktop Sidebar Collapse/Expand Toggle */}
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            title={isSidebarCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-cyan-500/15 text-slate-700 dark:text-neon-cyan border border-slate-200 dark:border-cyan-500/30 transition-all cursor-pointer text-xs font-mono"
+          >
+            {isSidebarCollapsed ? (
+              <>
+                <PanelLeftOpen className="w-4 h-4" />
+                <span>SIDEBAR</span>
+              </>
+            ) : (
+              <PanelLeftClose className="w-4 h-4" />
+            )}
+          </button>
+
           <Link
             href="/"
             className="group flex items-center gap-2.5 font-mono font-bold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white"
@@ -53,7 +93,7 @@ export function Navbar() {
 
         {/* Center / Right Navigation */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <nav className="flex items-center gap-1 font-mono text-xs sm:text-sm mr-1">
+          <nav className="hidden sm:flex items-center gap-1 font-mono text-xs sm:text-sm mr-1">
             <Link
               href="/"
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${
@@ -89,7 +129,7 @@ export function Navbar() {
             type="button"
             onClick={triggerSearchFocus}
             title="포스트 빠른 검색 (Ctrl + K)"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono bg-slate-100 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-cyan-500/10 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 dark:hover:border-cyan-500/30 transition-all"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono bg-slate-100 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-cyan-500/10 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 dark:hover:border-cyan-500/30 transition-all cursor-pointer"
           >
             <Search className="w-3.5 h-3.5 text-cyan-600 dark:text-neon-cyan" />
             <span>Search...</span>
@@ -113,7 +153,7 @@ export function Navbar() {
             onClick={toggleTheme}
             aria-label="테마 전환"
             title={theme === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
-            className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-cyan-500/10 text-slate-700 dark:text-neon-cyan border border-slate-200 dark:border-cyan-500/30 hover:shadow-neon-cyan transition-all"
+            className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-cyan-500/10 text-slate-700 dark:text-neon-cyan border border-slate-200 dark:border-cyan-500/30 hover:shadow-neon-cyan transition-all cursor-pointer"
           >
             {theme === "dark" ? (
               <Sun className="w-4 h-4" />

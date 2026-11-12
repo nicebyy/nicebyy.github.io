@@ -19,7 +19,7 @@ export default function AboutPage() {
               <span>OPERATOR PROFILE // {siteConfig.author.toUpperCase()}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              @{siteConfig.author}
+              {siteConfig.author}
             </h1>
             <p className="font-mono text-sm text-purple-600 dark:text-purple-300">
               {siteConfig.role} · {siteConfig.location}
@@ -33,7 +33,7 @@ export default function AboutPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-slate-900 dark:bg-cyan-500/15 text-white dark:text-neon-cyan border border-slate-800 dark:border-neon-cyan/40 hover:opacity-90 transition-all self-start"
           >
             <Github className="w-4 h-4" />
-            <span>github.com/{siteConfig.author}</span>
+            <span>github.com/{siteConfig.githubUsername}</span>
           </a>
         </div>
 

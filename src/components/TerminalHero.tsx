@@ -27,12 +27,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     {
       id: 1,
       type: "accent",
-      text: `NICEBYY OS v2.6.0 [KERNEL: NEXT.JS_STATIC_EXPORT] — Type 'help' or click a command below.`,
+      text: `김까따 OS v2.6.0 [KERNEL: NEXT.JS_STATIC_EXPORT] — Type 'help' or click a command below.`,
     },
     {
       id: 2,
       type: "output",
-      text: `> Welcome! Loaded ${posts.length} markdown posts from /content/posts.`,
+      text: `> 안녕하세요, ${siteConfig.author}의 개발 로그입니다! (${posts.length}개의 포스트 로드 완료)`,
     },
   ]);
   const terminalBodyRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,11 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     if (!cmd) return;
 
     const newLines: TerminalLine[] = [
-      { id: Date.now(), type: "input", text: `nicebyy@dev-node:~$ ${rawCmd}` },
+      {
+        id: Date.now(),
+        type: "input",
+        text: `${siteConfig.author}@dev-node:~$ ${rawCmd}`,
+      },
     ];
 
     if (cmd === "help") {
@@ -60,18 +64,18 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         type: "output",
         text: [
           "Available commands:",
-          "  whoami   — Display developer profile & bio",
-          "  skills   — Show core tech stack telemetry",
-          "  ls       — List latest blog posts",
-          "  theme    — Toggle Cyberpunk Dark / Clean Light theme",
-          "  clear    — Clear terminal output",
+          "  whoami   — 김까따 개발자 프로필 & 소개 조회",
+          "  skills   — 주요 기술 스택 및 숙련도 게이지 출력",
+          "  ls       — 최근 작성된 블로그 포스트 리스트 확인",
+          "  theme    — 사이버펑크 다크 / 클린 라이트 테마 전환",
+          "  clear    — 터미널 출력 로그 초기화",
         ].join("\n"),
       });
     } else if (cmd === "whoami") {
       newLines.push({
         id: Date.now() + 1,
         type: "accent",
-        text: `[USER] ${siteConfig.author} (${siteConfig.role})\n[BIO]  ${siteConfig.bio}\n[REPO] https://github.com/${siteConfig.githubRepo}`,
+        text: `[OPERATOR] ${siteConfig.author} (${siteConfig.role})\n[BIO]      ${siteConfig.bio}\n[GITHUB]   https://github.com/${siteConfig.githubRepo}`,
       });
     } else if (cmd === "skills") {
       const skillLines = siteConfig.techStack
@@ -127,7 +131,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
   };
 
   return (
-    <section className="relative pt-6 pb-8">
+    <section className="relative pt-2 pb-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left 7 cols: Interactive Terminal Window */}
         <div className="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-slate-950 text-slate-100 shadow-xl dark:shadow-neon-cyan overflow-hidden flex flex-col justify-between">
@@ -139,7 +143,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               <span className="w-3 h-3 rounded-full bg-emerald-400/80" />
               <span className="ml-2 font-mono text-xs text-slate-400 flex items-center gap-1.5">
                 <TerminalIcon className="w-3.5 h-3.5 text-neon-cyan" />
-                <span>nicebyy@github.io: ~/blog</span>
+                <span>{siteConfig.author}@github.io: ~/blog</span>
               </span>
             </div>
             <span className="font-mono text-[11px] px-2 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/20">
@@ -220,7 +224,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 <span>DEV TELEMETRY</span>
               </span>
               <span className="font-mono text-xs text-slate-400 dark:text-slate-500">
-                ID // {siteConfig.author.toUpperCase()}
+                OPERATOR // {siteConfig.author}
               </span>
             </div>
 

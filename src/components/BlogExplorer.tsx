@@ -42,11 +42,34 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
       });
     };
 
+    const handleSidebarCategory = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      if (custom.detail) {
+        setSelectedCategory(custom.detail);
+        setSelectedTag(null);
+      }
+    };
+
+    const handleSidebarTag = (e: Event) => {
+      const custom = e as CustomEvent<string>;
+      if (custom.detail) {
+        setSelectedTag(custom.detail);
+        setSelectedCategory("ALL");
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("focus-blog-search", handleFocusEvent);
+    window.addEventListener("sidebar-select-category", handleSidebarCategory);
+    window.addEventListener("sidebar-select-tag", handleSidebarTag);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("focus-blog-search", handleFocusEvent);
+      window.removeEventListener(
+        "sidebar-select-category",
+        handleSidebarCategory
+      );
+      window.removeEventListener("sidebar-select-tag", handleSidebarTag);
     };
   }, []);
 
