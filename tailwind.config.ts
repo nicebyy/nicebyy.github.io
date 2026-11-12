@@ -12,7 +12,6 @@ const config: Config = {
       fontFamily: {
         orbitron: [
           "var(--font-orbitron)",
-          "SfHambakneun",
           "Orbit",
           "Oxanium",
           "sans-serif",
@@ -21,7 +20,6 @@ const config: Config = {
           "var(--font-chakra)",
           "Oxanium",
           "Orbit",
-          "SfHambakneun",
           "sans-serif",
         ],
         mono: [
@@ -38,7 +36,6 @@ const config: Config = {
           "sans-serif",
         ],
         cyber: [
-          "SfHambakneun",
           "var(--font-orbitron)",
           "Orbit",
           "Oxanium",

@@ -4,13 +4,6 @@
 /* NeoDunggeunmo Pro (Cyberpunk 2077 Retro Terminal & Netrunner Deck Korean/Latin Monospace) */
 @import url('https://cdn.jsdelivr.net/gh/neodgm/neodgm-pro-webfont@1.020/neodgm_pro/style.css');
 
-/* SF함박눈체 (Heavy Sci-Fi Cyberpunk Title Font for Korean/Latin) */
-@font-face {
-  font-family: 'SfHambakneun';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2106@1.1/SF_HambakSnow.woff') format('woff');
-  font-weight: normal;
-  font-display: swap;
-}
 
 /* 싸락눈체 (Alternative High-Tech Sci-Fi Display Font) */
 @font-face {
