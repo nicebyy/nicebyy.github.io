@@ -45,7 +45,7 @@ export function Sidebar({
   const router = useRouter();
   const [catOpen, setCatOpen] = useState(true);
   const [recentOpen, setRecentOpen] = useState(true);
-  const [tagsOpen, setTagsOpen] = useState(true);
+  const [tagsOpen, setTagsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
 
   // Specific categories (excluding ALL, since All Logs is in NAVIGATION)
@@ -460,7 +460,7 @@ export function Sidebar({
     <>
       {/* Desktop Sticky Collapsible Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/20 bg-[#070b14]/90 backdrop-blur-md transition-all duration-300 z-30 overflow-y-auto ${
+        className={`hidden lg:flex flex-col shrink-0 sticky top-16 h-[calc(100vh-4rem)] border-r border-cyan-500/20 bg-[#070b14]/90 backdrop-blur-md transition-all duration-300 z-30 overflow-y-auto cyber-scrollbar ${
           isCollapsed ? "w-16" : "w-64"
         }`}
       >
@@ -474,7 +474,7 @@ export function Sidebar({
             className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
             onClick={onCloseMobile}
           />
-          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-[#070b14] border-r border-cyan-500/40 shadow-2xl shadow-neon-cyan overflow-y-auto">
+          <aside className="relative z-10 w-72 max-w-[85vw] h-full bg-[#070b14] border-r border-cyan-500/40 shadow-2xl shadow-neon-cyan overflow-y-auto cyber-scrollbar">
             {sidebarContent(false)}
           </aside>
         </div>

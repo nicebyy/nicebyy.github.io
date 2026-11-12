@@ -52,6 +52,84 @@ nextjs-portal [data-nextjs-toast],
   scrollbar-width: none;
 }
 
+/* Cyberpunk Neon Slim Scrollbar (Specialized for Sidebar and Dark Panels) */
+.cyber-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 243, 255, 0.3) transparent;
+}
+
+.cyber-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.25);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  transition: all 0.2s ease;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 243, 255, 0.65);
+  border-color: #00f3ff;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.75);
+}
+
+.cyber-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgba(255, 0, 127, 0.75);
+  border-color: #ff007f;
+  box-shadow: 0 0 12px rgba(255, 0, 127, 0.85);
+}
+
+.cyber-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.cyber-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Global Cyberpunk Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(5, 7, 14, 0.85);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 243, 255, 0.22);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 243, 255, 0.55);
+  border-color: #00f3ff;
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.65);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
 /* Cyberpunk Neon Grid & Scanline Background */
 .cyber-grid-bg {
   background-image: 
