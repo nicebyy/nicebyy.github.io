@@ -26,6 +26,8 @@ export interface PostMeta {
   summary: string;
   image?: string;
   featured?: boolean;
+  draft?: boolean;
+  hidden?: boolean;
   readingTime: string;
 }
 
@@ -33,6 +35,10 @@ export interface PostDetail extends PostMeta {
   contentHtml: string;
   rawContent: string;
   toc: TocItem[];
+}
+
+export interface PostStudioItem extends PostMeta {
+  rawContent: string;
 }
 
 function calculateReadingTime(content: string): string {
@@ -73,7 +79,8 @@ function extractToc(markdown: string): TocItem[] {
   return toc;
 }
 
-export function getAllPosts(): PostMeta[] {
+export function getAllPosts(options: { includeDrafts?: boolean } = {}): PostMeta[] {
+  const { includeDrafts = false } = options;
   if (!fs.existsSync(postsDirectory)) {
     return [];
   }
@@ -82,14 +89,21 @@ export function getAllPosts(): PostMeta[] {
     .readdirSync(postsDirectory)
     .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"));
 
-  const allPostsData = fileNames.map((fileName) => {
+  const allPostsData: PostMeta[] = [];
+
+  for (const fileName of fileNames) {
     const slug = fileName.replace(/\.(md|mdx)$/, "");
     const fullPath = path.join(postsDirectory, fileName);
     const fileContents = fs.readFileSync(fullPath, "utf8");
 
     const { data, content } = matter(fileContents);
+    const isDraft = Boolean(data.draft) || Boolean(data.hidden);
 
-    return {
+    if (!includeDrafts && isDraft) {
+      continue;
+    }
+
+    allPostsData.push({
       slug,
       title: data.title ?? slug,
       date: data.date ?? "2026-11-12",
@@ -98,14 +112,57 @@ export function getAllPosts(): PostMeta[] {
       summary: data.summary ?? "",
       image: typeof data.image === "string" ? data.image : undefined,
       featured: Boolean(data.featured),
+      draft: isDraft,
+      hidden: isDraft,
       readingTime: calculateReadingTime(content),
-    };
-  });
+    });
+  }
 
   return allPostsData.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
-export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
+export function getAllStudioPosts(): PostStudioItem[] {
+  if (!fs.existsSync(postsDirectory)) {
+    return [];
+  }
+
+  const fileNames = fs
+    .readdirSync(postsDirectory)
+    .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"));
+
+  const posts: PostStudioItem[] = [];
+
+  for (const fileName of fileNames) {
+    const slug = fileName.replace(/\.(md|mdx)$/, "");
+    const fullPath = path.join(postsDirectory, fileName);
+    const fileContents = fs.readFileSync(fullPath, "utf8");
+
+    const { data, content } = matter(fileContents);
+    const isDraft = Boolean(data.draft) || Boolean(data.hidden);
+
+    posts.push({
+      slug,
+      title: data.title ?? slug,
+      date: data.date ?? "2026-11-12",
+      category: data.category ?? "Dev",
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      summary: data.summary ?? "",
+      image: typeof data.image === "string" ? data.image : undefined,
+      featured: Boolean(data.featured),
+      draft: isDraft,
+      hidden: isDraft,
+      readingTime: calculateReadingTime(content),
+      rawContent: content,
+    });
+  }
+
+  return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+export async function getPostBySlug(
+  slug: string,
+  options: { includeDrafts?: boolean } = {}
+): Promise<PostDetail | null> {
   const mdPath = path.join(postsDirectory, `${slug}.md`);
   const mdxPath = path.join(postsDirectory, `${slug}.mdx`);
   const fullPath = fs.existsSync(mdPath)
@@ -120,6 +177,11 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
 
   const fileContents = fs.readFileSync(fullPath, "utf8");
   const { data, content } = matter(fileContents);
+
+  const isDraft = Boolean(data.draft) || Boolean(data.hidden);
+  if (!options.includeDrafts && isDraft && process.env.NODE_ENV === "production") {
+    return null;
+  }
 
   const processedContent = await unified()
     .use(remarkParse)
@@ -142,6 +204,8 @@ export async function getPostBySlug(slug: string): Promise<PostDetail | null> {
     summary: data.summary ?? "",
     image: typeof data.image === "string" ? data.image : undefined,
     featured: Boolean(data.featured),
+    draft: isDraft,
+    hidden: isDraft,
     readingTime: calculateReadingTime(content),
     contentHtml,
     rawContent: content,
