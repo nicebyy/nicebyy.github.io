@@ -16,9 +16,11 @@ import {
   Menu,
   FolderGit2,
   Edit3,
+  Lock,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
+import { useOperatorAuth } from "@/lib/useOperatorAuth";
 
 const CyberBgmPlayer = dynamic(
   () => import("./CyberBgmPlayer").then((mod) => mod.CyberBgmPlayer),
@@ -58,6 +60,7 @@ export function Navbar({
   onSelectSection,
 }: NavbarProps) {
   const pathname = usePathname();
+  const { isAuthenticated } = useOperatorAuth();
 
   const triggerSearchFocus = () => {
     window.dispatchEvent(new CustomEvent("focus-blog-search"));
@@ -197,14 +200,25 @@ export function Navbar({
             </Link>
             <Link
               href="/studio"
+              title={isAuthenticated ? "스튜디오 (운영자 로그인됨)" : "스튜디오 (운영자 전용)"}
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 pathname?.startsWith("/studio")
                   ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
               }`}
             >
-              <Edit3 className="w-3.5 h-3.5 text-neon-cyan" />
-              <span>STUDIO</span>
+              {isAuthenticated ? (
+                <>
+                  <Edit3 className="w-3.5 h-3.5 text-neon-cyan" />
+                  <span>STUDIO</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>STUDIO</span>
+                </>
+              )}
             </Link>
             <Link
               href="/about"
@@ -264,14 +278,21 @@ export function Navbar({
           <Link
             href="/studio"
             aria-label="스튜디오 // 글 작성 및 관리"
-            title="스튜디오 (글 작성 및 관리)"
-            className={`md:hidden p-2 rounded-xl border transition-all cursor-pointer ${
+            title={isAuthenticated ? "스튜디오 (운영자 모드)" : "스튜디오 (운영자 로그인 필요)"}
+            className={`md:hidden p-2 rounded-xl border transition-all cursor-pointer relative ${
               pathname?.startsWith("/studio")
                 ? "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-neon-cyan"
                 : "text-slate-400 hover:text-neon-cyan bg-white/5 hover:bg-cyan-500/15 border-cyan-500/20 hover:border-cyan-500/40"
             }`}
           >
-            <Edit3 className="w-4 h-4 text-neon-cyan" />
+            {isAuthenticated ? (
+              <>
+                <Edit3 className="w-4 h-4 text-neon-cyan" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              </>
+            ) : (
+              <Lock className="w-4 h-4 text-slate-400" />
+            )}
           </Link>
 
           {/* Mobile Quick Search Button */}

@@ -21,11 +21,13 @@ import {
   FolderGit2,
   X,
   Edit3,
+  Lock,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, CategoryNode } from "@/lib/categories";
 import { VisitorCounter } from "./VisitorCounter";
+import { useOperatorAuth } from "@/lib/useOperatorAuth";
 
 const MIN_SIDEBAR_WIDTH = 180;
 const MAX_SIDEBAR_WIDTH = 560;
@@ -57,6 +59,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated } = useOperatorAuth();
   const [catOpen, setCatOpen] = useState(true);
   const [recentOpen, setRecentOpen] = useState(true);
   const [tagsOpen, setTagsOpen] = useState(false);

@@ -1,43 +1,33 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  FileText,
+  Layers,
   Edit3,
+  LogOut,
   Settings,
-  Github,
   ArrowLeft,
   ShieldCheck,
+  UserCheck,
   Sparkles,
-  Layers,
-  Terminal,
-  ExternalLink,
 } from "lucide-react";
 import { PostStudioItem } from "@/lib/posts";
 import { PostManager } from "./PostManager";
 import { CyberWriter } from "./CyberWriter";
+import { OperatorLoginGate } from "./OperatorLoginGate";
 import { GitHubSettingsModal } from "./GitHubSettingsModal";
-import { getStoredGitHubConfig, GitHubConfig } from "@/lib/github-api";
+import { useOperatorAuth } from "@/lib/useOperatorAuth";
 
 interface CyberStudioProps {
   initialPosts: PostStudioItem[];
 }
 
 export function CyberStudio({ initialPosts }: CyberStudioProps) {
+  const { isAuthenticated, session, isLoading, logout } = useOperatorAuth();
   const [activeTab, setActiveTab] = useState<"manager" | "writer">("manager");
   const [editingPost, setEditingPost] = useState<PostStudioItem | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [gitHubConfig, setGitHubConfig] = useState<GitHubConfig>({
-    token: "",
-    repo: "nicebyy/nicebyy.github.io",
-    branch: "develop",
-  });
-
-  // Load config on mount
-  useEffect(() => {
-    setGitHubConfig(getStoredGitHubConfig());
-  }, []);
 
   // Compute all unique categories and popular tags across all posts
   const { allCategories, popularTags } = useMemo(() => {
@@ -75,10 +65,26 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // If still hydrating or checking storage
+  if (isLoading) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center space-y-3 font-mono text-xs text-neon-cyan">
+        <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+        <p className="tracking-widest">VERIFYING OPERATOR CLEARANCE...</p>
+      </div>
+    );
+  }
+
+  // If NOT authenticated, show the Operator Security Clearance Login Gate
+  if (!isAuthenticated) {
+    return <OperatorLoginGate />;
+  }
+
+  // Authenticated Operator Studio
   return (
-    <div className="py-4 space-y-6">
-      {/* Top Navigation & Status Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-cyan-500/20 pb-4">
+    <div className="py-4 space-y-6 animate-fadeIn">
+      {/* Top Navigation & Operator Status Bar */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-cyan-500/20 pb-4">
         {/* Back Link & Brand */}
         <div className="space-y-1">
           <Link
@@ -92,8 +98,9 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
             <h1 className="text-xl sm:text-2xl font-cyber font-black tracking-wider text-white">
               CYBER STUDIO // CMS & POST MANAGER
             </h1>
-            <span className="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-neon-cyan border border-cyan-500/40">
-              v1.0
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-bold">
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>OPERATOR UNLOCKED</span>
             </span>
           </div>
           <p className="text-xs font-mono text-cyan-400/70">
@@ -101,34 +108,43 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
           </p>
         </div>
 
-        {/* GitHub Status & Settings Button */}
-        <div className="flex items-center gap-2.5 font-mono text-xs">
-          <div
-            className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
-              gitHubConfig.token
-                ? "border-emerald-500/40 bg-emerald-950/20 text-emerald-300"
-                : "border-slate-700 bg-slate-900/60 text-slate-400"
-            }`}
-          >
-            <div
-              className={`w-2 h-2 rounded-full ${
-                gitHubConfig.token ? "bg-emerald-400 animate-pulse" : "bg-slate-500"
-              }`}
-            />
-            <span className="text-[11px]">
-              {gitHubConfig.token
-                ? `SYNC ON (${gitHubConfig.branch})`
-                : "OFFLINE / NO TOKEN"}
-            </span>
+        {/* Operator Profile & Logout Control */}
+        <div className="flex items-center flex-wrap gap-2.5 font-mono text-xs">
+          {/* Active Operator Pill */}
+          <div className="px-3.5 py-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/20 text-emerald-300 flex items-center gap-2 shadow-[0_0_15px_rgba(0,255,157,0.15)]">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-bold">{session?.displayName || "kimkkatta"}</span>
+              <span className="text-slate-400 text-[10px]">(@{session?.username})</span>
+              <span className="text-slate-500">|</span>
+              <span className="text-neon-cyan text-[10px]">{session?.branch || "develop"}</span>
+            </div>
           </div>
 
+          {/* Settings Button */}
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-neon-cyan border border-cyan-500/30 text-xs font-mono font-bold transition-all active:scale-95"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-slate-700 text-xs font-mono transition-all"
+            title="저장소/브랜치 설정"
           >
             <Settings className="w-3.5 h-3.5" />
-            <span>GITHUB 설정</span>
+          </button>
+
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm("운영자 세션을 로그아웃하시겠습니까?")) {
+                logout();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer"
+            title="운영자 로그아웃"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>로그아웃</span>
           </button>
         </div>
       </div>
@@ -138,7 +154,7 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
         <button
           type="button"
           onClick={() => setActiveTab("manager")}
-          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === "manager"
               ? "bg-cyan-500/20 text-neon-cyan border border-cyan-500/40 font-bold shadow-[0_0_15px_rgba(0,243,255,0.2)]"
               : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -154,7 +170,7 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
             if (activeTab !== "writer") handleNewPost();
             setActiveTab("writer");
           }}
-          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all ${
+          className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
             activeTab === "writer"
               ? "bg-gradient-to-r from-cyan-500/20 to-pink-500/20 text-white border border-cyan-500/40 font-bold shadow-[0_0_15px_rgba(0,243,255,0.2)]"
               : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -190,7 +206,6 @@ export function CyberStudio({ initialPosts }: CyberStudioProps) {
       <GitHubSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        onConfigSaved={(cfg) => setGitHubConfig(cfg)}
       />
     </div>
   );

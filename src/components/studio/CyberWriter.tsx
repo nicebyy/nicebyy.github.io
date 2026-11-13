@@ -31,6 +31,7 @@ import {
   Sparkles,
   CheckCircle2,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { PostStudioItem } from "@/lib/posts";
 import {
@@ -45,6 +46,7 @@ import {
   getGitHubFile,
   getStoredGitHubConfig,
 } from "@/lib/github-api";
+import { useOperatorAuth } from "@/lib/useOperatorAuth";
 
 interface CyberWriterProps {
   initialPost?: PostStudioItem | null;
@@ -63,6 +65,8 @@ export function CyberWriter({
   onOpenSettings,
   onPostSaved,
 }: CyberWriterProps) {
+  const { isAuthenticated, session } = useOperatorAuth();
+
   // Frontmatter State
   const [title, setTitle] = useState(initialPost?.title || "");
   const [slug, setSlug] = useState(initialPost?.slug || "");
@@ -323,11 +327,22 @@ export function CyberWriter({
       return;
     }
 
-    const config = getStoredGitHubConfig();
+    if (!isAuthenticated) {
+      setStatusMessage({
+        type: "error",
+        text: "게시물을 발행하거나 수정하려면 운영자로 로그인해야 합니다.",
+      });
+      return;
+    }
+
+    const config = session?.token
+      ? { token: session.token, repo: session.repo, branch: session.branch }
+      : getStoredGitHubConfig();
+
     if (!config.token) {
       setStatusMessage({
         type: "info",
-        text: "GitHub 토큰이 필요합니다. 상단 'GITHUB 설정'에서 토큰을 설정해주세요.",
+        text: "운영자 세션이 만료되었거나 토큰이 없습니다. 다시 로그인해주세요.",
       });
       onOpenSettings();
       return;
@@ -923,21 +938,28 @@ export function CyberWriter({
           </button>
 
           {/* Direct Publish to GitHub */}
-          <button
-            type="button"
-            onClick={handlePublishToGitHub}
-            disabled={isSaving}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-500 text-black font-cyber font-bold text-xs tracking-wider shadow-[0_0_25px_rgba(0,243,255,0.4)] transition-all active:scale-95 disabled:opacity-50"
-          >
-            {isSaving ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-black" />
-            ) : (
-              <Send className="w-4 h-4 text-black" />
-            )}
-            <span>
-              {isSaving ? "GITHUB 커밋 전송 중..." : "🚀 GITHUB 즉시 커밋 & 발행"}
-            </span>
-          </button>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={handlePublishToGitHub}
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-500 text-black font-cyber font-bold text-xs tracking-wider shadow-[0_0_25px_rgba(0,243,255,0.4)] transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              {isSaving ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-black" />
+              ) : (
+                <Send className="w-4 h-4 text-black" />
+              )}
+              <span>
+                {isSaving ? "GITHUB 커밋 전송 중..." : "🚀 GITHUB 즉시 커밋 & 발행"}
+              </span>
+            </button>
+          ) : (
+            <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 text-xs font-mono">
+              <Lock className="w-3.5 h-3.5 text-slate-600" />
+              <span>발행 불가 (운영자 전용)</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

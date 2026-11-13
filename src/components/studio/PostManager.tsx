@@ -21,6 +21,7 @@ import {
   RefreshCw,
   FileText,
   SlidersHorizontal,
+  Lock,
 } from "lucide-react";
 import { PostStudioItem } from "@/lib/posts";
 import {
@@ -30,6 +31,7 @@ import {
   getStoredGitHubConfig,
 } from "@/lib/github-api";
 import { parsePostMarkdown, serializePostMarkdown } from "@/lib/markdown-client";
+import { useOperatorAuth } from "@/lib/useOperatorAuth";
 
 interface PostManagerProps {
   posts: PostStudioItem[];
@@ -44,6 +46,7 @@ export function PostManager({
   onOpenSettings,
   onPostListUpdated,
 }: PostManagerProps) {
+  const { isAuthenticated, session } = useOperatorAuth();
   const [posts, setPosts] = useState<PostStudioItem[]>(initialPosts);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PUBLISHED" | "HIDDEN">("ALL");
@@ -105,16 +108,27 @@ export function PostManager({
 
   // Toggle Hide / Publish
   const handleToggleHide = async (post: PostStudioItem) => {
+    if (!isAuthenticated) {
+      setActionMessage({
+        type: "error",
+        text: "운영자로 로그인해야 게시물을 가리거나 공개할 수 있습니다.",
+      });
+      return;
+    }
+
     const isCurrentlyHidden = Boolean(post.draft || post.hidden);
     const newStatus = !isCurrentlyHidden;
     const targetPath = `content/posts/${post.slug}.md`;
     const actionLabel = newStatus ? "가리기 (비공개 전환)" : "공개 전환";
 
-    const config = getStoredGitHubConfig();
+    const config = session?.token
+      ? { token: session.token, repo: session.repo, branch: session.branch }
+      : getStoredGitHubConfig();
+
     if (!config.token) {
       setActionMessage({
         type: "info",
-        text: `GitHub 토큰이 필요합니다. 상단 'GITHUB 설정'에서 토큰을 입력하시면 원클릭으로 ${actionLabel}이 적용됩니다.`,
+        text: `운영자 세션이 만료되었거나 토큰이 없습니다. 다시 로그인해주세요.`,
       });
       onOpenSettings();
       return;
@@ -191,7 +205,17 @@ export function PostManager({
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
 
-    const config = getStoredGitHubConfig();
+    if (!isAuthenticated) {
+      setActionMessage({
+        type: "error",
+        text: "운영자로 로그인해야 게시물을 삭제할 수 있습니다.",
+      });
+      return;
+    }
+
+    const config = session?.token
+      ? { token: session.token, repo: session.repo, branch: session.branch }
+      : getStoredGitHubConfig();
     const targetPath = `content/posts/${deleteTarget.slug}.md`;
 
     if (!config.token) {
@@ -503,46 +527,55 @@ export function PostManager({
 
                 {/* Post Action Buttons */}
                 <div className="flex items-center flex-wrap gap-2 w-full md:w-auto shrink-0 justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
-                  {/* Edit in Studio */}
-                  <button
-                    onClick={() => onEditPost(post)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-neon-cyan border border-cyan-500/30 text-xs font-mono font-bold transition-all active:scale-95"
-                    title="Studio에서 수정"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>수정</span>
-                  </button>
+                  {isAuthenticated ? (
+                    <>
+                      {/* Edit in Studio */}
+                      <button
+                        onClick={() => onEditPost(post)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-neon-cyan border border-cyan-500/30 text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer"
+                        title="Studio에서 수정"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>수정</span>
+                      </button>
 
-                  {/* Toggle Hide / Publish */}
-                  <button
-                    onClick={() => handleToggleHide(post)}
-                    disabled={isProcessing}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all active:scale-95 disabled:opacity-40 ${
-                      isHidden
-                        ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                        : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/40"
-                    }`}
-                    title={isHidden ? "공개 상태로 전환" : "블로그에서 가리기"}
-                  >
-                    {isProcessing ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : isHidden ? (
-                      <Eye className="w-3.5 h-3.5" />
-                    ) : (
-                      <EyeOff className="w-3.5 h-3.5" />
-                    )}
-                    <span>{isHidden ? "공개하기" : "가리기"}</span>
-                  </button>
+                      {/* Toggle Hide / Publish */}
+                      <button
+                        onClick={() => handleToggleHide(post)}
+                        disabled={isProcessing}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all active:scale-95 cursor-pointer disabled:opacity-40 ${
+                          isHidden
+                            ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                            : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/40"
+                        }`}
+                        title={isHidden ? "공개 상태로 전환" : "블로그에서 가리기"}
+                      >
+                        {isProcessing ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : isHidden ? (
+                          <Eye className="w-3.5 h-3.5" />
+                        ) : (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        )}
+                        <span>{isHidden ? "공개하기" : "가리기"}</span>
+                      </button>
 
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => setDeleteTarget(post)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono font-bold transition-all active:scale-95"
-                    title="게시물 영구 삭제"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">삭제</span>
-                  </button>
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => setDeleteTarget(post)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer"
+                        title="게시물 영구 삭제"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">삭제</span>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/40 border border-slate-800">
+                      <Lock className="w-3.5 h-3.5 text-slate-600" />
+                      <span>수정 불가 (운영자 전용)</span>
+                    </span>
+                  )}
 
                   {/* View link (if published) */}
                   {!isHidden && (

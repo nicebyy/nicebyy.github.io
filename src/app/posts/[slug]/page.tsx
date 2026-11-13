@@ -7,6 +7,7 @@ import { getAllPosts, getPostBySlug } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
 import { PostEnhancer } from "@/components/PostEnhancer";
 import { GiscusComments } from "@/components/GiscusComments";
+import { OperatorPostToolbar } from "@/components/OperatorPostToolbar";
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
@@ -87,7 +88,7 @@ export default async function PostDetailPage({
   return (
     <div className="py-4">
       {/* Back button */}
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <Link
           href="/"
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white dark:bg-white/5 hover:bg-cyan-500/10 text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-neon-cyan border border-slate-200 dark:border-white/10 transition-all"
@@ -96,6 +97,9 @@ export default async function PostDetailPage({
           <span>cd ~/dashboard</span>
         </Link>
       </div>
+
+      {/* Operator Quick Edit Bar (Only visible when logged in) */}
+      <OperatorPostToolbar slug={post.slug} title={post.title} />
 
       <div className="flex flex-col xl:flex-row gap-8 items-start w-full min-w-0">
         {/* Main Article Column */}
