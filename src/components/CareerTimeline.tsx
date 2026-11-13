@@ -44,7 +44,7 @@ const companyColorTheme: Record<
     accent: "text-emerald-400",
     bgHover: "hover:bg-emerald-500/10",
   },
-  "company-j": {
+  "company-c": {
     border: "border-cyan-500/40 hover:border-neon-cyan",
     glow: "hover:shadow-neon-cyan shadow-[0_0_25px_rgba(0,243,255,0.12)]",
     badgeBg: "bg-cyan-500/15 text-neon-cyan border-cyan-500/40",
