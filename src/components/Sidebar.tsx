@@ -475,7 +475,7 @@ export function Sidebar({
                 <Link
                   href="/studio"
                   onClick={() => onCloseMobile()}
-                  title="블로그 스튜디오 (글 작성 / 가리기 / 삭제)"
+                  title={isAuthenticated ? "블로그 스튜디오 (운영자 모드)" : "블로그 스튜디오 (운영자 로그인 필요)"}
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
                   } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 ${
@@ -484,13 +484,23 @@ export function Sidebar({
                       : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/30 hover:shadow-[0_0_10px_rgba(0,243,255,0.2)]"
                   }`}
                 >
-                  <Edit3 className={`w-4 h-4 shrink-0 ${isStudioActive ? "text-neon-cyan animate-pulse" : "text-cyan-400"}`} />
+                  {isAuthenticated ? (
+                    <Edit3 className={`w-4 h-4 shrink-0 ${isStudioActive ? "text-neon-cyan animate-pulse" : "text-cyan-400"}`} />
+                  ) : (
+                    <Lock className="w-4 h-4 shrink-0 text-slate-500" />
+                  )}
                   {!collapsed && (
                     <span className="flex-1 flex items-center justify-between">
                       <span>Studio</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-neon-cyan border border-cyan-500/40 font-bold">
-                        WRITE
-                      </span>
+                      {isAuthenticated ? (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                          ADMIN
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 text-slate-500 border border-white/10 font-bold">
+                          LOCKED
+                        </span>
+                      )}
                     </span>
                   )}
                 </Link>
