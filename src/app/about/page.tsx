@@ -1,7 +1,9 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Terminal, Github, Cpu, Code2, Globe, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Terminal, Github, Cpu, Code2, Globe, Sparkles, Mail, Send, FolderGit2, ArrowUpRight } from "lucide-react";
 import { siteConfig } from "@/config/site";
+
 
 export const metadata: Metadata = {
   title: "About",
@@ -101,6 +103,99 @@ export default function AboutPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Featured Projects Section */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-mono font-bold text-slate-900 dark:text-neon-cyan flex items-center gap-2">
+              <FolderGit2 className="w-4 h-4" />
+              <span>FEATURED PROJECTS // 4 BUILDS</span>
+            </h2>
+            <Link
+              href="/projects"
+              className="text-xs font-mono font-bold text-neon-pink hover:underline flex items-center gap-1"
+            >
+              <span>전체보기</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {siteConfig.projects.map((proj) => (
+              <Link
+                key={proj.id}
+                href={`/projects#${proj.id}`}
+                className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] hover:border-cyan-500/50 hover:shadow-neon-cyan transition-all space-y-2 group block"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold uppercase">
+                    {proj.category}
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400">
+                    {proj.status}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-cyan transition-colors">
+                    {proj.title}
+                  </h3>
+                  <p className="font-mono text-[11px] text-pink-400 truncate">
+                    {proj.subtitle}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                  {proj.summary}
+                </p>
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {proj.techStack.slice(0, 3).map((t) => (
+                    <span
+                      key={t}
+                      className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/40 text-slate-400 border border-white/5"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                  {proj.techStack.length > 3 && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-black/40 text-slate-500">
+                      +{proj.techStack.length - 3}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+
+        {/* Contact & Transmission Card */}
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.05] p-5 sm:p-6 space-y-3 cyber-corner">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-neon-green">
+              <Mail className="w-4 h-4" />
+              <span>DIRECT CONTACT // OPERATOR INQUIRY</span>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-neon-green px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+              ACTIVE
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            프로젝트 제안, 기술 질문, 개발 관련 문의는 언제든 환영합니다. 아래 이메일 주소로 편하게 연락주세요!
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+            <code className="font-mono text-sm sm:text-base font-bold text-neon-cyan p-2.5 rounded-xl bg-black/60 border border-cyan-500/30 select-all">
+              {siteConfig.email}
+            </code>
+            <a
+              href={`mailto:${siteConfig.email}?subject=${encodeURIComponent(
+                "[kimkkatta DEV.LOG] 안녕하세요, 문의드립니다"
+              )}`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-neon-green border border-emerald-500/40 hover:border-emerald-400 hover:shadow-neon-green transition-all"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>이메일 보내기</span>
+            </a>
           </div>
         </div>
 

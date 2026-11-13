@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { ContactModal } from "./ContactModal";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
 
@@ -18,7 +19,7 @@ const IsolatedAtmosphere = dynamic(
   { ssr: false }
 );
 
-export type NavSection = "dashboard" | "posts" | "about";
+export type NavSection = "dashboard" | "posts" | "projects" | "about";
 
 export function AppShell({
   posts,
@@ -30,9 +31,17 @@ export function AppShell({
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
   const [rainAudio, setRainAudio] = useState(false);
+
+  // Global event listener for opening contact modal
+  useEffect(() => {
+    const handleOpenContact = () => setIsContactOpen(true);
+    window.addEventListener("open-contact-modal", handleOpenContact);
+    return () => window.removeEventListener("open-contact-modal", handleOpenContact);
+  }, []);
 
   // Sync procedural rain audio state across footer / HUD / terminal CLI
   useEffect(() => {
@@ -95,16 +104,24 @@ export function AppShell({
       setActiveSection("about");
       return;
     }
+    if (pathname.startsWith("/projects")) {
+      setActiveSection("projects");
+      return;
+    }
     if (pathname.startsWith("/posts/")) {
       setActiveSection("posts");
       return;
     }
 
     if (pathname === "/") {
-      if (typeof window !== "undefined" && window.location.hash === "#posts") {
-        setActiveSection("posts");
-      } else {
-        setActiveSection("dashboard");
+      if (typeof window !== "undefined") {
+        if (window.location.hash === "#posts") {
+          setActiveSection("posts");
+        } else if (window.location.hash === "#projects") {
+          setActiveSection("projects");
+        } else {
+          setActiveSection("dashboard");
+        }
       }
 
       let scrollRaf: number | null = null;
@@ -113,11 +130,14 @@ export function AppShell({
         scrollRaf = requestAnimationFrame(() => {
           scrollRaf = null;
           const postsEl = document.getElementById("posts");
-          if (!postsEl) return;
-          const rect = postsEl.getBoundingClientRect();
-          // When posts section top reaches upper half of viewport
-          if (rect.top <= 250) {
+          const projectsEl = document.getElementById("projects");
+          const postsRect = postsEl?.getBoundingClientRect();
+          const projectsRect = projectsEl?.getBoundingClientRect();
+
+          if (postsRect && postsRect.top <= 250) {
             setActiveSection("posts");
+          } else if (projectsRect && projectsRect.top <= 250) {
+            setActiveSection("projects");
           } else {
             setActiveSection("dashboard");
           }
@@ -164,6 +184,7 @@ export function AppShell({
         isSidebarCollapsed={isCollapsed}
         onToggleSidebar={toggleCollapse}
         onOpenMobileSidebar={() => setIsMobileOpen(true)}
+        onOpenContact={() => setIsContactOpen(true)}
         activeSection={activeSection}
         onSelectSection={setActiveSection}
       />
@@ -176,8 +197,14 @@ export function AppShell({
           onSetCollapsed={setCollapsedState}
           isMobileOpen={isMobileOpen}
           onCloseMobile={() => setIsMobileOpen(false)}
+          onOpenContact={() => setIsContactOpen(true)}
           activeSection={activeSection}
           onSelectSection={setActiveSection}
+        />
+
+        <ContactModal
+          isOpen={isContactOpen}
+          onClose={() => setIsContactOpen(false)}
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-between">

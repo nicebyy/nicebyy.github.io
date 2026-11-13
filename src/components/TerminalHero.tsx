@@ -73,6 +73,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         text: [
           "⚡ AVAILABLE CYBER COMMANDS:",
           "  whoami   — 운영자(kimkkatta) 프로필 및 개발 철학 출력",
+          "  projects — 4대 핵심 개인 프로젝트 아카이브 출력",
           "  skills   — 실시간 핵심 기술 스택 게이지 전송",
           "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
           "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
@@ -86,6 +87,31 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         id: Date.now() + 1,
         type: "accent",
         text: `[OPERATOR] ${siteConfig.author} (${siteConfig.role})\n[LOCATION] ${siteConfig.location}\n[BIO]      ${siteConfig.bio}\n[GITHUB]   https://github.com/${siteConfig.githubRepo}`,
+      });
+    } else if (cmd === "projects" || cmd === "project") {
+      newLines.push({
+        id: Date.now() + 1,
+        type: "accent",
+        text: [
+          "🚀 KIMKKATTA PRODUCTION PROJECTS ARCHIVE:",
+          "  1. 1234pickban   — LoL 20단계 밴픽/피어리스 & 실시간 팀 경매 & 크로노브레이크 플랫폼",
+          "     [Stack] Next.js 14 · NestJS 10 · Socket.IO · Docker (Web)",
+          "     [Repo]  https://github.com/nicebyy/1234_pickban_simulator",
+          "",
+          "  2. kkt-bookmark  — 100% 로컬 DB, 다단계 폴더 트리 & 브라우저 지정 실행 스마트 북마크",
+          "     [Stack] Kotlin · Jetpack Compose · Room DB (Android & PWA)",
+          "     [Repo]  https://github.com/nicebyy/kkt-bookmark",
+          "",
+          "  3. old-calendar  — 0ms 로컬 우선 반응성, Windows 10 UWP 룩앤필 데스크톱 캘린더",
+          "     [Stack] Electron 34 · React 19 · Vite 6 · Tailwind CSS v4 (Desktop)",
+          "     [Repo]  https://github.com/nicebyy/old-calender",
+          "",
+          "  4. job-blocking  — 5대 채용 플랫폼(원티드·사람인·잡코리아) 광고 차단 & 무한 스크롤 & 평점 뱃지",
+          "     [Stack] Chrome Manifest V3 · TypeScript · React 18 · Vite (Extension)",
+          "     [Repo]  https://github.com/nicebyy/job-blockingV2",
+          "",
+          "> 상단 내비게이션의 PROJECTS 메뉴 또는 /projects 에서 상세 스펙을 열람할 수 있습니다.",
+        ].join("\n"),
       });
     } else if (cmd === "skills") {
       const skillLines = siteConfig.techStack
@@ -231,9 +257,10 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               {[
                 { name: "help", color: "cyan" },
+                { name: "projects", color: "pink" },
                 { name: "scan", color: "pink" },
                 { name: "rain", color: "cyan" },
-                { name: "whoami", color: "pink" },
+                { name: "whoami", color: "cyan" },
                 { name: "skills", color: "green" },
                 { name: "ls", color: "cyan" },
                 { name: "status", color: "amber" },
