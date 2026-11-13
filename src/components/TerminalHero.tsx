@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Terminal as TerminalIcon,
   Sparkles,
@@ -12,10 +13,19 @@ import {
   Flame,
   Code2,
   Github,
+  Key,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
 import { VisitorCounter } from "./VisitorCounter";
+import {
+  authenticateOperator,
+  getOperatorSession,
+  clearOperatorSession,
+} from "@/lib/auth";
+import { DEFAULT_BRANCH, DEFAULT_REPO } from "@/lib/github-api";
 
 interface TerminalLine {
   id: number;
@@ -24,6 +34,7 @@ interface TerminalLine {
 }
 
 export function TerminalHero({ posts }: { posts: PostMeta[] }) {
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<TerminalLine[]>([
     {
@@ -54,95 +65,307 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
     }
   }, [history]);
 
-  const executeCommand = (rawCmd: string) => {
-    const cmd = rawCmd.trim().toLowerCase();
-    if (!cmd) return;
+  const executeCommand = async (rawCmd: string) => {
+    const trimmed = rawCmd.trim();
+    if (!trimmed) return;
 
-    const newLines: TerminalLine[] = [
-      {
-        id: Date.now(),
-        type: "input",
-        text: `${siteConfig.author}@neon-node:~$ ${rawCmd}`,
-      },
-    ];
+    const parts = trimmed.split(/\s+/);
+    const mainCmd = parts[0].toLowerCase();
 
-    if (cmd === "help") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "output",
-        text: [
-          "⚡ AVAILABLE CYBER COMMANDS:",
-          "  whoami   — 운영자(kimkkatta) 프로필 및 개발 철학 출력",
-          "  career   — 실무 경력 및 아키텍처 문제 해결 이력서 (익명화)",
-          "  projects — 4대 핵심 개인 프로젝트 아카이브 출력",
-          "  skills   — 실시간 핵심 기술 스택 게이지 전송",
-          "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
-          "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
-          "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환",
-          "  status   — 나이트 시티 메인프레임 통신 상태 진단",
-          "  clear    — 터미널 콘솔 로그 초기화",
-        ].join("\n"),
-      });
-    } else if (cmd === "whoami") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: `[OPERATOR] ${siteConfig.author} (${siteConfig.role})\n[LOCATION] ${siteConfig.location}\n[BIO]      ${siteConfig.bio}\n[GITHUB]   https://github.com/${siteConfig.githubRepo}`,
-      });
-    } else if (cmd === "career" || cmd === "resume" || cmd === "exp") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: [
-          "💼 KIMKKATTA VERIFIED WORK EXPERIENCE ARCHIVE:",
-          "  (보안 및 비공개 원칙에 따라 회사명은 A사, C사, G사 및 서비스명은 일반화되어 표기됩니다)",
-          "",
-          "  [1] 블록체인 핀테크 & 대용량 정산 플랫폼 기업 (G사) | 2025.07 ~ 2026.05 (11개월)",
-          "      • 직무: 백엔드 개발팀 · 백엔드 / 서버 개발 엔지니어",
-          "      • 주요 성과: DAG 위상 정렬 기반 인메모리 트리 캐싱으로 DB I/O 90%+ 감축, Dynamic JDBC Cursor & Spring Batch 5 튜닝, 다차원 출금 정책 엔진 구축",
-          "      • Tech: Java 17, Kotlin, Spring Boot 3.4, Spring Batch 5, MySQL 8, JPA, QueryDSL, Redis",
-          "",
-          "  [2] Web3 블록체인 게임 & 플랫폼 개발사 (C사) | 2024.06 ~ 2025.05 (1년)",
-          "      • 직무: 웹 개발팀 · 풀스택 소프트웨어 엔지니어",
-          "      • 주요 성과: Clean Layered Architecture 4계층 도메인 설계, TDD 90%+ 테스트 커버리지, 온체인 민팅 대기열 & SSE 실시간 모니터링, 무한 스크롤 v2",
-          "      • Tech: NestJS, TypeScript, MongoDB, React 18, TanStack Query v5, Zustand, Tailwind",
-          "",
-          "  [3] 글로벌 암호화폐 거래소 & 핀테크 플랫폼 기업 (A사) | 2022.08 ~ 2023.08 (1년 1개월)",
-          "      • 직무: 거래소개발팀 · 백엔드 / 서버 개발 엔지니어",
-          "      • 주요 성과: RabbitMQ 실시간 메시징 아키텍처 개편 및 SPOF 해소, WebSocket 패킷 다이어트, No-Offset 커서 페이징 & N+1 해결, MySQL Named Lock 전환",
-          "      • Tech: Java 11, Spring Boot 2.7, MySQL 8, Redis, RabbitMQ, WebSocket (STOMP), Prometheus",
-          "",
-          "> 상단 내비게이션의 CAREER 메뉴 또는 /career 에서 각 프로젝트별 STAR 문제 해결 상세 내역을 열람할 수 있습니다.",
-        ].join("\n"),
-      });
-    } else if (cmd === "projects" || cmd === "project") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: [
-          "🚀 KIMKKATTA PRODUCTION PROJECTS ARCHIVE:",
-          "  1. 1234pickban   — LoL 20단계 밴픽/피어리스 & 실시간 팀 경매 & 크로노브레이크 플랫폼",
-          "     [Stack] Next.js 14 · NestJS 10 · Socket.IO · Docker (Web)",
-          "     [Web]   https://1234banpick.me (Private Repo // 웹 서비스 운영)",
-          "",
-          "  2. kkt-bookmark  — 100% 로컬 DB, 다단계 폴더 트리 & 브라우저 지정 실행 스마트 북마크",
-          "     [Stack] Kotlin · Jetpack Compose · Room DB (Android & PWA)",
-          "     [Repo]  https://github.com/nicebyy/kkt-bookmark",
-          "",
-          "  3. old-calendar  — 0ms 로컬 우선 반응성, Windows 10 UWP 룩앤필 데스크톱 캘린더",
-          "     [Stack] Electron 34 · React 19 · Vite 6 · Tailwind CSS v4 (Desktop)",
-          "     [Store] Microsoft Store (https://apps.microsoft.com/detail/9nt09z0g12ss)",
-          "     [Repo]  https://github.com/nicebyy/old-calender",
-          "",
-          "  4. job-blocking  — 5대 채용 플랫폼(원티드·사람인·잡코리아) 광고 차단 & 무한 스크롤 & 평점 뱃지",
-          "     [Stack] Chrome Manifest V3 · TypeScript · React 18 · Vite (Extension)",
-          "     [Store] Chrome 웹스토어 (https://chromewebstore.google.com/detail/cohpijikelgbghbccpdhffaphajbmplf)",
-          "     [Repo]  https://github.com/nicebyy/job-blockingV2",
-          "",
-          "> 상단 내비게이션의 PROJECTS 메뉴 또는 /projects 에서 상세 스펙을 열람할 수 있습니다.",
-        ].join("\n"),
-      });
-    } else if (cmd === "skills") {
+    // Security: Mask sensitive GitHub PAT token in input history
+    let echoText = `${siteConfig.author}@neon-node:~$ ${rawCmd}`;
+    if ((mainCmd === "login" || mainCmd === "auth") && parts[1]) {
+      const rawToken = parts[1];
+      const masked =
+        rawToken.length > 8
+          ? `${rawToken.slice(0, 6)}****${rawToken.slice(-2)}`
+          : "********";
+      const branchPart = parts[2] ? ` ${parts[2]}` : "";
+      echoText = `${siteConfig.author}@neon-node:~$ ${parts[0]} ${masked}${branchPart}`;
+    }
+
+    const inputLine: TerminalLine = {
+      id: Date.now(),
+      type: "input",
+      text: echoText,
+    };
+
+    setHistory((prev) => [...prev, inputLine]);
+    setInput("");
+
+    // Command: Clear console
+    if (mainCmd === "clear") {
+      setHistory([]);
+      return;
+    }
+
+    // Command: Help manual
+    if (mainCmd === "help") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "output",
+          text: [
+            "⚡ AVAILABLE CYBER COMMANDS:",
+            "  whoami   — 운영자 프로필 및 실시간 보안 인가 레벨 출력",
+            "  studio   — 블로그 글 작성/수정/관리 사이버 스튜디오 열기",
+            "  login    — 운영자 전용 인증 (사용법: login <TOKEN> [main])",
+            "  logout   — 현재 브라우저의 운영자 세션 해제",
+            "  career   — 실무 경력 및 아키텍처 문제 해결 이력서 (익명화)",
+            "  projects — 4대 핵심 개인 프로젝트 아카이브 출력",
+            "  skills   — 실시간 핵심 기술 스택 게이지 전송",
+            "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
+            "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
+            "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환",
+            "  status   — 나이트 시티 메인프레임 통신 상태 진단",
+            "  clear    — 터미널 콘솔 로그 초기화",
+          ].join("\n"),
+        },
+      ]);
+      return;
+    }
+
+    // Command: Operator Login / Authentication
+    if (mainCmd === "login" || mainCmd === "auth") {
+      const tokenArg = parts[1];
+      const branchArg = parts[2] || DEFAULT_BRANCH;
+
+      if (!tokenArg) {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: [
+              "🔑 [USAGE] login <GITHUB_PAT_TOKEN> [target_branch=main]",
+              "  • Example : login ghp_11AV3... main",
+              "  • Scope   : Token requires 'repo' (Classic) or 'Contents: Read & write' (Fine-grained).",
+              "  • Note    : Token is saved only in browser localStorage (no 3rd-party servers).",
+              "  • Tip     : Type 'studio' to jump directly to the editor.",
+            ].join("\n"),
+          },
+        ]);
+        return;
+      }
+
+      // Show authenticating progress
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: `[OPERATOR_AUTH] Connecting to GitHub Mainframe (api.github.com)...`,
+        },
+      ]);
+
+      const res = await authenticateOperator(tokenArg, branchArg, DEFAULT_REPO);
+
+      if (res.success && res.session) {
+        const session = res.session;
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 2,
+            type: "accent",
+            text: [
+              `⚡ [VERIFIED] Operator clearance confirmed: ${session.displayName} (@${session.username})`,
+              `🔒 [LEVEL 5] ROOT ACCESS UNLOCKED // Target branch locked to: '${session.branch}'`,
+              `🚀 [WARP] Launching Cyber Studio in 1.5s...`,
+            ].join("\n"),
+          },
+        ]);
+
+        setTimeout(() => {
+          router.push("/studio");
+        }, 1500);
+      } else {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 2,
+            type: "output",
+            text: `❌ [AUTH_DENIED] ${res.error || "Invalid token or insufficient repository permissions."}`,
+          },
+        ]);
+      }
+      return;
+    }
+
+    // Command: Launch Studio
+    if (mainCmd === "studio") {
+      const active = getOperatorSession();
+      if (active && active.token) {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "accent",
+            text: [
+              `⚡ [OPERATOR_ACTIVE] Verified session found: ${active.displayName} (@${active.username})`,
+              `🎯 [TARGET_BRANCH] ${active.branch}`,
+              `🚀 [WARP] Launching Cyber Studio...`,
+            ].join("\n"),
+          },
+        ]);
+        setTimeout(() => {
+          router.push("/studio");
+        }, 800);
+      } else {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: [
+              "🔒 [RESTRICTED] Cyber Studio requires Operator Clearance.",
+              "  • Quick Login: login <GITHUB_PAT> [branch=main]",
+              "  • Launching Visual Clearance Gate in 1s...",
+            ].join("\n"),
+          },
+        ]);
+        setTimeout(() => {
+          router.push("/studio");
+        }, 1200);
+      }
+      return;
+    }
+
+    // Command: Operator Logout
+    if (mainCmd === "logout") {
+      const active = getOperatorSession();
+      if (active) {
+        clearOperatorSession();
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: `[SYSTEM] Operator session terminated for @${active.username}. Clearance revoked.`,
+          },
+        ]);
+      } else {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: `[SYSTEM] No active operator session found. You are currently in guest mode.`,
+          },
+        ]);
+      }
+      return;
+    }
+
+    // Command: Sudo / Root
+    if (mainCmd === "sudo" || mainCmd === "su" || mainCmd === "root") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: [
+            `[ROOT_GATE] Root privilege requires Operator Access Key.`,
+            `Execute: login <GITHUB_PAT> [branch=main]`,
+          ].join("\n"),
+        },
+      ]);
+      return;
+    }
+
+    // Command: Whoami
+    if (mainCmd === "whoami") {
+      const active = getOperatorSession();
+      const authStatus = active
+        ? `⚡ [AUTH_STATUS] LEVEL 5 OPERATOR: ${active.displayName} (@${active.username}) | TARGET: ${active.branch}`
+        : `[AUTH_STATUS] GUEST VISITOR // Type 'login <token>' for Operator clearance.`;
+
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: [
+            authStatus,
+            `[OPERATOR]   ${siteConfig.author} (${siteConfig.role})`,
+            `[LOCATION]   ${siteConfig.location}`,
+            `[BIO]        ${siteConfig.bio}`,
+            `[GITHUB]     https://github.com/${siteConfig.githubRepo}`,
+          ].join("\n"),
+        },
+      ]);
+      return;
+    }
+
+    // Command: Career
+    if (mainCmd === "career" || mainCmd === "resume" || mainCmd === "exp") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: [
+            "💼 KIMKKATTA VERIFIED WORK EXPERIENCE ARCHIVE:",
+            "  (보안 및 비공개 원칙에 따라 회사명은 A사, C사, G사 및 서비스명은 일반화되어 표기됩니다)",
+            "",
+            "  [1] 블록체인 핀테크 & 대용량 정산 플랫폼 기업 (G사) | 2025.07 ~ 2026.05 (11개월)",
+            "      • 직무: 백엔드 개발팀 · 백엔드 / 서버 개발 엔지니어",
+            "      • 주요 성과: DAG 위상 정렬 기반 인메모리 트리 캐싱으로 DB I/O 90%+ 감축, Dynamic JDBC Cursor & Spring Batch 5 튜닝, 다차원 출금 정책 엔진 구축",
+            "      • Tech: Java 17, Kotlin, Spring Boot 3.4, Spring Batch 5, MySQL 8, JPA, QueryDSL, Redis",
+            "",
+            "  [2] Web3 블록체인 게임 & 플랫폼 개발사 (C사) | 2024.06 ~ 2025.05 (1년)",
+            "      • 직무: 웹 개발팀 · 풀스택 소프트웨어 엔지니어",
+            "      • 주요 성과: Clean Layered Architecture 4계층 도메인 설계, TDD 90%+ 테스트 커버리지, 온체인 민팅 대기열 & SSE 실시간 모니터링, 무한 스크롤 v2",
+            "      • Tech: NestJS, TypeScript, MongoDB, React 18, TanStack Query v5, Zustand, Tailwind",
+            "",
+            "  [3] 글로벌 암호화폐 거래소 & 핀테크 플랫폼 기업 (A사) | 2022.08 ~ 2023.08 (1년 1개월)",
+            "      • 직무: 거래소개발팀 · 백엔드 / 서버 개발 엔지니어",
+            "      • 주요 성과: RabbitMQ 실시간 메시징 아키텍처 개편 및 SPOF 해소, WebSocket 패킷 다이어트, No-Offset 커서 페이징 & N+1 해결, MySQL Named Lock 전환",
+            "      • Tech: Java 11, Spring Boot 2.7, MySQL 8, Redis, RabbitMQ, WebSocket (STOMP), Prometheus",
+            "",
+            "> 상단 내비게이션의 CAREER 메뉴 또는 /career 에서 각 프로젝트별 STAR 문제 해결 상세 내역을 열람할 수 있습니다.",
+          ].join("\n"),
+        },
+      ]);
+      return;
+    }
+
+    // Command: Projects
+    if (mainCmd === "projects" || mainCmd === "project") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: [
+            "🚀 KIMKKATTA PRODUCTION PROJECTS ARCHIVE:",
+            "  1. 1234pickban   — LoL 20단계 밴픽/피어리스 & 실시간 팀 경매 & 크로노브레이크 플랫폼",
+            "     [Stack] Next.js 14 · NestJS 10 · Socket.IO · Docker (Web)",
+            "     [Web]   https://1234banpick.me (Private Repo // 웹 서비스 운영)",
+            "",
+            "  2. kkt-bookmark  — 100% 로컬 DB, 다단계 폴더 트리 & 브라우저 지정 실행 스마트 북마크",
+            "     [Stack] Kotlin · Jetpack Compose · Room DB (Android & PWA)",
+            "     [Repo]  https://github.com/nicebyy/kkt-bookmark",
+            "",
+            "  3. old-calendar  — 0ms 로컬 우선 반응성, Windows 10 UWP 룩앤필 데스크톱 캘린더",
+            "     [Stack] Electron 34 · React 19 · Vite 6 · Tailwind CSS v4 (Desktop)",
+            "     [Store] Microsoft Store (https://apps.microsoft.com/detail/9nt09z0g12ss)",
+            "     [Repo]  https://github.com/nicebyy/old-calender",
+            "",
+            "  4. job-blocking  — 5대 채용 플랫폼(원티드·사람인·잡코리아) 광고 차단 & 무한 스크롤 & 평점 뱃지",
+            "     [Stack] Chrome Manifest V3 · TypeScript · React 18 · Vite (Extension)",
+            "     [Store] Chrome 웹스토어 (https://chromewebstore.google.com/detail/cohpijikelgbghbccpdhffaphajbmplf)",
+            "     [Repo]  https://github.com/nicebyy/job-blockingV2",
+            "",
+            "> 상단 내비게이션의 PROJECTS 메뉴 또는 /projects 에서 상세 스펙을 열람할 수 있습니다.",
+          ].join("\n"),
+        },
+      ]);
+      return;
+    }
+
+    // Command: Skills
+    if (mainCmd === "skills") {
       const skillLines = siteConfig.techStack
         .map((s) => {
           const filled = Math.round(s.level / 10);
@@ -151,30 +374,52 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           return `  ${s.name.padEnd(14, " ")} [${bar}] ${String(s.level + "%").padStart(4, " ")}${byteInfo}`;
         })
         .join("\n");
-      newLines.push({
-        id: Date.now() + 1,
-        type: "output",
-        text: `⚡ GITHUB TELEMETRY (@nicebyy | 28 repos [13 public + 15 private] | 29.8 MB analyzed):\n${skillLines}`,
-      });
-    } else if (cmd === "ls") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "output",
+          text: `⚡ GITHUB TELEMETRY (@nicebyy | 28 repos [13 public + 15 private] | 29.8 MB analyzed):\n${skillLines}`,
+        },
+      ]);
+      return;
+    }
+
+    // Command: Ls
+    if (mainCmd === "ls") {
       const list = posts
         .slice(0, 5)
         .map((p) => `  - [${p.date}] (${p.category}) ${p.title}`)
         .join("\n");
-      newLines.push({
-        id: Date.now() + 1,
-        type: "output",
-        text: `📁 ARCHIVED LOGS in /content/posts:\n${list}`,
-      });
-    } else if (cmd === "scan") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: `[SUBNET_RADAR_SCAN] Sweeping Night City Sector 01..09...\n  • Sector 01 ~ 04 : [NO CARRIER / SILENT]\n  • Sector 05 ~ 08 : [SIGNAL LOST / ABANDONED]\n  • Sector 09      : [SOLO NODE ACTIVE -> ${siteConfig.author} (YOU)]\n> RESULT: 0 other operators detected. Signal completely isolated.`,
-      });
-    } else if (cmd === "rain" || cmd === "rain on" || cmd === "rain off") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "output",
+          text: `📁 ARCHIVED LOGS in /content/posts:\n${list}`,
+        },
+      ]);
+      return;
+    }
+
+    // Command: Scan
+    if (mainCmd === "scan") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: `[SUBNET_RADAR_SCAN] Sweeping Night City Sector 01..09...\n  • Sector 01 ~ 04 : [NO CARRIER / SILENT]\n  • Sector 05 ~ 08 : [SIGNAL LOST / ABANDONED]\n  • Sector 09      : [SOLO NODE ACTIVE -> ${siteConfig.author} (YOU)]\n> RESULT: 0 other operators detected. Signal completely isolated.`,
+        },
+      ]);
+      return;
+    }
+
+    // Command: Rain
+    if (mainCmd === "rain" || trimmed.toLowerCase() === "rain on" || trimmed.toLowerCase() === "rain off") {
+      const low = trimmed.toLowerCase();
       const explicitState =
-        cmd === "rain on" ? true : cmd === "rain off" ? false : undefined;
+        low === "rain on" ? true : low === "rain off" ? false : undefined;
       window.dispatchEvent(
         new CustomEvent("toggle-rain-audio", { detail: explicitState })
       );
@@ -183,37 +428,45 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           new CustomEvent("toggle-rain-visual", { detail: explicitState })
         );
       }
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: `[ATMOSPHERE_DECK] Night City ambient rain soundscape ${
-          explicitState === true
-            ? "ENABLED"
-            : explicitState === false
-            ? "DISABLED"
-            : "TOGGLED"
-        }. (Rain outside the shelter terminal...)`,
-      });
-    } else if (cmd === "status") {
-      newLines.push({
-        id: Date.now() + 1,
-        type: "accent",
-        text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
-      });
-    } else if (cmd === "clear") {
-      setHistory([]);
-      setInput("");
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: `[ATMOSPHERE_DECK] Night City ambient rain soundscape ${
+            explicitState === true
+              ? "ENABLED"
+              : explicitState === false
+              ? "DISABLED"
+              : "TOGGLED"
+          }. (Rain outside the shelter terminal...)`,
+        },
+      ]);
       return;
-    } else {
-      newLines.push({
+    }
+
+    // Command: Status
+    if (mainCmd === "status") {
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
+        },
+      ]);
+      return;
+    }
+
+    // Fallback: Command not found
+    setHistory((prev) => [
+      ...prev,
+      {
         id: Date.now() + 1,
         type: "output",
         text: `Command not found: '${rawCmd}'. Type 'help' for available commands.`,
-      });
-    }
-
-    setHistory((prev) => [...prev, ...newLines]);
-    setInput("");
+      },
+    ]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -286,6 +539,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               {[
                 { name: "help", color: "cyan" },
+                { name: "studio", color: "pink" },
                 { name: "projects", color: "pink" },
                 { name: "scan", color: "pink" },
                 { name: "rain", color: "cyan" },
@@ -316,19 +570,25 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
 
             <form
               onSubmit={handleSubmit}
-              className="flex items-center gap-2 bg-black/80 rounded-xl px-2.5 sm:px-3 py-2 border border-cyan-500/40 focus-within:border-neon-cyan focus-within:shadow-neon-cyan transition-all"
+              className="flex items-center gap-2 bg-black/90 rounded-xl px-2.5 sm:px-3 py-2 border border-cyan-500/50 focus-within:border-neon-cyan focus-within:shadow-[0_0_15px_rgba(0,243,255,0.4)] transition-all relative"
             >
-              <ChevronRight className="w-4 h-4 text-neon-green shrink-0 animate-pulse" />
+              <div className="flex items-center gap-1 shrink-0 text-neon-green">
+                <ChevronRight className="w-4 h-4 animate-pulse shrink-0" />
+              </div>
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="명령어 입력 (scan, rain, whoami, skills, status, help)..."
-                className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-mono text-white placeholder-slate-500 focus:outline-none"
+                placeholder="명령어 입력 (help, studio, whoami, login <token>, rain)..."
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                className="min-w-0 flex-1 bg-transparent font-mono text-xs sm:text-sm text-neon-cyan font-bold tracking-wider placeholder:text-slate-600 placeholder:font-mono placeholder:font-normal placeholder:tracking-normal focus:outline-none caret-neon-cyan selection:bg-cyan-500/30 selection:text-white drop-shadow-[0_0_6px_rgba(0,243,255,0.7)]"
               />
               <button
                 type="submit"
-                className="text-xs font-orbitron tracking-wider text-slate-300 hover:text-neon-cyan flex items-center gap-1 shrink-0 px-2 py-0.5 rounded bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 transition-colors cursor-pointer"
+                className="text-xs font-orbitron tracking-wider text-slate-300 hover:text-neon-cyan flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/30 hover:border-cyan-400 transition-all cursor-pointer active:scale-95 shadow-[0_0_8px_rgba(0,243,255,0.15)]"
               >
                 <span>EXEC</span>
                 <CornerDownLeft className="w-3.5 h-3.5" />

@@ -184,8 +184,8 @@ export function OperatorLoginGate({ onSuccess }: OperatorLoginGateProps) {
                 onChange={(e) => setBranch(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-black/70 border border-slate-700 focus:border-emerald-400 text-white outline-none font-mono text-xs"
               >
-                <option value="develop">develop (표준 개발/통합 브랜치 - 권장)</option>
-                <option value="main">main (프로덕션 직접 배포 브랜치)</option>
+                <option value="main">main (프로덕션 즉시 라이브 발행 - 권장)</option>
+                <option value="develop">develop (개발/초안 보관 브랜치)</option>
               </select>
             </div>
 

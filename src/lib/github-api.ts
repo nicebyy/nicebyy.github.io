@@ -14,7 +14,7 @@ const STORAGE_KEY_REPO = "cyber_studio_github_repo";
 const STORAGE_KEY_BRANCH = "cyber_studio_github_branch";
 
 export const DEFAULT_REPO = "nicebyy/nicebyy.github.io";
-export const DEFAULT_BRANCH = "develop";
+export const DEFAULT_BRANCH = "main";
 
 export function getStoredGitHubConfig(): GitHubConfig {
   if (typeof window === "undefined") {
