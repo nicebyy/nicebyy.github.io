@@ -64,12 +64,14 @@ const companyColorTheme: Record<
 
 export function CareerTimeline() {
   const [selectedFilter, setSelectedFilter] = useState<string>("ALL");
-  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({
-    "chew-chew-batch": true,
-    "shibarise-v1": true,
-    "metamatch-admin": true,
-    "aladdin-exchange": true,
-    "buyaladdin-seller": true,
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    careerCompaniesData.forEach((comp) => {
+      comp.projects.forEach((proj) => {
+        initial[proj.id] = true;
+      });
+    });
+    return initial;
   });
 
   const toggleProject = (projectId: string) => {
