@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { ContactModal } from "./ContactModal";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
 
@@ -30,9 +31,17 @@ export function AppShell({
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
   const [rainAudio, setRainAudio] = useState(false);
+
+  // Global event listener for opening contact modal
+  useEffect(() => {
+    const handleOpenContact = () => setIsContactOpen(true);
+    window.addEventListener("open-contact-modal", handleOpenContact);
+    return () => window.removeEventListener("open-contact-modal", handleOpenContact);
+  }, []);
 
   // Sync procedural rain audio state across footer / HUD / terminal CLI
   useEffect(() => {
@@ -164,6 +173,7 @@ export function AppShell({
         isSidebarCollapsed={isCollapsed}
         onToggleSidebar={toggleCollapse}
         onOpenMobileSidebar={() => setIsMobileOpen(true)}
+        onOpenContact={() => setIsContactOpen(true)}
         activeSection={activeSection}
         onSelectSection={setActiveSection}
       />
@@ -176,8 +186,14 @@ export function AppShell({
           onSetCollapsed={setCollapsedState}
           isMobileOpen={isMobileOpen}
           onCloseMobile={() => setIsMobileOpen(false)}
+          onOpenContact={() => setIsContactOpen(true)}
           activeSection={activeSection}
           onSelectSection={setActiveSection}
+        />
+
+        <ContactModal
+          isOpen={isContactOpen}
+          onClose={() => setIsContactOpen(false)}
         />
 
         <div className="flex-1 min-w-0 flex flex-col justify-between">

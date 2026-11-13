@@ -1,3 +1,5 @@
+import { projectsData } from "./projects";
+
 export const siteConfig = {
   title: "kimkkatta // DEV.LOG",
   author: "kimkkatta",
@@ -10,7 +12,7 @@ export const siteConfig = {
   bio: "코드로 문제를 해결하고, 실험적인 웹 인터페이스와 아키텍처를 탐구합니다.",
   location: "Seoul, KR",
   statusText: "SYSTEM.ONLINE // kimkkatta NODE",
-  email: "nicebyy@users.noreply.github.com",
+  email: "nicebyy@naver.com",
   social: {
     github: "https://github.com/nicebyy",
   },
@@ -21,6 +23,7 @@ export const siteConfig = {
     { name: "CSS / Style", level: 27, bytes: "4.90 MB", color: "green" },
     { name: "Kotlin", level: 2, bytes: "278 KB", color: "pink" },
   ],
+  projects: projectsData,
   // Giscus 댓글 설정 (https://giscus.app 연동 완료)
   giscus: {
     enabled: true,
@@ -45,3 +48,4 @@ export const siteConfig = {
 };
 
 export type SiteConfig = typeof siteConfig;
+

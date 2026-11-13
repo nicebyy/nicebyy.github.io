@@ -9,6 +9,7 @@ import {
   Cpu,
   BookOpen,
   User,
+  Mail,
   Folder,
   FolderOpen,
   Tag,
@@ -36,6 +37,7 @@ interface SidebarProps {
   onSetCollapsed?: (collapsed: boolean) => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  onOpenContact?: () => void;
   activeSection?: "dashboard" | "posts" | "about";
   onSelectSection?: (section: "dashboard" | "posts" | "about") => void;
 }
@@ -47,6 +49,7 @@ export function Sidebar({
   onSetCollapsed,
   isMobileOpen,
   onCloseMobile,
+  onOpenContact,
   activeSection = "dashboard",
   onSelectSection,
 }: SidebarProps) {
@@ -442,6 +445,28 @@ export function Sidebar({
                   <User className={`w-4 h-4 shrink-0 ${isAboutActive ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" : "text-slate-500"}`} />
                   {!collapsed && <span>About kimkkatta</span>}
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onCloseMobile();
+                    onOpenContact?.();
+                  }}
+                  title="문의하기 (nicebyy@naver.com)"
+                  className={`flex items-center ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-[0_0_10px_rgba(0,255,157,0.2)] cursor-pointer w-full text-left`}
+                >
+                  <Mail className="w-4 h-4 shrink-0 text-neon-green" />
+                  {!collapsed && (
+                    <span className="flex items-center justify-between flex-1 min-w-0">
+                      <span className="truncate">Contact // 문의</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-emerald-500/10 text-neon-green border border-emerald-500/30 shrink-0">
+                        EMAIL
+                      </span>
+                    </span>
+                  )}
+                </button>
               </>
             );
           })()}

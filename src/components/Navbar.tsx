@@ -10,6 +10,7 @@ import {
   Cpu,
   BookOpen,
   User,
+  Mail,
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
@@ -41,6 +42,7 @@ interface NavbarProps {
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
   onOpenMobileSidebar?: () => void;
+  onOpenContact?: () => void;
   activeSection?: "dashboard" | "posts" | "about";
   onSelectSection?: (section: "dashboard" | "posts" | "about") => void;
 }
@@ -49,6 +51,7 @@ export function Navbar({
   isSidebarCollapsed,
   onToggleSidebar,
   onOpenMobileSidebar,
+  onOpenContact,
   activeSection = "dashboard",
   onSelectSection,
 }: NavbarProps) {
@@ -179,6 +182,15 @@ export function Navbar({
               <User className="w-3.5 h-3.5 text-purple-400" />
               <span>ABOUT</span>
             </Link>
+            <button
+              type="button"
+              onClick={onOpenContact}
+              title="문의하기 (nicebyy@naver.com)"
+              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer"
+            >
+              <Mail className="w-3.5 h-3.5 text-neon-green" />
+              <span>CONTACT</span>
+            </button>
           </nav>
 
           {/* Cyberpunk HUD BGM Player */}
@@ -199,6 +211,17 @@ export function Navbar({
             <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
               Ctrl K
             </kbd>
+          </button>
+
+          {/* Quick Contact Button (Desktop & Mobile) */}
+          <button
+            type="button"
+            onClick={onOpenContact}
+            aria-label="문의하기 (이메일)"
+            title="문의하기 (nicebyy@naver.com)"
+            className="p-2 rounded-xl text-slate-400 hover:text-neon-green bg-white/5 hover:bg-emerald-500/15 border border-cyan-500/20 hover:border-emerald-500/40 hover:shadow-neon-green transition-all cursor-pointer"
+          >
+            <Mail className="w-4 h-4 text-neon-green" />
           </button>
 
           {/* Mobile Quick Search Button */}

@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
-import { Terminal, Github, Cpu, Code2, Globe, Sparkles } from "lucide-react";
+import { Terminal, Github, Cpu, Code2, Globe, Sparkles, Mail, Send } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -101,6 +101,36 @@ export default function AboutPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Contact & Transmission Card */}
+        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.05] p-5 sm:p-6 space-y-3 cyber-corner">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-neon-green">
+              <Mail className="w-4 h-4" />
+              <span>DIRECT CONTACT // OPERATOR INQUIRY</span>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-neon-green px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
+              ACTIVE
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+            프로젝트 제안, 기술 질문, 개발 관련 문의는 언제든 환영합니다. 아래 이메일 주소로 편하게 연락주세요!
+          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+            <code className="font-mono text-sm sm:text-base font-bold text-neon-cyan p-2.5 rounded-xl bg-black/60 border border-cyan-500/30 select-all">
+              {siteConfig.email}
+            </code>
+            <a
+              href={`mailto:${siteConfig.email}?subject=${encodeURIComponent(
+                "[kimkkatta DEV.LOG] 안녕하세요, 문의드립니다"
+              )}`}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-neon-green border border-emerald-500/40 hover:border-emerald-400 hover:shadow-neon-green transition-all"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>이메일 보내기</span>
+            </a>
           </div>
         </div>
 
