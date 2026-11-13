@@ -102,9 +102,9 @@ export function Navbar({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-cyan-500/30 bg-[#060911]/90 backdrop-blur-md transition-colors shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]">
-      <div className="px-2.5 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
+      <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Sidebar Toggle + Brand & System Status */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Mobile Menu Toggle */}
           <button
             type="button"
@@ -135,13 +135,13 @@ export function Navbar({
           {/* Brand Logo with Orbitron Font & Neon Sign */}
           <Link
             href="/"
-            className="group flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-lg tracking-tight text-white min-w-0"
+            className="group flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-lg tracking-tight text-white shrink-0"
           >
             <span className="hidden min-[400px]:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-cyan-400/10 border border-cyan-400/60 items-center justify-center text-neon-cyan group-hover:shadow-neon-cyan group-hover:scale-105 transition-all shrink-0">
               <Terminal className="w-4 h-4" />
             </span>
-            <span className="flex items-center gap-1 sm:gap-1.5 truncate">
-              <span className="font-cyber font-black tracking-wider text-white group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff] transition-all truncate">
+            <span className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shrink-0">
+              <span className="font-cyber font-black tracking-wider text-white group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff] transition-all">
                 {siteConfig.author}
               </span>
               <span className="text-neon-cyan animate-pulse font-black font-mono shrink-0">
@@ -154,19 +154,19 @@ export function Navbar({
           </Link>
 
           {/* Live HUD Status Badge */}
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
+          <div className="hidden 2xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
             <span className="w-2 h-2 rounded-full bg-neon-green animate-ping" />
             <span>{siteConfig.statusText}</span>
           </div>
         </div>
 
         {/* Center / Right Navigation */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <nav className="hidden md:flex items-center gap-1.5 font-chakra text-xs sm:text-sm mr-1">
+        <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 justify-end">
+          <nav className="hidden xl:flex items-center gap-1 font-chakra text-xs mr-1">
             <Link
               href="/"
               onClick={handleDashboardClick}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 activeSection === "dashboard" && pathname === "/"
                   ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
@@ -178,7 +178,7 @@ export function Navbar({
             <Link
               href="/projects"
               onClick={handleProjectsClick}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 (activeSection === "projects" && pathname === "/") || pathname?.startsWith("/projects")
                   ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
@@ -189,7 +189,7 @@ export function Navbar({
             </Link>
             <Link
               href="/career"
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 pathname?.startsWith("/career")
                   ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/20"
@@ -201,7 +201,7 @@ export function Navbar({
             <Link
               href="/#posts"
               onClick={handlePostsClick}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 activeSection === "posts" && (pathname === "/" || pathname.startsWith("/posts/"))
                   ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
@@ -213,7 +213,7 @@ export function Navbar({
             <Link
               href="/studio"
               title={isAuthenticated ? "스튜디오 (운영자 로그인됨)" : "스튜디오 (운영자 전용)"}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
                 pathname?.startsWith("/studio")
                   ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
@@ -235,7 +235,7 @@ export function Navbar({
             <Link
               href="/about"
               onClick={() => onSelectSection?.("about")}
-              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+              className={`hidden 2xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider ${
                 pathname?.startsWith("/about")
                   ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
                   : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
@@ -248,7 +248,7 @@ export function Navbar({
               type="button"
               onClick={onOpenContact}
               title="문의하기 (nicebyy@naver.com)"
-              className="px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer"
+              className="hidden 2xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer"
             >
               <Mail className="w-3.5 h-3.5 text-neon-green" />
               <span>CONTACT</span>
@@ -266,11 +266,11 @@ export function Navbar({
             type="button"
             onClick={triggerSearchFocus}
             title="포스트 빠른 검색 (Ctrl + K)"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-black/60 hover:bg-cyan-500/10 text-slate-400 hover:text-slate-200 border border-cyan-500/30 hover:border-neon-cyan hover:shadow-neon-cyan transition-all cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-mono bg-black/60 hover:bg-cyan-500/10 text-slate-400 hover:text-slate-200 border border-cyan-500/30 hover:border-neon-cyan hover:shadow-neon-cyan transition-all cursor-pointer shrink-0"
           >
             <Search className="w-3.5 h-3.5 text-neon-cyan" />
-            <span className="font-chakra tracking-wider hidden lg:inline">SEARCH...</span>
-            <kbd className="px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+            <span className="font-chakra tracking-wider hidden 2xl:inline">SEARCH...</span>
+            <kbd className="hidden 2xl:inline-block px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
               Ctrl K
             </kbd>
           </button>
@@ -281,17 +281,17 @@ export function Navbar({
             onClick={onOpenContact}
             aria-label="문의하기 (이메일)"
             title="문의하기 (nicebyy@naver.com)"
-            className="p-2 rounded-xl text-slate-400 hover:text-neon-green bg-white/5 hover:bg-emerald-500/15 border border-cyan-500/20 hover:border-emerald-500/40 hover:shadow-neon-green transition-all cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-neon-green bg-white/5 hover:bg-emerald-500/15 border border-cyan-500/20 hover:border-emerald-500/40 hover:shadow-neon-green transition-all cursor-pointer shrink-0"
           >
             <Mail className="w-4 h-4 text-neon-green" />
           </button>
 
-          {/* Mobile Studio Button */}
+          {/* Studio Button for Viewports where Header Nav is hidden */}
           <Link
             href="/studio"
             aria-label="스튜디오 // 글 작성 및 관리"
             title={isAuthenticated ? "스튜디오 (운영자 모드)" : "스튜디오 (운영자 로그인 필요)"}
-            className={`md:hidden p-2 rounded-xl border transition-all cursor-pointer relative ${
+            className={`xl:hidden p-2 rounded-xl border transition-all cursor-pointer relative shrink-0 ${
               pathname?.startsWith("/studio")
                 ? "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-neon-cyan"
                 : "text-slate-400 hover:text-neon-cyan bg-white/5 hover:bg-cyan-500/15 border-cyan-500/20 hover:border-cyan-500/40"
@@ -312,7 +312,7 @@ export function Navbar({
             type="button"
             onClick={triggerSearchFocus}
             aria-label="포스트 검색"
-            className="sm:hidden p-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 text-neon-cyan border border-cyan-500/30 hover:shadow-neon-cyan transition-all cursor-pointer"
+            className="sm:hidden p-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 text-neon-cyan border border-cyan-500/30 hover:shadow-neon-cyan transition-all cursor-pointer shrink-0"
           >
             <Search className="w-4 h-4" />
           </button>
@@ -322,7 +322,7 @@ export function Navbar({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="GitHub Profile"
-            className="hidden min-[380px]:inline-flex p-2 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-cyan-500/15 border border-cyan-500/20 hover:border-neon-cyan hover:shadow-neon-cyan transition-all"
+            className="hidden min-[380px]:inline-flex p-2 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-cyan-500/15 border border-cyan-500/20 hover:border-neon-cyan hover:shadow-neon-cyan transition-all shrink-0"
           >
             <Github className="w-4 h-4" />
           </a>
