@@ -73,7 +73,7 @@ export const careerCompaniesData: CareerCompany[] = [
     team: "백엔드 개발팀",
     position: "백엔드 / 서버 개발 엔지니어",
     description:
-      "Chew-fi 글로벌 핀테크 플랫폼의 백엔드 코어 API 설계 및 개발, 대용량 회원 트랜잭션에 따른 파트너 수익금 쉐어 정산 및 자동 구매 배치 엔진 최적화, 다차원 출금 정책 엔진 구축을 주도했습니다.",
+      "글로벌 블록체인 핀테크 플랫폼의 백엔드 코어 API 설계 및 개발, 대용량 회원 트랜잭션에 따른 파트너 수익금 쉐어 정산 및 자동 구매 배치 엔진 최적화, 다차원 출금 정책 엔진 구축을 주도했습니다.",
     coreTech: [
       "Java 17",
       "Kotlin",
@@ -89,8 +89,8 @@ export const careerCompaniesData: CareerCompany[] = [
     ],
     projects: [
       {
-        id: "chew-chew-batch",
-        name: "Chew-fi 대용량 배치 및 정산 시스템 (chew-chew-batch)",
+        id: "multi-tier-settlement-engine",
+        name: "대용량 일일 정산 및 리워드 분배 배치 시스템 (Multi-Tier Settlement Batch Engine)",
         period: "2025.07 ~ 2026.05",
         duration: "11개월",
         overview:
@@ -142,12 +142,12 @@ export const careerCompaniesData: CareerCompany[] = [
         ],
       },
       {
-        id: "shibarise-v1",
-        name: "Chew-fi 백엔드 코어 API (shibarise-v1)",
+        id: "fintech-policy-core-api",
+        name: "핀테크 플랫폼 백엔드 코어 & 출금 정책 엔진 (FinTech Core & Policy Engine)",
         period: "2025.07 ~ 2026.05",
         duration: "11개월",
         overview:
-          "Chew-fi 플랫폼의 유저 인증, 회원 관리, 지갑 자산, 직급/커미션 계산, 출금 정책 및 백오피스 운영을 위한 메인 백엔드 코어 API입니다.",
+          "글로벌 핀테크 플랫폼의 유저 인증, 회원 관리, 지갑 자산, 직급/커미션 계산, 출금 정책 및 백오피스 운영을 위한 메인 백엔드 코어 API입니다.",
         role: "출금 정책 엔진(Withdraw Policy Engine) 설계, 직급/커미션 엔진 트리 최적화, 자산 보안 파이프라인 및 모니터링 체계 수립",
         techStack: [
           "Java 17",
@@ -208,7 +208,7 @@ export const careerCompaniesData: CareerCompany[] = [
     team: "웹 개발팀",
     position: "풀스택 소프트웨어 엔지니어 (백엔드 코어 & 프론트 어드민)",
     description:
-      "Web3 기반 TCG 게임 'MetaMatch' 운영 관리 시스템(Admin Platform)의 백엔드 API 및 프론트엔드 어드민 전체를 단독 설계·구축했습니다. 도메인 중심 클린 아키텍처, TDD 90% 커버리지, 온체인 민팅 대기열 관리 및 실시간 SSE 스트리밍을 구현했습니다.",
+      "Web3 기반 글로벌 블록체인 TCG 게임 운영 관리 시스템(Admin Platform)의 백엔드 API 및 프론트엔드 어드민 전체를 단독 설계·구축했습니다. 도메인 중심 클린 아키텍처, TDD 90% 커버리지, 온체인 민팅 대기열 관리 및 실시간 SSE 스트리밍을 구현했습니다.",
     coreTech: [
       "NestJS",
       "TypeScript",
@@ -224,12 +224,12 @@ export const careerCompaniesData: CareerCompany[] = [
     ],
     projects: [
       {
-        id: "metamatch-admin",
-        name: "MetaMatch 관리자 플랫폼 (metamatch-admin & metamatch-admin-api)",
+        id: "web3-game-admin-platform",
+        name: "Web3 블록체인 게임 통합 운영 관리자 플랫폼 (Web3 Game Admin & Core API)",
         period: "2024.06 ~ 2025.05",
         duration: "1년",
         overview:
-          "Web3 기반 TCG/수집형 블록체인 게임 'MetaMatch'의 게임 데이터, 유저 자산, 보상 지급, 온체인 민팅 대기열 및 운영 정책을 총괄하는 백오피스 통합 플랫폼입니다.",
+          "Web3 기반 TCG/수집형 블록체인 게임의 게임 마스터 데이터, 유저 자산, 보상 지급, 온체인 민팅 대기열 및 운영 정책을 총괄하는 백오피스 통합 플랫폼입니다.",
         role: "백엔드 API 및 프론트엔드 SPA 단독 설계/개발, 클린 레이어드 아키텍처 수립, TDD 테스트 자동화 및 SSE 온체인 모니터링 구축",
         techStack: [
           "NestJS",
@@ -345,7 +345,7 @@ export const careerCompaniesData: CareerCompany[] = [
     ],
     projects: [
       {
-        id: "aladdin-exchange",
+        id: "crypto-exchange-core",
         name: "글로벌 암호화폐 거래소 플랫폼 코어 & 실시간 중계 시스템",
         period: "2022.08 ~ 2023.08",
         duration: "1년",
@@ -423,7 +423,7 @@ export const careerCompaniesData: CareerCompany[] = [
         ],
       },
       {
-        id: "buyaladdin-seller",
+        id: "seller-backoffice-platform",
         name: "글로벌 커머스 판매자 백오피스 플랫폼 (Seller Admin)",
         period: "2022.08 ~ 2023.02",
         duration: "약 6개월",

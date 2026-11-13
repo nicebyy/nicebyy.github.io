@@ -95,7 +95,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         type: "accent",
         text: [
           "💼 KIMKKATTA VERIFIED WORK EXPERIENCE ARCHIVE:",
-          "  (보안 및 비공개 요청에 따라 회사명은 A사, C사, G사로 표기됩니다)",
+          "  (보안 및 비공개 원칙에 따라 회사명은 A사, C사, G사 및 서비스명은 일반화되어 표기됩니다)",
           "",
           "  [1] 블록체인 핀테크 & 대용량 정산 플랫폼 기업 (G사) | 2025.07 ~ 2026.05 (11개월)",
           "      • 직무: 백엔드 개발팀 · 백엔드 / 서버 개발 엔지니어",

@@ -85,8 +85,8 @@ export default function CareerPage() {
           <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
           <p className="leading-relaxed break-keep">
             <strong className="text-amber-300 font-bold">비공개 원칙 안내: </strong>
-            본 페이지에 수록된 재직 회사명은 보안 및 비공개 요청에 따라 익명(<strong>A사</strong>, <strong>C사</strong>, <strong>G사</strong>)으로 보호 처리되어 있습니다.
-            수행한 프로젝트의 도메인 아키텍처, 성능 튜닝, 문제 해결(STAR) 및 수치 성과는 실제 프로덕션 실무 경험을 100% 사실에 입각하여 정리한 내역입니다.
+            본 페이지에 수록된 재직 회사명(<strong>A사</strong>, <strong>C사</strong>, <strong>G사</strong>) 및 고유 서비스/프로젝트 명칭은 비즈니스 보안과 비공개 원칙에 따라 익명화 및 일반화(Generic) 처리되어 있습니다.
+            수행한 아키텍처 설계, 성능 튜닝, 문제 해결(STAR) 및 정량적 수치 성과는 실제 프로덕션 실무 경험을 100% 사실에 입각하여 정리한 내역입니다.
           </p>
         </div>
 

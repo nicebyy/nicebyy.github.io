@@ -6,7 +6,7 @@ GitHub Pages(`output: 'export'`)를 통해 **100% 무료 호스팅** 및 **GitHu
 ## 주요 기능
 
 - **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `career`, `projects`, `skills`, `ls`, `scan`, `rain`, `status`, `clear` 명령어 실시간 실행
-- **CAREER & RESUME ARCHIVE (`/career`)**: 3개사(G사, C사, A사) 실무 경력 및 미션 크리티컬 아키텍처 문제 해결 이력서 (회사명 비공개/익명화 원칙 준수, 대용량 정산·배치·EDA·Web3·Clean Architecture STAR 성과 아카이브)
+- **CAREER & RESUME ARCHIVE (`/career`)**: 3개사(G사, C사, A사) 실무 경력 및 미션 크리티컬 아키텍처 문제 해결 이력서 (회사명 및 고유 프로젝트명 비공개/익명화 원칙 준수, 대용량 정산·배치·EDA·Web3·Clean Architecture STAR 성과 아카이브)
 - **FEATURED PROJECTS ARCHIVE (`/projects`)**: 4대 핵심 개인 프로젝트 아카이브 (1234pickban 웹 시뮬레이터, kkt-bookmark 안드로이드/PWA 앱, old-calendar 윈도우 스토어 데스크톱 캘린더, job-blocking 크롬 웹스토어 확장 프로그램)
 - **사이버펑크 네온 단일 테마 & 고립 무드 앰비언스**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI, 네온 빗줄기·부유 먼지 캔버스(`IsolatedAtmosphere`), CRT 비네팅 & 주사선, 단독 오퍼레이터 레이더 HUD(`LoneOperatorHud`)
 - **프로시저럴 Web Audio 빗소리 신디사이저**: 외부 오디오 파일 없이 실시간 생성되는 Night City 빗소리 사운드스케이프(`RAIN FX` / `RAIN SND` 토글 및 `$rain` 명령 지원)
