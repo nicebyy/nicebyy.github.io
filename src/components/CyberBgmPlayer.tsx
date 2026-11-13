@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Radio,
   Repeat,
+  Shuffle,
 } from "lucide-react";
 
 export interface Track {
@@ -64,6 +65,46 @@ export const PLAYLIST: Track[] = [
     genre: "Cyberpunk Synthwave",
     license: "CC BY-SA 3.0",
   },
+  {
+    id: "duncan-avoid-mind-breach",
+    title: "Mind Breach",
+    artist: "Duncan Avoid",
+    src: "/audio/duncan-avoid-mind-breach.mp3",
+    genre: "Cybernetics IDM",
+    license: "CC-BY-NC-SA 4.0",
+  },
+  {
+    id: "duncan-avoid-implant",
+    title: "Implant",
+    artist: "Duncan Avoid",
+    src: "/audio/duncan-avoid-implant.mp3",
+    genre: "Cybernetics IDM",
+    license: "CC-BY-NC-SA 4.0",
+  },
+  {
+    id: "libroru-80s-synth",
+    title: "Stranger 80s",
+    artist: "Libroru",
+    src: "/audio/libroru-80s-synth.mp3",
+    genre: "Retro Synthwave",
+    license: "Creative Commons",
+  },
+  {
+    id: "demetr-ozone-cloud",
+    title: "Ozone Cloud",
+    artist: "Demetr",
+    src: "/audio/demetr-ozone-cloud.mp3",
+    genre: "Dark Synthwave",
+    license: "Creative Commons",
+  },
+  {
+    id: "duncan-avoid-colloid",
+    title: "Colloid",
+    artist: "Duncan Avoid",
+    src: "/audio/duncan-avoid-colloid.mp3",
+    genre: "Cybernetics Ambient",
+    license: "CC-BY-NC-SA 4.0",
+  },
 ];
 
 // Gentle, calm ambient default volume (12%) so reading remains comfortable
@@ -73,6 +114,7 @@ const FADE_IN_DURATION_MS = 1200;
 export function CyberBgmPlayer() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isShuffle, setIsShuffle] = useState(true);
   const [volume, setVolume] = useState(DEFAULT_BGM_VOLUME);
   const [isMuted, setIsMuted] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -86,6 +128,8 @@ export function CyberBgmPlayer() {
   const volumeRef = useRef(DEFAULT_BGM_VOLUME);
   const isMutedRef = useRef(false);
   const isPlayingRef = useRef(false);
+  const isShuffleRef = useRef(true);
+  const historyStackRef = useRef<number[]>([]);
   const currentTrackIndexRef = useRef(0);
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const unlockCleanupRef = useRef<(() => void) | null>(null);
@@ -144,6 +188,28 @@ export function CyberBgmPlayer() {
     [clearFade, getTargetVolume]
   );
 
+  // Helper to pick next random track without immediate repetition
+  const getNextRandomTrackIndex = useCallback((): number => {
+    const currentIdx = currentTrackIndexRef.current;
+    const total = PLAYLIST.length;
+    if (total <= 1) return 0;
+
+    // Avoid the current track and recent history (up to half the playlist size)
+    const recent = historyStackRef.current.slice(-Math.floor(total / 2));
+    const excluded = new Set([currentIdx, ...recent]);
+    let candidates = Array.from({ length: total }, (_, i) => i).filter(
+      (i) => !excluded.has(i)
+    );
+
+    if (candidates.length === 0) {
+      candidates = Array.from({ length: total }, (_, i) => i).filter(
+        (i) => i !== currentIdx
+      );
+    }
+    if (candidates.length === 0) return 0;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }, []);
+
   // Core playback helper: imperative src + load() avoids React re-render race conditions
   const playCurrentAudio = useCallback(
     async (withFadeIn = false) => {
@@ -182,8 +248,22 @@ export function CyberBgmPlayer() {
   );
 
   const loadAndPlayTrack = useCallback(
-    async (index: number, shouldPlay = true, withFadeIn = false) => {
+    async (
+      index: number,
+      shouldPlay = true,
+      withFadeIn = false,
+      recordHistory = true
+    ) => {
       const safeIndex = (index + PLAYLIST.length) % PLAYLIST.length;
+      const prevIndex = currentTrackIndexRef.current;
+
+      if (recordHistory && prevIndex !== safeIndex) {
+        historyStackRef.current.push(prevIndex);
+        if (historyStackRef.current.length > 20) {
+          historyStackRef.current.shift();
+        }
+      }
+
       setCurrentTrackIndex(safeIndex);
       currentTrackIndexRef.current = safeIndex;
       setProgress(0);
@@ -232,6 +312,16 @@ export function CyberBgmPlayer() {
         }
       }
 
+      const savedShuffle = localStorage.getItem("kimgatta_bgm_shuffle");
+      if (savedShuffle !== null) {
+        const parsedShuffle = savedShuffle === "true";
+        setIsShuffle(parsedShuffle);
+        isShuffleRef.current = parsedShuffle;
+      } else {
+        setIsShuffle(true);
+        isShuffleRef.current = true;
+      }
+
       const savedTrack = localStorage.getItem("kimgatta_bgm_track");
       if (savedTrack !== null) {
         const parsed = parseInt(savedTrack, 10);
@@ -240,6 +330,11 @@ export function CyberBgmPlayer() {
           setCurrentTrackIndex(parsed);
           currentTrackIndexRef.current = parsed;
         }
+      } else if (isShuffleRef.current) {
+        const randomInit = Math.floor(Math.random() * PLAYLIST.length);
+        initialTrack = randomInit;
+        setCurrentTrackIndex(randomInit);
+        currentTrackIndexRef.current = randomInit;
       }
 
       userPaused = localStorage.getItem("kimgatta_bgm_paused_by_user") === "true";
@@ -358,15 +453,24 @@ export function CyberBgmPlayer() {
     };
 
     const onEnded = () => {
-      // Automatically cycle to next track (wraps from track 5 back to track 1) without zeroing volume
-      const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
-      loadAndPlayTrack(nextIdx, true, false);
+      if (isShuffleRef.current) {
+        const nextIdx = getNextRandomTrackIndex();
+        loadAndPlayTrack(nextIdx, true, false, true);
+      } else {
+        const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
+        loadAndPlayTrack(nextIdx, true, false, true);
+      }
     };
 
     const onError = () => {
       if (isPlayingRef.current) {
-        const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
-        loadAndPlayTrack(nextIdx, true, false);
+        if (isShuffleRef.current) {
+          const nextIdx = getNextRandomTrackIndex();
+          loadAndPlayTrack(nextIdx, true, false, true);
+        } else {
+          const nextIdx = (currentTrackIndexRef.current + 1) % PLAYLIST.length;
+          loadAndPlayTrack(nextIdx, true, false, true);
+        }
       }
     };
 
@@ -385,7 +489,7 @@ export function CyberBgmPlayer() {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("error", onError);
     };
-  }, [getTargetVolume, loadAndPlayTrack]);
+  }, [getNextRandomTrackIndex, getTargetVolume, loadAndPlayTrack]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -413,12 +517,39 @@ export function CyberBgmPlayer() {
     }
   };
 
+  const toggleShuffle = () => {
+    setIsShuffle((prev) => {
+      const next = !prev;
+      isShuffleRef.current = next;
+      try {
+        localStorage.setItem("kimgatta_bgm_shuffle", String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
+
   const handleNextTrack = () => {
-    loadAndPlayTrack(currentTrackIndex + 1, isPlaying, false);
+    if (isShuffleRef.current) {
+      const nextIdx = getNextRandomTrackIndex();
+      loadAndPlayTrack(nextIdx, isPlaying, false, true);
+    } else {
+      const nextIdx = (currentTrackIndex + 1) % PLAYLIST.length;
+      loadAndPlayTrack(nextIdx, isPlaying, false, true);
+    }
   };
 
   const handlePrevTrack = () => {
-    loadAndPlayTrack(currentTrackIndex - 1, isPlaying, false);
+    if (historyStackRef.current.length > 0) {
+      const prevIdx = historyStackRef.current.pop()!;
+      loadAndPlayTrack(prevIdx, isPlaying, false, false);
+    } else {
+      const prevIdx = isShuffleRef.current
+        ? getNextRandomTrackIndex()
+        : (currentTrackIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+      loadAndPlayTrack(prevIdx, isPlaying, false, false);
+    }
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -554,13 +685,32 @@ export function CyberBgmPlayer() {
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span
-                title="전곡 순환 반복 재생 활성화됨"
-                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30"
+              <button
+                type="button"
+                onClick={toggleShuffle}
+                title={
+                  isShuffle
+                    ? "랜덤 셔플 활성화됨 (클릭 시 순차 재생으로 전환)"
+                    : "순차 순환 재생 활성화됨 (클릭 시 랜덤 셔플로 전환)"
+                }
+                className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-chakra tracking-wider border transition-all cursor-pointer active:scale-95 ${
+                  isShuffle
+                    ? "bg-pink-500/20 text-neon-pink border-pink-500/50 shadow-[0_0_8px_rgba(255,0,127,0.3)] hover:bg-pink-500/30"
+                    : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20"
+                }`}
               >
-                <Repeat className="w-2.5 h-2.5" />
-                <span>LOOP</span>
-              </span>
+                {isShuffle ? (
+                  <>
+                    <Shuffle className="w-2.5 h-2.5" />
+                    <span>SHUFFLE</span>
+                  </>
+                ) : (
+                  <>
+                    <Repeat className="w-2.5 h-2.5" />
+                    <span>LOOP</span>
+                  </>
+                )}
+              </button>
               <span
                 className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border ${
                   isPlaying
@@ -580,7 +730,8 @@ export function CyberBgmPlayer() {
                 {currentTrack.genre}
               </span>
               <span className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 border border-white/10">
-                0{currentTrackIndex + 1}/0{PLAYLIST.length} ·{" "}
+                {String(currentTrackIndex + 1).padStart(2, "0")}/
+                {String(PLAYLIST.length).padStart(2, "0")} ·{" "}
                 {currentTrack.license}
               </span>
             </div>
@@ -621,12 +772,12 @@ export function CyberBgmPlayer() {
 
           {/* Playback Controls */}
           <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handlePrevTrack}
-                title="이전 곡"
-                className="p-1.5 rounded-lg border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-500/15 text-slate-300 hover:text-neon-cyan transition-all cursor-pointer"
+                title="이전 곡 (히스토리 역방향)"
+                className="p-1.5 rounded-lg border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-500/15 text-slate-300 hover:text-neon-cyan transition-all cursor-pointer active:scale-95"
               >
                 <SkipBack className="w-3.5 h-3.5" />
               </button>
@@ -634,7 +785,7 @@ export function CyberBgmPlayer() {
                 type="button"
                 onClick={togglePlay}
                 title={isPlaying ? "일시정지" : "재생"}
-                className={`p-2 rounded-xl border transition-all cursor-pointer ${
+                className={`p-2 rounded-xl border transition-all cursor-pointer active:scale-95 ${
                   isPlaying
                     ? "bg-pink-500/20 text-neon-pink border-pink-500 shadow-[0_0_12px_#ff007f]"
                     : "bg-cyan-500/20 text-neon-cyan border-cyan-400 shadow-[0_0_12px_#00f3ff]"
@@ -649,10 +800,26 @@ export function CyberBgmPlayer() {
               <button
                 type="button"
                 onClick={handleNextTrack}
-                title="다음 곡"
-                className="p-1.5 rounded-lg border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-500/15 text-slate-300 hover:text-neon-cyan transition-all cursor-pointer"
+                title={isShuffle ? "다음 곡 (무작위 셔플)" : "다음 곡"}
+                className="p-1.5 rounded-lg border border-white/10 hover:border-cyan-400/50 hover:bg-cyan-500/15 text-slate-300 hover:text-neon-cyan transition-all cursor-pointer active:scale-95"
               >
                 <SkipForward className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleShuffle}
+                title={
+                  isShuffle
+                    ? "랜덤 셔플 켜짐 (클릭 시 순차 재생으로 전환)"
+                    : "순차 순환 재생 (클릭 시 랜덤 셔플 활성화)"
+                }
+                className={`p-1.5 rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                  isShuffle
+                    ? "border-pink-500/60 bg-pink-500/20 text-neon-pink shadow-[0_0_8px_rgba(255,0,127,0.35)]"
+                    : "border-white/10 hover:border-cyan-400/50 hover:bg-cyan-500/15 text-slate-400 hover:text-neon-cyan"
+                }`}
+              >
+                <Shuffle className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -686,17 +853,26 @@ export function CyberBgmPlayer() {
             </div>
           </div>
 
-          {/* Playlist selector (5 Tracks Cyclic) */}
+          {/* Playlist selector (10 Tracks) */}
           <div className="border-t border-cyan-500/20 pt-2 space-y-1">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-              // PLAYLIST ({PLAYLIST.length} TRACKS · CYCLIC)
-            </p>
-            <div className="space-y-1 max-h-36 overflow-y-auto cyber-scrollbar pr-0.5">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
+              <span>// PLAYLIST ({PLAYLIST.length} TRACKS)</span>
+              <span
+                className={
+                  isShuffle
+                    ? "text-neon-pink text-[9px] font-bold"
+                    : "text-neon-cyan text-[9px] font-bold"
+                }
+              >
+                {isShuffle ? "RANDOM SHUFFLE" : "CYCLIC LOOP"}
+              </span>
+            </div>
+            <div className="space-y-1 max-h-40 overflow-y-auto cyber-scrollbar pr-0.5">
               {PLAYLIST.map((track, idx) => (
                 <button
                   key={track.id}
                   type="button"
-                  onClick={() => loadAndPlayTrack(idx, true, false)}
+                  onClick={() => loadAndPlayTrack(idx, true, false, true)}
                   className={`w-full text-left px-2 py-1.5 rounded-lg text-[10px] flex items-center justify-between transition-all cursor-pointer ${
                     currentTrackIndex === idx
                       ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 font-bold shadow-[0_0_8px_rgba(0,243,255,0.2)]"
@@ -704,7 +880,7 @@ export function CyberBgmPlayer() {
                   }`}
                 >
                   <span className="truncate">
-                    0{idx + 1}. {track.title}
+                    {String(idx + 1).padStart(2, "0")}. {track.title}
                   </span>
                   <span className="text-[9px] text-slate-400 shrink-0 ml-1">
                     {track.artist}
