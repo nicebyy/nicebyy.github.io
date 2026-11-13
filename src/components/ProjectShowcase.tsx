@@ -14,8 +14,12 @@ import {
   CheckCircle2,
   Sparkles,
   ArrowUpRight,
+  Chrome,
+  Store,
+  Globe,
+  Lock,
 } from "lucide-react";
-import { projectsData, ProjectItem } from "@/config/projects";
+import { projectsData, ProjectItem, ProjectPlatformType } from "@/config/projects";
 
 const iconMap = {
   gamepad: Gamepad2,
@@ -153,29 +157,31 @@ export function ProjectShowcase({
 
               <div className="space-y-4">
                 {/* Header: Icon, Category & Status Badge */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div
-                      className={`w-11 h-11 rounded-xl ${styles.iconBg} border flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform`}
+                      className={`w-10 h-10 rounded-xl ${styles.iconBg} border flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform`}
                     >
                       <IconComponent className="w-5 h-5" />
                     </div>
-                    <div className="min-w-0">
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${styles.badgeBg} uppercase tracking-wider font-bold`}>
-                        {project.category}
-                      </span>
-                      <h3 className="text-lg sm:text-xl font-bold font-cyber text-white group-hover:text-neon-cyan transition-colors truncate mt-1">
-                        {project.title}
-                      </h3>
-                      <p className="text-xs font-mono text-slate-400 truncate">
-                        {project.subtitle}
-                      </p>
-                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${styles.badgeBg} uppercase tracking-wider font-bold shrink-0`}>
+                      {project.category}
+                    </span>
                   </div>
 
                   <span className="text-[10px] font-mono font-bold px-2 py-1 rounded bg-black/60 border border-white/10 text-emerald-400 shrink-0">
                     {project.status}
                   </span>
+                </div>
+
+                {/* Full-width Title & Subtitle: No Truncate, Clean Word Wrap */}
+                <div className="space-y-1">
+                  <h3 className="text-lg sm:text-xl font-bold font-cyber text-white group-hover:text-neon-cyan transition-colors leading-snug break-keep">
+                    {project.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-mono text-slate-400 break-keep">
+                    {project.subtitle}
+                  </p>
                 </div>
 
                 {/* Summary */}
@@ -226,24 +232,52 @@ export function ProjectShowcase({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between gap-3 pt-3 border-t border-white/10 mt-auto">
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-white/5 hover:bg-white/10 text-white border border-white/15 hover:border-cyan-400 hover:shadow-neon-cyan transition-all cursor-pointer"
-                >
-                  <Github className="w-3.5 h-3.5" />
-                  <span>GitHub</span>
-                  <ExternalLink className="w-3 h-3 text-slate-400" />
-                </a>
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-white/10 mt-auto">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <a
+                    href={project.primaryLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer truncate ${
+                      project.primaryLink.type === "microsoft"
+                        ? "bg-emerald-500/15 hover:bg-emerald-500/25 text-neon-green border border-emerald-500/40 hover:shadow-neon-green"
+                        : project.primaryLink.type === "chrome"
+                        ? "bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/40 hover:shadow-neon-purple"
+                        : project.primaryLink.type === "web"
+                        ? "bg-cyan-500/15 hover:bg-cyan-500/25 text-neon-cyan border border-cyan-500/40 hover:shadow-neon-cyan"
+                        : "bg-pink-500/15 hover:bg-pink-500/25 text-neon-pink border border-pink-500/40 hover:shadow-neon-pink"
+                    }`}
+                  >
+                    {project.primaryLink.type === "microsoft" && <Store className="w-3.5 h-3.5 shrink-0" />}
+                    {project.primaryLink.type === "chrome" && <Chrome className="w-3.5 h-3.5 shrink-0" />}
+                    {project.primaryLink.type === "web" && <Globe className="w-3.5 h-3.5 shrink-0" />}
+                    {project.primaryLink.type === "github" && <Github className="w-3.5 h-3.5 shrink-0" />}
+                    <span className="truncate">{project.primaryLink.label}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0 opacity-70" />
+                  </a>
+
+                  {/* Secondary GitHub Repo link (only if public githubUrl exists and primary is not github) */}
+                  {project.githubUrl && project.primaryLink.type !== "github" && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="GitHub 오픈소스 저장소"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-mono text-slate-300 bg-white/5 hover:bg-white/10 border border-white/15 hover:border-slate-300 transition-all cursor-pointer shrink-0"
+                      aria-label="GitHub 저장소"
+                    >
+                      <Github className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline text-[11px]">코드</span>
+                    </a>
+                  )}
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setActiveModalProject(project)}
-                  className={`inline-flex items-center gap-1 text-xs font-mono font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${styles.badgeBg} hover:opacity-90`}
+                  className={`inline-flex items-center gap-1 text-xs font-mono font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${styles.badgeBg} hover:opacity-90 shrink-0`}
                 >
-                  <span>상세 스펙 & 아키텍처</span>
+                  <span>상세 스펙</span>
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -271,14 +305,14 @@ export function ProjectShowcase({
 
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-cyan-500/30 pb-4">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-neon-cyan border border-cyan-500/30 uppercase tracking-wider font-bold">
                   {activeModalProject.category}
                 </span>
-                <h3 className="text-2xl font-black font-cyber text-white">
+                <h3 className="text-xl sm:text-2xl font-black font-cyber text-white break-keep leading-tight">
                   {activeModalProject.title}
                 </h3>
-                <p className="font-mono text-xs text-pink-400">
+                <p className="font-mono text-xs sm:text-sm text-pink-400 break-keep">
                   {activeModalProject.subtitle}
                 </p>
               </div>
@@ -286,7 +320,7 @@ export function ProjectShowcase({
               <button
                 type="button"
                 onClick={() => setActiveModalProject(null)}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 cursor-pointer"
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 cursor-pointer shrink-0"
                 aria-label="닫기"
               >
                 ✕
@@ -339,22 +373,54 @@ export function ProjectShowcase({
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between gap-4 pt-4 border-t border-cyan-500/20">
-              <span className="text-xs font-mono text-slate-400">
-                Status: <strong className="text-white">{activeModalProject.status}</strong>
-              </span>
-
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-cyan-500/20">
               <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-slate-400">
+                  Status: <strong className="text-white">{activeModalProject.status}</strong>
+                </span>
+                {!activeModalProject.githubUrl && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-mono text-amber-400/90 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                    <Lock className="w-3 h-3" />
+                    <span>Private Repo</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
                 <a
-                  href={activeModalProject.githubUrl}
+                  href={activeModalProject.primaryLink.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold bg-cyan-500/20 text-neon-cyan border border-cyan-500/50 hover:bg-cyan-500/30 hover:shadow-neon-cyan transition-all"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all shadow-md ${
+                    activeModalProject.primaryLink.type === "microsoft"
+                      ? "bg-emerald-500/20 hover:bg-emerald-500/30 text-neon-green border border-emerald-500/50 hover:shadow-neon-green"
+                      : activeModalProject.primaryLink.type === "chrome"
+                      ? "bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/50 hover:shadow-neon-purple"
+                      : activeModalProject.primaryLink.type === "web"
+                      ? "bg-cyan-500/20 hover:bg-cyan-500/30 text-neon-cyan border border-cyan-500/50 hover:shadow-neon-cyan"
+                      : "bg-pink-500/20 hover:bg-pink-500/30 text-neon-pink border border-pink-500/50 hover:shadow-neon-pink"
+                  }`}
                 >
-                  <Github className="w-4 h-4" />
-                  <span>GitHub 저장소 바로가기</span>
+                  {activeModalProject.primaryLink.type === "microsoft" && <Store className="w-4 h-4" />}
+                  {activeModalProject.primaryLink.type === "chrome" && <Chrome className="w-4 h-4" />}
+                  {activeModalProject.primaryLink.type === "web" && <Globe className="w-4 h-4" />}
+                  {activeModalProject.primaryLink.type === "github" && <Github className="w-4 h-4" />}
+                  <span>{activeModalProject.primaryLink.label} 바로가기</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
+
+                {activeModalProject.githubUrl && activeModalProject.primaryLink.type !== "github" && (
+                  <a
+                    href={activeModalProject.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/15 hover:border-slate-300 transition-all"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    <span>GitHub 저장소</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

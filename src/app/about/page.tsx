@@ -137,11 +137,11 @@ export default function AboutPage() {
                     {proj.status}
                   </span>
                 </div>
-                <div>
-                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-cyan transition-colors">
+                <div className="space-y-0.5">
+                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-cyan transition-colors break-keep leading-snug">
                     {proj.title}
                   </h3>
-                  <p className="font-mono text-[11px] text-pink-400 truncate">
+                  <p className="font-mono text-[11px] text-pink-400 break-keep">
                     {proj.subtitle}
                   </p>
                 </div>

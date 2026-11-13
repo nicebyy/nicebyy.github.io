@@ -3,6 +3,14 @@ export interface ProjectHighlight {
   value: string;
 }
 
+export type ProjectPlatformType = "microsoft" | "chrome" | "web" | "github";
+
+export interface ProjectPrimaryLink {
+  type: ProjectPlatformType;
+  label: string;
+  url: string;
+}
+
 export interface ProjectItem {
   id: string;
   title: string;
@@ -14,8 +22,10 @@ export interface ProjectItem {
   keyFeatures: string[];
   techStack: string[];
   metrics: ProjectHighlight[];
-  githubUrl: string;
-  demoUrl?: string;
+  primaryLink: ProjectPrimaryLink;
+  githubUrl?: string; // Optional (private repo may omit this)
+  webUrl?: string;
+  storeUrl?: string;
   status: string;
   accentColor: "cyan" | "pink" | "emerald" | "purple";
   iconName: "gamepad" | "bookmark" | "calendar" | "shield";
@@ -55,8 +65,13 @@ export const projectsData: ProjectItem[] = [
       { label: "Sync Engine", value: "Socket.IO Real-time" },
       { label: "Verification", value: "119+ E2E Test Suite" },
     ],
-    githubUrl: "https://github.com/nicebyy/1234_pickban_simulator",
-    status: "Active // Maintained",
+    primaryLink: {
+      type: "web",
+      label: "웹 서비스 바로가기",
+      url: "https://1234banpick.me",
+    },
+    webUrl: "https://1234banpick.me",
+    status: "Active // Live Service",
     accentColor: "cyan",
     iconName: "gamepad",
   },
@@ -92,8 +107,13 @@ export const projectsData: ProjectItem[] = [
       { label: "Platform", value: "Android Native + Web PWA" },
       { label: "Zero Ads", value: "0 Trackers / No SDK" },
     ],
+    primaryLink: {
+      type: "github",
+      label: "GitHub 저장소",
+      url: "https://github.com/nicebyy/kkt-bookmark",
+    },
     githubUrl: "https://github.com/nicebyy/kkt-bookmark",
-    status: "Active // Released",
+    status: "Active // Open Source",
     accentColor: "pink",
     iconName: "bookmark",
   },
@@ -129,8 +149,14 @@ export const projectsData: ProjectItem[] = [
       { label: "Packaging", value: "MS Store (.appx) + NSIS" },
       { label: "CI/CD Pipeline", value: "Auto SemVer & Release" },
     ],
+    primaryLink: {
+      type: "microsoft",
+      label: "Microsoft Store 다운로드",
+      url: "https://apps.microsoft.com/detail/9nt09z0g12ss",
+    },
+    storeUrl: "https://apps.microsoft.com/detail/9nt09z0g12ss",
     githubUrl: "https://github.com/nicebyy/old-calender",
-    status: "v1.0.2 // Store Released",
+    status: "v1.0.2 // MS Store 출시",
     accentColor: "emerald",
     iconName: "calendar",
   },
@@ -166,8 +192,14 @@ export const projectsData: ProjectItem[] = [
       { label: "Matching Engine", value: "O(1) Hash Index (0.03ms)" },
       { label: "Privacy Policy", value: "Zero Data Collection" },
     ],
+    primaryLink: {
+      type: "chrome",
+      label: "Chrome 웹스토어 설치",
+      url: "https://chromewebstore.google.com/detail/cohpijikelgbghbccpdhffaphajbmplf",
+    },
+    storeUrl: "https://chromewebstore.google.com/detail/cohpijikelgbghbccpdhffaphajbmplf",
     githubUrl: "https://github.com/nicebyy/job-blockingV2",
-    status: "Active // v2.0 Released",
+    status: "v0.2.6 // Chrome 웹스토어 출시",
     accentColor: "purple",
     iconName: "shield",
   },
