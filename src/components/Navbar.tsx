@@ -17,6 +17,7 @@ import {
   FolderGit2,
   Edit3,
   Lock,
+  Briefcase,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
@@ -185,6 +186,17 @@ export function Navbar({
             >
               <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
               <span>PROJECTS</span>
+            </Link>
+            <Link
+              href="/career"
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+                pathname?.startsWith("/career")
+                  ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/20"
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
+              <span>CAREER</span>
             </Link>
             <Link
               href="/#posts"

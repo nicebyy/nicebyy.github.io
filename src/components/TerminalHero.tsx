@@ -73,6 +73,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         text: [
           "⚡ AVAILABLE CYBER COMMANDS:",
           "  whoami   — 운영자(kimkkatta) 프로필 및 개발 철학 출력",
+          "  career   — 실무 경력 및 아키텍처 문제 해결 이력서 (익명화)",
           "  projects — 4대 핵심 개인 프로젝트 아카이브 출력",
           "  skills   — 실시간 핵심 기술 스택 게이지 전송",
           "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
@@ -88,6 +89,32 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         type: "accent",
         text: `[OPERATOR] ${siteConfig.author} (${siteConfig.role})\n[LOCATION] ${siteConfig.location}\n[BIO]      ${siteConfig.bio}\n[GITHUB]   https://github.com/${siteConfig.githubRepo}`,
       });
+    } else if (cmd === "career" || cmd === "resume" || cmd === "exp") {
+      newLines.push({
+        id: Date.now() + 1,
+        type: "accent",
+        text: [
+          "💼 KIMKKATTA VERIFIED WORK EXPERIENCE ARCHIVE:",
+          "  (보안 및 비공개 요청에 따라 회사명은 A사, J사, G사로 표기됩니다)",
+          "",
+          "  [1] 블록체인 핀테크 & 대용량 정산 플랫폼 기업 (G사) | 2025.07 ~ 2026.05 (11개월)",
+          "      • 직무: 백엔드 개발팀 · 백엔드 / 서버 개발 엔지니어",
+          "      • 주요 성과: DAG 위상 정렬 기반 인메모리 트리 캐싱으로 DB I/O 90%+ 감축, Dynamic JDBC Cursor & Spring Batch 5 튜닝, 다차원 출금 정책 엔진 구축",
+          "      • Tech: Java 17, Kotlin, Spring Boot 3.4, Spring Batch 5, MySQL 8, JPA, QueryDSL, Redis",
+          "",
+          "  [2] Web3 블록체인 게임 & 플랫폼 개발사 (J사) | 2024.06 ~ 2025.05 (1년)",
+          "      • 직무: 웹 개발팀 · 풀스택 소프트웨어 엔지니어",
+          "      • 주요 성과: Clean Layered Architecture 4계층 도메인 설계, TDD 90%+ 테스트 커버리지, 온체인 민팅 대기열 & SSE 실시간 모니터링, 무한 스크롤 v2",
+          "      • Tech: NestJS, TypeScript, MongoDB, React 18, TanStack Query v5, Zustand, Tailwind",
+          "",
+          "  [3] 글로벌 암호화폐 거래소 & 핀테크 플랫폼 기업 (A사) | 2022.08 ~ 2023.08 (1년 1개월)",
+          "      • 직무: 거래소개발팀 · 백엔드 / 서버 개발 엔지니어",
+          "      • 주요 성과: RabbitMQ 실시간 메시징 아키텍처 개편 및 SPOF 해소, WebSocket 패킷 다이어트, No-Offset 커서 페이징 & N+1 해결, MySQL Named Lock 전환",
+          "      • Tech: Java 11, Spring Boot 2.7, MySQL 8, Redis, RabbitMQ, WebSocket (STOMP), Prometheus",
+          "",
+          "> 상단 내비게이션의 CAREER 메뉴 또는 /career 에서 각 프로젝트별 STAR 문제 해결 상세 내역을 열람할 수 있습니다.",
+        ].join("\n"),
+      });
     } else if (cmd === "projects" || cmd === "project") {
       newLines.push({
         id: Date.now() + 1,
@@ -96,7 +123,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           "🚀 KIMKKATTA PRODUCTION PROJECTS ARCHIVE:",
           "  1. 1234pickban   — LoL 20단계 밴픽/피어리스 & 실시간 팀 경매 & 크로노브레이크 플랫폼",
           "     [Stack] Next.js 14 · NestJS 10 · Socket.IO · Docker (Web)",
-          "     [Repo]  https://github.com/nicebyy/1234_pickban_simulator",
+          "     [Web]   https://1234banpick.me (Private Repo // 웹 서비스 운영)",
           "",
           "  2. kkt-bookmark  — 100% 로컬 DB, 다단계 폴더 트리 & 브라우저 지정 실행 스마트 북마크",
           "     [Stack] Kotlin · Jetpack Compose · Room DB (Android & PWA)",
@@ -104,10 +131,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           "",
           "  3. old-calendar  — 0ms 로컬 우선 반응성, Windows 10 UWP 룩앤필 데스크톱 캘린더",
           "     [Stack] Electron 34 · React 19 · Vite 6 · Tailwind CSS v4 (Desktop)",
+          "     [Store] Microsoft Store (https://apps.microsoft.com/detail/9nt09z0g12ss)",
           "     [Repo]  https://github.com/nicebyy/old-calender",
           "",
           "  4. job-blocking  — 5대 채용 플랫폼(원티드·사람인·잡코리아) 광고 차단 & 무한 스크롤 & 평점 뱃지",
           "     [Stack] Chrome Manifest V3 · TypeScript · React 18 · Vite (Extension)",
+          "     [Store] Chrome 웹스토어 (https://chromewebstore.google.com/detail/cohpijikelgbghbccpdhffaphajbmplf)",
           "     [Repo]  https://github.com/nicebyy/job-blockingV2",
           "",
           "> 상단 내비게이션의 PROJECTS 메뉴 또는 /projects 에서 상세 스펙을 열람할 수 있습니다.",
