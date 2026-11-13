@@ -15,6 +15,7 @@ import {
   PanelLeftOpen,
   Menu,
   FolderGit2,
+  Edit3,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
@@ -195,6 +196,17 @@ export function Navbar({
               <span>POSTS</span>
             </Link>
             <Link
+              href="/studio"
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+                pathname?.startsWith("/studio")
+                  ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+              }`}
+            >
+              <Edit3 className="w-3.5 h-3.5 text-neon-cyan" />
+              <span>STUDIO</span>
+            </Link>
+            <Link
               href="/about"
               onClick={() => onSelectSection?.("about")}
               className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
@@ -247,6 +259,20 @@ export function Navbar({
           >
             <Mail className="w-4 h-4 text-neon-green" />
           </button>
+
+          {/* Mobile Studio Button */}
+          <Link
+            href="/studio"
+            aria-label="스튜디오 // 글 작성 및 관리"
+            title="스튜디오 (글 작성 및 관리)"
+            className={`md:hidden p-2 rounded-xl border transition-all cursor-pointer ${
+              pathname?.startsWith("/studio")
+                ? "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-neon-cyan"
+                : "text-slate-400 hover:text-neon-cyan bg-white/5 hover:bg-cyan-500/15 border-cyan-500/20 hover:border-cyan-500/40"
+            }`}
+          >
+            <Edit3 className="w-4 h-4 text-neon-cyan" />
+          </Link>
 
           {/* Mobile Quick Search Button */}
           <button
