@@ -64,15 +64,7 @@ const companyColorTheme: Record<
 
 export function CareerTimeline() {
   const [selectedFilter, setSelectedFilter] = useState<string>("ALL");
-  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    careerCompaniesData.forEach((comp) => {
-      comp.projects.forEach((proj) => {
-        initial[proj.id] = true;
-      });
-    });
-    return initial;
-  });
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => ({
