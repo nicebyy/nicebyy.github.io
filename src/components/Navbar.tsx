@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Menu,
+  FolderGit2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
@@ -43,8 +44,8 @@ interface NavbarProps {
   onToggleSidebar?: () => void;
   onOpenMobileSidebar?: () => void;
   onOpenContact?: () => void;
-  activeSection?: "dashboard" | "posts" | "about";
-  onSelectSection?: (section: "dashboard" | "posts" | "about") => void;
+  activeSection?: "dashboard" | "posts" | "projects" | "about";
+  onSelectSection?: (section: "dashboard" | "posts" | "projects" | "about") => void;
 }
 
 export function Navbar({
@@ -82,6 +83,17 @@ export function Navbar({
       );
     }
   };
+
+  const handleProjectsClick = (e: React.MouseEvent) => {
+    onSelectSection?.("projects");
+    if (pathname === "/") {
+      e.preventDefault();
+      const el = document.getElementById("projects");
+      el?.scrollIntoView({ behavior: "smooth" });
+      window.history.replaceState(null, "", "/#projects");
+    }
+  };
+
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-cyan-500/30 bg-[#060911]/90 backdrop-blur-md transition-colors shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]">
@@ -157,6 +169,18 @@ export function Navbar({
             >
               <Cpu className="w-3.5 h-3.5 text-neon-cyan" />
               <span>DASHBOARD</span>
+            </Link>
+            <Link
+              href="/projects"
+              onClick={handleProjectsClick}
+              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
+                (activeSection === "projects" && pathname === "/") || pathname?.startsWith("/projects")
+                  ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
+                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span>PROJECTS</span>
             </Link>
             <Link
               href="/#posts"

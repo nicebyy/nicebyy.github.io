@@ -19,7 +19,7 @@ const IsolatedAtmosphere = dynamic(
   { ssr: false }
 );
 
-export type NavSection = "dashboard" | "posts" | "about";
+export type NavSection = "dashboard" | "posts" | "projects" | "about";
 
 export function AppShell({
   posts,
@@ -104,16 +104,24 @@ export function AppShell({
       setActiveSection("about");
       return;
     }
+    if (pathname.startsWith("/projects")) {
+      setActiveSection("projects");
+      return;
+    }
     if (pathname.startsWith("/posts/")) {
       setActiveSection("posts");
       return;
     }
 
     if (pathname === "/") {
-      if (typeof window !== "undefined" && window.location.hash === "#posts") {
-        setActiveSection("posts");
-      } else {
-        setActiveSection("dashboard");
+      if (typeof window !== "undefined") {
+        if (window.location.hash === "#posts") {
+          setActiveSection("posts");
+        } else if (window.location.hash === "#projects") {
+          setActiveSection("projects");
+        } else {
+          setActiveSection("dashboard");
+        }
       }
 
       let scrollRaf: number | null = null;
@@ -122,11 +130,14 @@ export function AppShell({
         scrollRaf = requestAnimationFrame(() => {
           scrollRaf = null;
           const postsEl = document.getElementById("posts");
-          if (!postsEl) return;
-          const rect = postsEl.getBoundingClientRect();
-          // When posts section top reaches upper half of viewport
-          if (rect.top <= 250) {
+          const projectsEl = document.getElementById("projects");
+          const postsRect = postsEl?.getBoundingClientRect();
+          const projectsRect = projectsEl?.getBoundingClientRect();
+
+          if (postsRect && postsRect.top <= 250) {
             setActiveSection("posts");
+          } else if (projectsRect && projectsRect.top <= 250) {
+            setActiveSection("projects");
           } else {
             setActiveSection("dashboard");
           }
