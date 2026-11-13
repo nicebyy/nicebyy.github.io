@@ -1,4 +1,5 @@
 import { projectsData } from "./projects";
+import { careerCompaniesData, careerSummaryStats } from "./career";
 
 export const siteConfig = {
   title: "kimkkatta // DEV.LOG",
@@ -24,6 +25,10 @@ export const siteConfig = {
     { name: "Kotlin", level: 2, bytes: "278 KB", color: "pink" },
   ],
   projects: projectsData,
+  career: {
+    stats: careerSummaryStats,
+    companies: careerCompaniesData,
+  },
   // Giscus 댓글 설정 (https://giscus.app 연동 완료)
   giscus: {
     enabled: true,

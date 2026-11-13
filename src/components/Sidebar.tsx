@@ -22,6 +22,7 @@ import {
   X,
   Edit3,
   Lock,
+  Briefcase,
 } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
@@ -390,6 +391,7 @@ export function Sidebar({
               activeCategory === "ALL";
             const isAboutActive = pathname?.startsWith("/about") || activeSection === "about";
             const isStudioActive = pathname?.startsWith("/studio");
+            const isCareerActive = pathname?.startsWith("/career");
 
             return (
               <>
@@ -440,6 +442,33 @@ export function Sidebar({
                           : "bg-white/5 text-slate-400 border border-white/10"
                       }`}>
                         4
+                      </span>
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  href="/career"
+                  onClick={() => onCloseMobile()}
+                  title="실무 경력 및 이력서 (Career Experience)"
+                  className={`flex items-center ${
+                    collapsed ? "justify-center px-2" : "gap-2.5 px-3"
+                  } py-2 rounded-xl text-xs font-mono transition-all duration-200 hover:translate-x-1 ${
+                    isCareerActive
+                      ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
+                      : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/30 hover:shadow-[0_0_10px_rgba(0,255,157,0.2)]"
+                  }`}
+                >
+                  <Briefcase className={`w-4 h-4 shrink-0 ${isCareerActive ? "text-neon-green animate-pulse" : "text-emerald-400"}`} />
+                  {!collapsed && (
+                    <span className="flex-1 flex items-center justify-between">
+                      <span>Career</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded transition-all ${
+                        isCareerActive
+                          ? "bg-emerald-500/25 text-neon-green border border-emerald-500/50 shadow-[0_0_8px_rgba(0,255,157,0.4)] font-bold"
+                          : "bg-white/5 text-slate-400 border border-white/10"
+                      }`}>
+                        3 Cos
                       </span>
                     </span>
                   )}

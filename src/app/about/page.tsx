@@ -1,7 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Terminal, Github, Cpu, Code2, Globe, Sparkles, Mail, Send, FolderGit2, ArrowUpRight } from "lucide-react";
+import { Terminal, Github, Cpu, Code2, Globe, Sparkles, Mail, Send, FolderGit2, ArrowUpRight, Briefcase } from "lucide-react";
 import { siteConfig } from "@/config/site";
 
 
@@ -102,6 +102,60 @@ export default function AboutPage() {
                   />
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Career & Work Experience Section */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-mono font-bold text-slate-900 dark:text-neon-cyan flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-neon-green" />
+              <span>CAREER & WORK EXPERIENCE // 3 COMPANIES (ANONYMIZED)</span>
+            </h2>
+            <Link
+              href="/career"
+              className="text-xs font-mono font-bold text-neon-green hover:underline flex items-center gap-1"
+            >
+              <span>이력서 전체보기</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {siteConfig.career.companies.map((comp) => (
+              <Link
+                key={comp.id}
+                href="/career"
+                className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] hover:border-emerald-500/50 hover:shadow-neon-green transition-all space-y-2 group block"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                    {comp.alias}
+                  </span>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {comp.totalDuration}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-green transition-colors break-keep leading-snug line-clamp-1">
+                    {comp.name}
+                  </h3>
+                  <p className="font-mono text-[11px] text-pink-400 break-keep mt-0.5">
+                    {comp.team} · {comp.position}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed font-sans">
+                  {comp.description}
+                </p>
+                <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] font-mono text-slate-400">
+                  <span>{comp.projects.length}개 주요 프로젝트</span>
+                  <span className="text-neon-cyan flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                    <span>상세보기</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
