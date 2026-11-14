@@ -11,6 +11,9 @@ import {
   Zap,
 } from "lucide-react";
 
+// Gentle ambient rain volume (8%) so BGM (12%~20%) remains clearly audible
+const DEFAULT_RAIN_VOLUME = 0.08;
+
 /**
  * Procedural Web Audio API Cyberpunk Rain & Room Drone Synthesizer (0 KB asset payload)
  */
@@ -18,9 +21,25 @@ class ProceduralRainEngine {
   private audioEl: HTMLAudioElement | null = null;
   private fadeInterval: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
+  private targetVolume = DEFAULT_RAIN_VOLUME;
 
-  start() {
-    if (this.isRunning) return;
+  setTargetVolume(vol: number) {
+    this.targetVolume = Math.max(0, Math.min(1, vol));
+    if (this.isRunning && this.audioEl && !this.fadeInterval) {
+      this.audioEl.volume = this.targetVolume;
+    }
+  }
+
+  start(volume?: number) {
+    if (typeof volume === "number") {
+      this.targetVolume = Math.max(0, Math.min(1, volume));
+    }
+    if (this.isRunning) {
+      if (this.audioEl) {
+        this.audioEl.volume = this.targetVolume;
+      }
+      return;
+    }
     if (typeof window === "undefined") return;
 
     if (!this.audioEl) {
@@ -38,17 +57,18 @@ class ProceduralRainEngine {
       .play()
       .then(() => {
         this.isRunning = true;
-        const targetVolume = 0.35; // 따뜻하고 포근한 잔잔한 빗소리 레벨
-        const step = 0.025;
+        const target = this.targetVolume;
+        const step = Math.max(0.005, target / 15);
         this.fadeInterval = setInterval(() => {
           if (!this.audioEl) return;
-          if (this.audioEl.volume < targetVolume - step) {
+          if (this.audioEl.volume < target - step) {
             this.audioEl.volume = Math.min(1, this.audioEl.volume + step);
           } else {
-            this.audioEl.volume = targetVolume;
+            this.audioEl.volume = target;
             if (this.fadeInterval) clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
           }
-        }, 50);
+        }, 40);
       })
       .catch(() => {
         // Autoplay policy fallback
@@ -59,10 +79,11 @@ class ProceduralRainEngine {
     if (!this.isRunning || !this.audioEl) return;
     if (this.fadeInterval) clearInterval(this.fadeInterval);
 
-    const step = 0.04;
+    const step = 0.02;
     this.fadeInterval = setInterval(() => {
       if (!this.audioEl) {
         if (this.fadeInterval) clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
         return;
       }
       if (this.audioEl.volume > step) {
@@ -72,6 +93,7 @@ class ProceduralRainEngine {
         this.audioEl.pause();
         this.isRunning = false;
         if (this.fadeInterval) clearInterval(this.fadeInterval);
+        this.fadeInterval = null;
       }
     }, 40);
   }
@@ -91,11 +113,17 @@ export function LoneOperatorHud() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [rainVisual, setRainVisual] = useState(true);
   const [rainAudio, setRainAudio] = useState(false);
+  const [rainVolume, setRainVolume] = useState(DEFAULT_RAIN_VOLUME);
   const [bootGlitch, setBootGlitch] = useState(true);
   const [uptimeSec, setUptimeSec] = useState(0);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
   const rainEngineRef = useRef<ProceduralRainEngine | null>(null);
+  const rainVolumeRef = useRef(DEFAULT_RAIN_VOLUME);
+
+  useEffect(() => {
+    rainVolumeRef.current = rainVolume;
+  }, [rainVolume]);
 
   useEffect(() => {
     rainEngineRef.current = new ProceduralRainEngine();
@@ -108,6 +136,15 @@ export function LoneOperatorHud() {
       const savedBootGlitch = localStorage.getItem("kimgatta_boot_glitch");
       if (savedBootGlitch === "off") {
         setBootGlitch(false);
+      }
+      const savedRainVol = localStorage.getItem("kimgatta_rain_volume");
+      if (savedRainVol) {
+        const parsed = parseFloat(savedRainVol);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
+          setRainVolume(parsed);
+          rainVolumeRef.current = parsed;
+          rainEngineRef.current?.setTargetVolume(parsed);
+        }
       }
     } catch {
       // ignore
@@ -154,7 +191,7 @@ export function LoneOperatorHud() {
   const applyRainAudio = useCallback((enable: boolean) => {
     setRainAudio(enable);
     if (enable) {
-      rainEngineRef.current?.start();
+      rainEngineRef.current?.start(rainVolumeRef.current);
     } else {
       rainEngineRef.current?.stop();
     }
@@ -163,6 +200,18 @@ export function LoneOperatorHud() {
     );
   }, []);
 
+  const handleRainVolumeChange = (newVol: number) => {
+    const clamped = Math.max(0.01, Math.min(0.4, newVol));
+    setRainVolume(clamped);
+    rainVolumeRef.current = clamped;
+    rainEngineRef.current?.setTargetVolume(clamped);
+    try {
+      localStorage.setItem("kimgatta_rain_volume", String(clamped));
+    } catch {
+      // ignore
+    }
+  };
+
   // Listen to global toggles (from Terminal CLI `$rain` or Footer button)
   useEffect(() => {
     const onToggleAudio = (e: Event) => {
@@ -170,7 +219,7 @@ export function LoneOperatorHud() {
       setRainAudio((prev) => {
         const next = typeof custom.detail === "boolean" ? custom.detail : !prev;
         if (next) {
-          rainEngineRef.current?.start();
+          rainEngineRef.current?.start(rainVolumeRef.current);
         } else {
           rainEngineRef.current?.stop();
         }
@@ -405,6 +454,29 @@ export function LoneOperatorHud() {
                 <span>SOUND: {rainAudio ? "ON" : "OFF"}</span>
               </button>
             </div>
+
+            {/* Rain Audio Volume Slider */}
+            {rainAudio && (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-black/60 border border-pink-500/30 text-[10px] font-mono animate-in fade-in duration-150">
+                <CloudRain className="w-3.5 h-3.5 text-neon-pink shrink-0" />
+                <span className="text-slate-400 text-[9px] uppercase tracking-wider shrink-0">
+                  RAIN VOL
+                </span>
+                <input
+                  type="range"
+                  min="0.01"
+                  max="0.30"
+                  step="0.01"
+                  value={rainVolume}
+                  onChange={(e) => handleRainVolumeChange(parseFloat(e.target.value))}
+                  title="Night City 빗소리 음량 조절 (기본 8%)"
+                  className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-pink-500"
+                />
+                <span className="w-7 text-right tabular-nums text-neon-pink text-[10px] font-bold">
+                  {Math.round(rainVolume * 100)}%
+                </span>
+              </div>
+            )}
 
             {/* CRT Boot Glitch Option & Preview Row */}
             <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-cyan-500/20 text-[10px]">
