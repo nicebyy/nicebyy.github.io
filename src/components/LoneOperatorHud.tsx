@@ -8,6 +8,7 @@ import {
   Radio,
   ChevronUp,
   Sparkles,
+  Zap,
 } from "lucide-react";
 
 /**
@@ -90,6 +91,7 @@ export function LoneOperatorHud() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [rainVisual, setRainVisual] = useState(true);
   const [rainAudio, setRainAudio] = useState(false);
+  const [bootGlitch, setBootGlitch] = useState(true);
   const [uptimeSec, setUptimeSec] = useState(0);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -102,6 +104,10 @@ export function LoneOperatorHud() {
       const savedRainVisual = localStorage.getItem("kimgatta_rain_visual");
       if (savedRainVisual === "off") {
         setRainVisual(false);
+      }
+      const savedBootGlitch = localStorage.getItem("kimgatta_boot_glitch");
+      if (savedBootGlitch === "off") {
+        setBootGlitch(false);
       }
     } catch {
       // ignore
@@ -183,11 +189,26 @@ export function LoneOperatorHud() {
       }
     };
 
+    const onToggleBoot = (e: Event) => {
+      const custom = e as CustomEvent<boolean | undefined>;
+      setBootGlitch((prev) => {
+        const next = typeof custom.detail === "boolean" ? custom.detail : !prev;
+        try {
+          localStorage.setItem("kimgatta_boot_glitch", next ? "on" : "off");
+        } catch {
+          // ignore
+        }
+        return next;
+      });
+    };
+
     window.addEventListener("toggle-rain-audio", onToggleAudio);
     window.addEventListener("toggle-rain-visual", onToggleVisual);
+    window.addEventListener("toggle-boot-glitch", onToggleBoot);
     return () => {
       window.removeEventListener("toggle-rain-audio", onToggleAudio);
       window.removeEventListener("toggle-rain-visual", onToggleVisual);
+      window.removeEventListener("toggle-boot-glitch", onToggleBoot);
     };
   }, []);
 
@@ -195,6 +216,21 @@ export function LoneOperatorHud() {
     const next = !rainVisual;
     setRainVisual(next);
     window.dispatchEvent(new CustomEvent("toggle-rain-visual", { detail: next }));
+  };
+
+  const toggleBootGlitch = () => {
+    const next = !bootGlitch;
+    setBootGlitch(next);
+    try {
+      localStorage.setItem("kimgatta_boot_glitch", next ? "on" : "off");
+    } catch {
+      // ignore
+    }
+    window.dispatchEvent(new CustomEvent("toggle-boot-glitch", { detail: next }));
+  };
+
+  const triggerBootReplay = () => {
+    window.dispatchEvent(new CustomEvent("trigger-boot-glitch"));
   };
 
   const formatUptime = (total: number) => {
@@ -334,39 +370,71 @@ export function LoneOperatorHud() {
             </div>
           </div>
 
-          {/* Ambience Controls (Rain FX + Procedural Rain Audio) */}
-          <div className="grid grid-cols-2 gap-2 pt-0.5">
-            <button
-              type="button"
-              onClick={toggleRainVisual}
-              title="사이버 빗줄기 이펙트 토글"
-              className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[10px] border transition-all cursor-pointer active:scale-95 ${
-                rainVisual
-                  ? "bg-cyan-500/15 text-neon-cyan border-cyan-500/45 shadow-[0_0_10px_rgba(0,243,255,0.2)] font-bold"
-                  : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 shrink-0" />
-              <span>RAIN FX: {rainVisual ? "ON" : "OFF"}</span>
-            </button>
+          {/* Ambience & Boot Glitch Controls */}
+          <div className="space-y-2 pt-0.5">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={toggleRainVisual}
+                title="사이버 빗줄기 이펙트 토글"
+                className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[10px] border transition-all cursor-pointer active:scale-95 ${
+                  rainVisual
+                    ? "bg-cyan-500/15 text-neon-cyan border-cyan-500/45 shadow-[0_0_10px_rgba(0,243,255,0.2)] font-bold"
+                    : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>RAIN FX: {rainVisual ? "ON" : "OFF"}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => applyRainAudio(!rainAudio)}
-              title="Night City 빗소리 앰비언스 사운드 토글"
-              className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[10px] border transition-all cursor-pointer active:scale-95 ${
-                rainAudio
-                  ? "bg-pink-500/20 text-neon-pink border-pink-500/55 shadow-[0_0_12px_rgba(255,0,127,0.3)] font-bold"
-                  : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
-              }`}
-            >
-              {rainAudio ? (
-                <Volume2 className="w-3.5 h-3.5 animate-pulse shrink-0" />
-              ) : (
-                <VolumeX className="w-3.5 h-3.5 shrink-0" />
-              )}
-              <span>SOUND: {rainAudio ? "ON" : "OFF"}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => applyRainAudio(!rainAudio)}
+                title="Night City 빗소리 앰비언스 사운드 토글"
+                className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-[10px] border transition-all cursor-pointer active:scale-95 ${
+                  rainAudio
+                    ? "bg-pink-500/20 text-neon-pink border-pink-500/55 shadow-[0_0_12px_rgba(255,0,127,0.3)] font-bold"
+                    : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                }`}
+              >
+                {rainAudio ? (
+                  <Volume2 className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                ) : (
+                  <VolumeX className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>SOUND: {rainAudio ? "ON" : "OFF"}</span>
+              </button>
+            </div>
+
+            {/* CRT Boot Glitch Option & Preview Row */}
+            <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.03] border border-cyan-500/20 text-[10px]">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Zap className="w-3.5 h-3.5 text-neon-cyan shrink-0" />
+                <span className="text-slate-300 font-medium truncate">BOOT GLITCH</span>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={toggleBootGlitch}
+                  title="새로고침 / 첫 접속 시 치지직 CRT 부팅 효과 켜기/끄기"
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer active:scale-95 ${
+                    bootGlitch
+                      ? "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-[0_0_8px_rgba(0,243,255,0.25)]"
+                      : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                  }`}
+                >
+                  {bootGlitch ? "ON" : "OFF"}
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerBootReplay}
+                  title="치지직 CRT 부팅 효과 즉시 미리보기"
+                  className="px-2 py-0.5 rounded-lg text-[10px] font-mono text-neon-pink bg-pink-500/10 border border-pink-500/35 hover:bg-pink-500/20 hover:border-pink-500/60 shadow-[0_0_6px_rgba(255,0,127,0.2)] transition-all cursor-pointer active:scale-95"
+                >
+                  PREVIEW ⚡
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -19,6 +19,11 @@ const IsolatedAtmosphere = dynamic(
   { ssr: false }
 );
 
+const CyberBootSequence = dynamic(
+  () => import("./CyberBootSequence").then((mod) => mod.CyberBootSequence),
+  { ssr: false }
+);
+
 export type NavSection = "dashboard" | "posts" | "projects" | "about";
 
 export function AppShell({
@@ -35,6 +40,7 @@ export function AppShell({
   const [activeSection, setActiveSection] = useState<NavSection>("dashboard");
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
   const [rainAudio, setRainAudio] = useState(false);
+  const [bootGlitch, setBootGlitch] = useState(true);
 
   // Global event listener for opening contact modal
   useEffect(() => {
@@ -85,6 +91,21 @@ export function AppShell({
     if (savedCursor === "native") {
       setCursorMode("native");
     }
+    const savedBoot = localStorage.getItem("kimgatta_boot_glitch");
+    if (savedBoot === "off") {
+      setBootGlitch(false);
+    }
+
+    const handleToggleBoot = (e: Event) => {
+      const custom = e as CustomEvent<boolean | undefined>;
+      if (typeof custom.detail === "boolean") {
+        setBootGlitch(custom.detail);
+      }
+    };
+    window.addEventListener("toggle-boot-glitch", handleToggleBoot);
+    return () => {
+      window.removeEventListener("toggle-boot-glitch", handleToggleBoot);
+    };
   }, []);
 
   const toggleCursorMode = () => {
@@ -96,6 +117,17 @@ export function AppShell({
       // ignore
     }
     window.dispatchEvent(new CustomEvent("toggle-cursor-mode", { detail: next }));
+  };
+
+  const toggleBootGlitch = () => {
+    const next = !bootGlitch;
+    setBootGlitch(next);
+    try {
+      localStorage.setItem("kimgatta_boot_glitch", next ? "on" : "off");
+    } catch {
+      // ignore
+    }
+    window.dispatchEvent(new CustomEvent("toggle-boot-glitch", { detail: next }));
   };
 
   // Update activeSection on pathname changes and on scroll with RAF throttling
@@ -176,6 +208,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col relative overflow-x-clip">
+      <CyberBootSequence />
       <IsolatedAtmosphere />
       <CyberCursor />
       <Navbar
@@ -220,6 +253,26 @@ export function AppShell({
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
+                <button
+                  type="button"
+                  onClick={toggleBootGlitch}
+                  title="초기 접속 및 새로고침 치지직 CRT 부팅 연출 전환"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
+                    bootGlitch
+                      ? "border-cyan-500/50 bg-cyan-500/15 text-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.25)]"
+                      : "border-cyan-500/30 bg-black/40 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      bootGlitch
+                        ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
+                        : "bg-slate-500"
+                    }`}
+                  />
+                  <span>BOOT: {bootGlitch ? "ON" : "OFF"}</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={toggleRainAudio}

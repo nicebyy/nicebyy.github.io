@@ -948,3 +948,121 @@ html.tab-inactive *::after {
   animation: cyber-radar-sweep 3.8s linear infinite;
   will-change: transform;
 }
+
+/* =========================================================================
+   Cyberpunk CRT Boot Sequence & Static Glitch FX ("치지직" + Fade)
+   ========================================================================= */
+
+/* CRT High-density phosphor scanlines */
+.cyber-boot-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.5) 50%
+  ), 
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 127, 0.03),
+    rgba(0, 243, 255, 0.02),
+    rgba(0, 255, 157, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+}
+
+/* CRT Tube Power-On Vertical Expansion */
+@keyframes cyber-crt-turn-on {
+  0% {
+    transform: scale(1, 0.003);
+    filter: brightness(25);
+    opacity: 0.3;
+  }
+  30% {
+    transform: scale(1, 0.003);
+    filter: brightness(18);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1, 0.08);
+    filter: brightness(6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+    opacity: 1;
+  }
+}
+
+.cyber-crt-turn-on {
+  animation: cyber-crt-turn-on 0.28s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  will-change: transform, filter, opacity;
+}
+
+/* Authentic Horizontal Static Jitter & Chromatic Aberration ("치지직") */
+@keyframes cyber-boot-chizizik {
+  0% {
+    transform: translate3d(0, 0, 0) skew(0deg);
+    filter: none;
+  }
+  8% {
+    transform: translate3d(-4px, 1px, 0) skew(-0.8deg);
+    filter: drop-shadow(-3px 0 #00f3ff) drop-shadow(3px 0 #ff007f);
+  }
+  16% {
+    transform: translate3d(3px, -2px, 0) skew(0.6deg);
+    filter: drop-shadow(3px 0 #00f3ff) drop-shadow(-3px 0 #ff007f);
+  }
+  24% {
+    transform: translate3d(-3px, 2px, 0) skew(-0.5deg);
+    filter: none;
+  }
+  32% {
+    transform: translate3d(5px, -1px, 0) skew(1deg);
+    filter: drop-shadow(-4px 0 #00f3ff) drop-shadow(4px 0 #ff007f);
+  }
+  42% {
+    transform: translate3d(-2px, 0px, 0) skew(-0.3deg);
+    filter: drop-shadow(2px 0 #00ff9d) drop-shadow(-2px 0 #ff007f);
+  }
+  54% {
+    transform: translate3d(3px, 1px, 0) skew(0.4deg);
+    filter: none;
+  }
+  68% {
+    transform: translate3d(-1px, -1px, 0) skew(-0.2deg);
+    filter: drop-shadow(-1px 0 #00f3ff) drop-shadow(1px 0 #ff007f);
+  }
+  82% {
+    transform: translate3d(1px, 0px, 0) skew(0.1deg);
+    filter: none;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) skew(0deg);
+    filter: none;
+  }
+}
+
+.cyber-boot-chizizik {
+  animation: cyber-boot-chizizik 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, filter;
+}
+
+/* Fast Sweeping Signal Glitch Bar */
+@keyframes cyber-signal-scan-fast {
+  0% {
+    top: -15%;
+    opacity: 0.9;
+  }
+  60% {
+    top: 70%;
+    opacity: 0.6;
+  }
+  100% {
+    top: 115%;
+    opacity: 0;
+  }
+}
+
+.cyber-signal-scan-fast {
+  animation: cyber-signal-scan-fast 0.35s linear forwards;
+  will-change: top, opacity;
+}

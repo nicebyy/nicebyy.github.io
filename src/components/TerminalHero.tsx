@@ -118,6 +118,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
             "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
             "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
             "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환",
+            "  boot     — CRT 치지직 부팅 글리치 & 시그널 락 시퀀스 재생 (동의어: reboot)",
             "  status   — 나이트 시티 메인프레임 통신 상태 진단",
             "  clear    — 터미널 콘솔 로그 초기화",
           ].join("\n"),
@@ -453,6 +454,20 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
           id: Date.now() + 1,
           type: "accent",
           text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
+        },
+      ]);
+      return;
+    }
+
+    // Command: Boot / Reboot / Glitch
+    if (mainCmd === "boot" || mainCmd === "reboot" || mainCmd === "glitch") {
+      window.dispatchEvent(new CustomEvent("trigger-boot-glitch"));
+      setHistory((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          type: "accent",
+          text: `[SYSTEM_KERNEL] Initializing CRT Signal Lock & Static Glitch sequence... (치지직-⚡)`,
         },
       ]);
       return;
