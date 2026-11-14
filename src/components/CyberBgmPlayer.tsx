@@ -120,9 +120,12 @@ export function CyberBgmPlayer() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+  const progressBarRef = useRef<HTMLDivElement | null>(null);
+  const isSeekingRef = useRef(false);
 
   // Refs to prevent stale closures inside event listeners & fade intervals
   const volumeRef = useRef(DEFAULT_BGM_VOLUME);
@@ -424,6 +427,7 @@ export function CyberBgmPlayer() {
     if (!audio) return;
 
     const onTimeUpdate = () => {
+      if (isSeekingRef.current) return;
       setProgress(audio.currentTime);
       if (audio.duration && !isNaN(audio.duration)) {
         setDuration(audio.duration);
@@ -592,6 +596,82 @@ export function CyberBgmPlayer() {
 
   const displayVolumePercent = Math.round((isMuted ? 0 : volume) * 100);
 
+  const calculateSeekTime = useCallback(
+    (clientX: number) => {
+      if (!progressBarRef.current || duration <= 0) return 0;
+      const rect = progressBarRef.current.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+      return ratio * duration;
+    },
+    [duration]
+  );
+
+  const handleSeekStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (duration <= 0) return;
+    e.preventDefault();
+    setIsSeeking(true);
+    isSeekingRef.current = true;
+    const targetTime = calculateSeekTime(e.clientX);
+    setProgress(targetTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetTime;
+    }
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSeekMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isSeekingRef.current || duration <= 0) return;
+    const targetTime = calculateSeekTime(e.clientX);
+    setProgress(targetTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetTime;
+    }
+  };
+
+  const handleSeekEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isSeekingRef.current) return;
+    setIsSeeking(false);
+    isSeekingRef.current = false;
+    const targetTime = calculateSeekTime(e.clientX);
+    setProgress(targetTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetTime;
+    }
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSeekKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (duration <= 0) return;
+    let nextTime = progress;
+    if (e.key === "ArrowLeft") {
+      nextTime = Math.max(0, progress - 5);
+    } else if (e.key === "ArrowRight") {
+      nextTime = Math.min(duration, progress + 5);
+    } else if (e.key === "Home") {
+      nextTime = 0;
+    } else if (e.key === "End") {
+      nextTime = duration;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    setProgress(nextTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = nextTime;
+    }
+  };
+
   return (
     <div ref={panelRef} className="relative inline-flex items-center">
       {/* Native Audio Element (src managed imperatively for seamless gapless track transitions) */}
@@ -753,18 +833,57 @@ export function CyberBgmPlayer() {
 
             {/* Progress Bar & Time */}
             <div className="pt-1.5 space-y-1">
-              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+              {/* Interactive Progress Bar Track Container */}
+              <div
+                ref={progressBarRef}
+                role="slider"
+                tabIndex={0}
+                aria-label="재생 구간 탐색 (클릭 또는 드래그로 원하는 구간 이동)"
+                aria-valuemin={0}
+                aria-valuemax={Math.round(duration)}
+                aria-valuenow={Math.round(progress)}
+                aria-valuetext={`${formatTime(progress)} / ${formatTime(duration)}`}
+                onPointerDown={handleSeekStart}
+                onPointerMove={handleSeekMove}
+                onPointerUp={handleSeekEnd}
+                onPointerCancel={handleSeekEnd}
+                onKeyDown={handleSeekKeyDown}
+                title="클릭하거나 드래그하여 원하는 재생 구간으로 이동"
+                className="relative group py-2 -my-1 cursor-pointer select-none touch-none outline-none"
+              >
+                {/* Background Rail */}
+                <div className="w-full h-1.5 group-hover:h-2 group-focus-visible:h-2 bg-white/10 rounded-full overflow-hidden transition-all duration-150 border border-white/5 group-hover:border-cyan-500/30">
+                  {/* Filled Gradient Bar */}
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-pink-500 rounded-full transition-[width] duration-75"
+                    style={{
+                      width: `${
+                        duration > 0 ? Math.min((progress / duration) * 100, 100) : 0
+                      }%`,
+                    }}
+                  />
+                </div>
+
+                {/* Draggable Cyber Neon Handle Thumb */}
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-400 to-pink-500 transition-all duration-200"
+                  className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-neon-cyan shadow-[0_0_10px_#00f3ff] transition-opacity pointer-events-none ${
+                    isSeeking ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                  }`}
                   style={{
-                    width: `${
-                      duration > 0 ? (progress / duration) * 100 : 0
+                    left: `${
+                      duration > 0
+                        ? Math.min(Math.max((progress / duration) * 100, 0), 100)
+                        : 0
                     }%`,
                   }}
                 />
               </div>
+
+              {/* Timestamp Readout */}
               <div className="flex justify-between text-[9px] text-slate-400 tabular-nums">
-                <span>{formatTime(progress)}</span>
+                <span className={isSeeking ? "text-neon-cyan font-bold" : ""}>
+                  {formatTime(progress)}
+                </span>
                 <span>{formatTime(duration)}</span>
               </div>
             </div>
