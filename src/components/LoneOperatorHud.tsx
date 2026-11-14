@@ -14,183 +14,75 @@ import {
  * Procedural Web Audio API Cyberpunk Rain & Room Drone Synthesizer (0 KB asset payload)
  */
 class ProceduralRainEngine {
-  private ctx: AudioContext | null = null;
-  private masterGain: GainNode | null = null;
-  private noiseSource: AudioBufferSourceNode | null = null;
-  private lfoGain: GainNode | null = null;
-  private lfoOsc: OscillatorNode | null = null;
+  private audioEl: HTMLAudioElement | null = null;
+  private fadeInterval: ReturnType<typeof setInterval> | null = null;
   private isRunning = false;
 
   start() {
     if (this.isRunning) return;
     if (typeof window === "undefined") return;
 
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioCtx) return;
-
-    if (!this.ctx) {
-      this.ctx = new AudioCtx();
-    }
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume().catch(() => {});
+    if (!this.audioEl) {
+      const audio = new Audio("/audio/night-city-rain.mp3");
+      audio.loop = true;
+      audio.preload = "auto";
+      this.audioEl = audio;
     }
 
-    const ctx = this.ctx;
+    const audio = this.audioEl;
+    if (this.fadeInterval) clearInterval(this.fadeInterval);
 
-    // Master Gain Node with gentle smooth fade-in
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    masterGain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 1.2);
-    masterGain.connect(ctx.destination);
-    this.masterGain = masterGain;
-
-    // 1. Create seamless 4-second stereo rain bed with realistic droplet patters
-    const duration = 4;
-    const bufferSize = ctx.sampleRate * duration;
-    const noiseBuffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
-
-    for (let channel = 0; channel < 2; channel++) {
-      const output = noiseBuffer.getChannelData(channel);
-      let b0 = 0,
-        b1 = 0,
-        b2 = 0,
-        b3 = 0,
-        b4 = 0,
-        b5 = 0,
-        b6 = 0;
-
-      // Base pink noise filter (continuous gentle rainfall bed)
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.969 * b2 + white * 0.153852;
-        b3 = 0.8665 * b3 + white * 0.3104856;
-        b4 = 0.55 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.016898;
-        const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.075;
-        b6 = white * 0.115926;
-        output[i] = pink;
-      }
-
-      // Add realistic microscopic raindrop impacts (토독토독 창문/포장도로 타격음)
-      const numDroplets = Math.floor(bufferSize * 0.0009); // ~40 droplets per sec
-      for (let d = 0; d < numDroplets; d++) {
-        const startIdx = Math.floor(Math.random() * (bufferSize - 1000));
-        const dropletFreq = 2800 + Math.random() * 3400; // 2.8kHz ~ 6.2kHz water drop resonance
-        const decaySeconds = 0.003 + Math.random() * 0.006; // 3ms - 9ms fast impact
-        const amplitude = 0.06 + Math.random() * 0.14;
-        const decaySamples = Math.floor(decaySeconds * ctx.sampleRate);
-
-        for (let s = 0; s < decaySamples; s++) {
-          const t = s / ctx.sampleRate;
-          const envelope = Math.exp(-s / (decaySamples * 0.32));
-          const wave = Math.sin(2 * Math.PI * dropletFreq * t) * envelope * amplitude;
-          output[startIdx + s] += wave;
-        }
-      }
-
-      // Clamp buffer to prevent any digital clipping
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.max(-0.95, Math.min(0.95, output[i]));
-      }
-    }
-
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-    noiseSource.loop = true;
-
-    // Highpass Filter: 1,200 Hz (Completely cuts 100~800Hz low wind whoosh / typhoon rumble)
-    const highpass = ctx.createBiquadFilter();
-    highpass.type = "highpass";
-    highpass.frequency.setValueAtTime(1200, ctx.currentTime);
-    highpass.Q.setValueAtTime(0.7, ctx.currentTime);
-
-    // Lowpass Filter: 6,800 Hz (Allows crisp, soothing water sizzle through without harshness)
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.frequency.setValueAtTime(6800, ctx.currentTime);
-    lowpass.Q.setValueAtTime(0.5, ctx.currentTime);
-
-    // Peaking EQ: 3,500 Hz (Accentuates delicate glass/pavement droplet pitter-patter)
-    const presence = ctx.createBiquadFilter();
-    presence.type = "peaking";
-    presence.frequency.setValueAtTime(3500, ctx.currentTime);
-    presence.gain.setValueAtTime(3.0, ctx.currentTime);
-    presence.Q.setValueAtTime(1.2, ctx.currentTime);
-
-    // Subtle Natural Rain Breathing Swell (LFO at 0.12 Hz)
-    const lfoOsc = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
-    lfoOsc.type = "sine";
-    lfoOsc.frequency.setValueAtTime(0.12, ctx.currentTime); // ~8 sec breathing cycle
-    lfoGain.gain.setValueAtTime(0.08, ctx.currentTime); // ±8% volume drift
-    lfoOsc.connect(lfoGain);
-
-    // Audio Graph Routing:
-    // Source -> Highpass(1.2kHz) -> Presence(3.5kHz) -> Lowpass(6.8kHz) -> MasterGain -> Destination
-    noiseSource.connect(highpass);
-    highpass.connect(presence);
-    presence.connect(lowpass);
-    lowpass.connect(masterGain);
-
-    lfoGain.connect(masterGain.gain);
-
-    lfoOsc.start();
-    noiseSource.start();
-
-    this.noiseSource = noiseSource;
-    this.lfoOsc = lfoOsc;
-    this.lfoGain = lfoGain;
-    this.isRunning = true;
+    audio.volume = 0;
+    audio
+      .play()
+      .then(() => {
+        this.isRunning = true;
+        const targetVolume = 0.35; // 따뜻하고 포근한 잔잔한 빗소리 레벨
+        const step = 0.025;
+        this.fadeInterval = setInterval(() => {
+          if (!this.audioEl) return;
+          if (this.audioEl.volume < targetVolume - step) {
+            this.audioEl.volume = Math.min(1, this.audioEl.volume + step);
+          } else {
+            this.audioEl.volume = targetVolume;
+            if (this.fadeInterval) clearInterval(this.fadeInterval);
+          }
+        }, 50);
+      })
+      .catch(() => {
+        // Autoplay policy fallback
+      });
   }
 
   stop() {
-    if (!this.isRunning || !this.ctx || !this.masterGain) return;
+    if (!this.isRunning || !this.audioEl) return;
+    if (this.fadeInterval) clearInterval(this.fadeInterval);
 
-    const ctx = this.ctx;
-    const now = ctx.currentTime;
-    try {
-      this.masterGain.gain.cancelScheduledValues(now);
-      this.masterGain.gain.setValueAtTime(
-        Math.max(0.0001, this.masterGain.gain.value),
-        now
-      );
-      this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
-    } catch {
-      // ignore
-    }
-
-    const src = this.noiseSource;
-    const lfo = this.lfoOsc;
-    const lfoG = this.lfoGain;
-    this.noiseSource = null;
-    this.lfoOsc = null;
-    this.lfoGain = null;
-    this.isRunning = false;
-
-    setTimeout(() => {
-      try {
-        src?.stop();
-        src?.disconnect();
-        lfo?.stop();
-        lfo?.disconnect();
-        lfoG?.disconnect();
-      } catch {
-        // ignore
+    const step = 0.04;
+    this.fadeInterval = setInterval(() => {
+      if (!this.audioEl) {
+        if (this.fadeInterval) clearInterval(this.fadeInterval);
+        return;
       }
-    }, 550);
+      if (this.audioEl.volume > step) {
+        this.audioEl.volume = Math.max(0, this.audioEl.volume - step);
+      } else {
+        this.audioEl.volume = 0;
+        this.audioEl.pause();
+        this.isRunning = false;
+        if (this.fadeInterval) clearInterval(this.fadeInterval);
+      }
+    }, 40);
   }
 
   dispose() {
-    this.stop();
-    if (this.ctx) {
-      this.ctx.close().catch(() => {});
-      this.ctx = null;
+    if (this.fadeInterval) clearInterval(this.fadeInterval);
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.src = "";
+      this.audioEl = null;
     }
+    this.isRunning = false;
   }
 }
 
