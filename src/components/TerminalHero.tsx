@@ -20,6 +20,7 @@ import {
 import { siteConfig } from "@/config/site";
 import { PostMeta } from "@/lib/posts";
 import { VisitorCounter } from "./VisitorCounter";
+import { CyberCountUp, useCyberCountUp } from "./CyberCountUp";
 import {
   authenticateOperator,
   getOperatorSession,
@@ -31,6 +32,58 @@ interface TerminalLine {
   id: number;
   type: "input" | "output" | "accent";
   text: string;
+}
+
+interface TechProgressBarProps {
+  tech: (typeof siteConfig.techStack)[number];
+  colorStyles: {
+    bar: string;
+    text: string;
+    glow: string;
+    badge: string;
+  };
+  delay: number;
+}
+
+function TechProgressBar({ tech, colorStyles, delay }: TechProgressBarProps) {
+  const { value, isFinished } = useCyberCountUp({
+    end: tech.level,
+    start: 0,
+    duration: 650,
+    delay,
+  });
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center text-xs font-chakra">
+        <div className="flex items-center gap-1.5">
+          <span className="text-slate-200 font-medium">
+            {tech.name}
+          </span>
+          {"bytes" in tech && tech.bytes && (
+            <span
+              className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${colorStyles.badge}`}
+            >
+              {tech.bytes}
+            </span>
+          )}
+        </div>
+        <span
+          className={`font-orbitron font-bold tabular-nums transition-all ${colorStyles.text} ${
+            isFinished ? colorStyles.glow : ""
+          }`}
+        >
+          {Math.round(value)}%
+        </span>
+      </div>
+      <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r transition-all duration-75 ${colorStyles.bar}`}
+          style={{ width: `${Math.max(value, 2)}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function TerminalHero({ posts }: { posts: PostMeta[] }) {
@@ -646,7 +699,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 <span>POSTS</span>
               </div>
               <p className="mt-1 text-lg sm:text-2xl font-orbitron font-black text-neon-cyan drop-shadow-[0_0_8px_rgba(0,243,255,0.6)]">
-                {posts.length}
+                <CyberCountUp end={posts.length} delay={100} duration={750} />
               </p>
             </div>
             <div className="rounded-xl p-2.5 sm:p-3 bg-black/50 border border-pink-500/40 hover:shadow-neon-pink hover:border-neon-pink transition-all">
@@ -655,7 +708,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 <span>CATS</span>
               </div>
               <p className="mt-1 text-lg sm:text-2xl font-orbitron font-black text-neon-pink drop-shadow-[0_0_8px_rgba(255,0,127,0.6)]">
-                {categories.length}
+                <CyberCountUp end={categories.length} delay={250} duration={600} />
               </p>
             </div>
             <div className="rounded-xl p-2.5 sm:p-3 bg-black/50 border border-emerald-500/40 hover:shadow-neon-green hover:border-neon-green transition-all">
@@ -664,7 +717,7 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 <span>TAGS</span>
               </div>
               <p className="mt-1 text-lg sm:text-2xl font-orbitron font-black text-neon-green drop-shadow-[0_0_8px_rgba(0,255,157,0.6)]">
-                {allTags.length}
+                <CyberCountUp end={allTags.length} delay={400} duration={800} />
               </p>
             </div>
           </div>
@@ -691,11 +744,15 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
               </span>
               <span className="text-neon-green text-[9.5px] sm:text-[10px] font-orbitron font-bold flex items-center gap-1.5 whitespace-nowrap shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse shrink-0" />
-                <span>28 REPOS · 29.8 MB</span>
+                <span>
+                  <CyberCountUp end={28} delay={650} duration={600} suffix=" REPOS" />
+                  {" · "}
+                  <CyberCountUp end={29.8} decimals={1} delay={750} duration={650} suffix=" MB" />
+                </span>
               </span>
             </div>
             <div className="space-y-2">
-              {siteConfig.techStack.map((tech) => {
+              {siteConfig.techStack.map((tech, idx) => {
                 const colorStyles = {
                   cyan: {
                     bar: "from-cyan-400 via-sky-500 to-blue-500 shadow-[0_0_8px_rgba(0,243,255,0.6)]",
@@ -735,33 +792,12 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 };
 
                 return (
-                  <div key={tech.name} className="space-y-1">
-                    <div className="flex justify-between items-center text-xs font-chakra">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-200 font-medium">
-                          {tech.name}
-                        </span>
-                        {"bytes" in tech && tech.bytes && (
-                          <span
-                            className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${colorStyles.badge}`}
-                          >
-                            {tech.bytes}
-                          </span>
-                        )}
-                      </div>
-                      <span
-                        className={`font-orbitron font-bold ${colorStyles.text} ${colorStyles.glow}`}
-                      >
-                        {tech.level}%
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${colorStyles.bar}`}
-                        style={{ width: `${Math.max(tech.level, 3)}%` }}
-                      />
-                    </div>
-                  </div>
+                  <TechProgressBar
+                    key={tech.name}
+                    tech={tech}
+                    colorStyles={colorStyles}
+                    delay={850 + idx * 120}
+                  />
                 );
               })}
             </div>

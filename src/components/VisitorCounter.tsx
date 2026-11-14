@@ -17,7 +17,12 @@ interface VisitorCounterProps {
   className?: string;
 }
 
-function useAnimatedNumber(target: number, active: boolean): number {
+function useAnimatedNumber(
+  target: number,
+  active: boolean,
+  delay: number = 0,
+  duration: number = 750
+): number {
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
@@ -36,22 +41,31 @@ function useAnimatedNumber(target: number, active: boolean): number {
       return;
     }
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let rafId = 0;
-    const duration = 450;
-    const start = performance.now();
 
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(target * eased));
-      if (progress < 1) {
-        rafId = requestAnimationFrame(tick);
-      }
+    timeoutId = setTimeout(() => {
+      const start = performance.now();
+
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / Math.max(duration, 1), 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        setDisplay(Math.round(target * eased));
+        if (progress < 1) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          setDisplay(target);
+        }
+      };
+
+      rafId = requestAnimationFrame(tick);
+    }, Math.max(delay, 0));
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      cancelAnimationFrame(rafId);
     };
-
-    rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
-  }, [target, active]);
+  }, [target, active, delay, duration]);
 
   return display;
 }
@@ -82,10 +96,18 @@ export function VisitorCounter({
   const isLoaded = stats !== null;
   const isError = stats?.source === "error";
   const combinedTotal = legacyTotal + (stats?.totalHits ?? 0);
-  const animatedToday = useAnimatedNumber(stats?.todayHits ?? 0, isLoaded && !isError);
+  const animationDelay = variant === "telemetry" ? 550 : 200;
+  const animatedToday = useAnimatedNumber(
+    stats?.todayHits ?? 0,
+    isLoaded && !isError,
+    animationDelay,
+    700
+  );
   const animatedTotal = useAnimatedNumber(
     combinedTotal,
-    isLoaded && (!isError || legacyTotal > 0)
+    isLoaded && (!isError || legacyTotal > 0),
+    animationDelay,
+    850
   );
 
   if (!config?.enabled) return null;
