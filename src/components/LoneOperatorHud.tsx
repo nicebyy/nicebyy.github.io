@@ -277,7 +277,7 @@ export function LoneOperatorHud() {
           <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
             <div className="flex items-center gap-2 min-w-0">
               <Radio className="w-4 h-4 text-neon-pink animate-pulse shrink-0" />
-              <span className="text-[11px] font-chakra tracking-widest text-neon-cyan font-bold uppercase truncate cyber-signal-flicker">
+              <span className="text-[11px] font-chakra tracking-wider text-neon-cyan font-bold uppercase truncate whitespace-nowrap cyber-signal-flicker">
                 // SOLO_NODE // S-09
               </span>
             </div>

@@ -675,16 +675,16 @@ export function CyberBgmPlayer() {
 
       {/* Cyberpunk HUD Audio Control Panel Popover */}
       {isPanelOpen && (
-        <div className="absolute top-full right-0 mt-2 w-72 sm:w-80 rounded-2xl border border-cyan-500/50 bg-[#070b14]/95 backdrop-blur-xl p-4 shadow-[0_0_25px_rgba(0,243,255,0.35)] z-50 space-y-3 font-mono animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed right-3 top-[4.25rem] sm:absolute sm:top-full sm:right-0 sm:mt-2 w-[calc(100vw-1.5rem)] max-w-[21rem] sm:w-[22.5rem] rounded-2xl border border-cyan-500/50 bg-[#070b14]/95 backdrop-blur-xl p-3.5 sm:p-4 shadow-[0_0_25px_rgba(0,243,255,0.35)] z-50 space-y-3 font-mono animate-in fade-in zoom-in-95 duration-150">
           {/* Header with Cyber Status */}
-          <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2">
-            <div className="flex items-center gap-2">
-              <Radio className="w-4 h-4 text-neon-cyan animate-pulse" />
-              <span className="text-[11px] font-chakra tracking-widest text-neon-cyan font-bold uppercase">
+          <div className="flex items-center justify-between border-b border-cyan-500/20 pb-2 gap-2">
+            <div className="flex items-center gap-1.5 min-w-0 shrink-0">
+              <Radio className="w-3.5 h-3.5 text-neon-cyan animate-pulse shrink-0" />
+              <span className="text-[11px] font-chakra tracking-wider text-neon-cyan font-bold uppercase whitespace-nowrap">
                 // CYBER_AUDIO_DECK
               </span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={toggleShuffle}
@@ -693,7 +693,7 @@ export function CyberBgmPlayer() {
                     ? "랜덤 셔플 활성화됨 (클릭 시 순차 재생으로 전환)"
                     : "순차 순환 재생 활성화됨 (클릭 시 랜덤 셔플로 전환)"
                 }
-                className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-chakra tracking-wider border transition-all cursor-pointer active:scale-95 ${
+                className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-chakra tracking-wider border transition-all cursor-pointer active:scale-95 whitespace-nowrap ${
                   isShuffle
                     ? "bg-pink-500/20 text-neon-pink border-pink-500/50 shadow-[0_0_8px_rgba(255,0,127,0.3)] hover:bg-pink-500/30"
                     : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20"
@@ -712,7 +712,7 @@ export function CyberBgmPlayer() {
                 )}
               </button>
               <span
-                className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border ${
+                className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase border whitespace-nowrap ${
                   isPlaying
                     ? "bg-emerald-500/20 text-neon-green border-emerald-500/50 shadow-[0_0_6px_#00ff9d]"
                     : "bg-slate-800 text-slate-400 border-slate-700"
@@ -725,23 +725,23 @@ export function CyberBgmPlayer() {
 
           {/* Current Track Display */}
           <div className="rounded-xl border border-white/10 bg-black/60 p-2.5 space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-slate-400">
-              <span className="text-neon-pink font-bold">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 gap-2">
+              <span className="text-neon-pink font-bold truncate">
                 {currentTrack.genre}
               </span>
-              <span className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 border border-white/10">
+              <span className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-400 border border-white/10 shrink-0 whitespace-nowrap">
                 {String(currentTrackIndex + 1).padStart(2, "0")}/
                 {String(PLAYLIST.length).padStart(2, "0")} ·{" "}
                 {currentTrack.license}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <Disc3
                 className={`w-5 h-5 text-neon-cyan shrink-0 ${
                   isPlaying ? "animate-[spin_4s_linear_infinite]" : ""
                 }`}
               />
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-white truncate drop-shadow-[0_0_8px_rgba(0,243,255,0.5)]">
                   {currentTrack.title}
                 </p>
@@ -763,7 +763,7 @@ export function CyberBgmPlayer() {
                   }}
                 />
               </div>
-              <div className="flex justify-between text-[9px] text-slate-400">
+              <div className="flex justify-between text-[9px] text-slate-400 tabular-nums">
                 <span>{formatTime(progress)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
@@ -824,7 +824,7 @@ export function CyberBgmPlayer() {
             </div>
 
             {/* Volume Control */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={toggleMute}
@@ -854,35 +854,66 @@ export function CyberBgmPlayer() {
           </div>
 
           {/* Playlist selector (10 Tracks) */}
-          <div className="border-t border-cyan-500/20 pt-2 space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
-              <span>// PLAYLIST ({PLAYLIST.length} TRACKS)</span>
+          <div className="border-t border-cyan-500/20 pt-2 space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider px-0.5">
+              <span className="font-chakra font-semibold text-slate-300 whitespace-nowrap">
+                // TRACKLIST ({PLAYLIST.length})
+              </span>
               <span
-                className={
+                className={`text-[9px] font-chakra font-bold tracking-wider px-1.5 py-0.5 rounded border whitespace-nowrap ${
                   isShuffle
-                    ? "text-neon-pink text-[9px] font-bold"
-                    : "text-neon-cyan text-[9px] font-bold"
-                }
+                    ? "text-neon-pink bg-pink-500/10 border-pink-500/30"
+                    : "text-neon-cyan bg-cyan-500/10 border-cyan-500/30"
+                }`}
               >
                 {isShuffle ? "RANDOM SHUFFLE" : "CYCLIC LOOP"}
               </span>
             </div>
-            <div className="space-y-1 max-h-40 overflow-y-auto cyber-scrollbar pr-0.5">
+
+            {/* Column Header */}
+            <div className="grid grid-cols-[1.5rem_1fr_6.5rem] items-center gap-2 px-2 text-[9px] font-mono text-slate-500 uppercase tracking-wider border-b border-white/5 pb-1">
+              <span>#</span>
+              <span>TITLE</span>
+              <span className="text-right">ARTIST</span>
+            </div>
+
+            <div className="space-y-1 max-h-44 overflow-y-auto cyber-scrollbar pr-1">
               {PLAYLIST.map((track, idx) => (
                 <button
                   key={track.id}
                   type="button"
                   onClick={() => loadAndPlayTrack(idx, true, false, true)}
-                  className={`w-full text-left px-2 py-1.5 rounded-lg text-[10px] flex items-center justify-between transition-all cursor-pointer ${
+                  className={`w-full text-left px-2 py-1.5 rounded-lg text-[10px] grid grid-cols-[1.5rem_1fr_6.5rem] items-center gap-2 transition-all cursor-pointer group ${
                     currentTrackIndex === idx
                       ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 font-bold shadow-[0_0_8px_rgba(0,243,255,0.2)]"
                       : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
                   }`}
                 >
-                  <span className="truncate">
-                    {String(idx + 1).padStart(2, "0")}. {track.title}
+                  <span
+                    className={`font-mono text-[10px] tabular-nums ${
+                      currentTrackIndex === idx
+                        ? "text-neon-cyan font-bold"
+                        : "text-slate-500 group-hover:text-cyan-400"
+                    }`}
+                  >
+                    {String(idx + 1).padStart(2, "0")}.
                   </span>
-                  <span className="text-[9px] text-slate-400 shrink-0 ml-1">
+                  <span
+                    className={`truncate font-medium ${
+                      currentTrackIndex === idx
+                        ? "text-white font-bold"
+                        : "text-slate-300 group-hover:text-white"
+                    }`}
+                  >
+                    {track.title}
+                  </span>
+                  <span
+                    className={`text-[9px] text-right truncate tabular-nums ${
+                      currentTrackIndex === idx
+                        ? "text-cyan-300 font-semibold"
+                        : "text-slate-500 group-hover:text-slate-400"
+                    }`}
+                  >
                     {track.artist}
                   </span>
                 </button>
