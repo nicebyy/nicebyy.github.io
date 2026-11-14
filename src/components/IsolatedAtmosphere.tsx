@@ -107,8 +107,21 @@ export function IsolatedAtmosphere() {
     let height = (canvas.height = window.innerHeight);
 
     const isMobile = width < 768;
-    const dropCount = isMobile ? 26 : 48;
-    const moteCount = isMobile ? 10 : 22;
+    const dropCount = isMobile ? 12 : 48;
+    const moteCount = isMobile ? 0 : 22; // 0 motes on mobile to eliminate path rendering overhead
+
+    // Mobile scroll performance: pause canvas drawing during active touch scroll
+    let isScrolling = false;
+    let scrollPauseTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleScroll = () => {
+      if (!isMobile) return;
+      isScrolling = true;
+      if (scrollPauseTimer) clearTimeout(scrollPauseTimer);
+      scrollPauseTimer = setTimeout(() => {
+        isScrolling = false;
+      }, 100);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     // Pre-allocated pools to guarantee 0 GC allocation inside render loop
     const drops: RainDrop[] = Array.from({ length: dropCount }, () => ({
@@ -151,6 +164,13 @@ export function IsolatedAtmosphere() {
     const renderFrame = (now: number) => {
       if (document.hidden) {
         rafId = null;
+        return;
+      }
+
+      // Skip canvas drawing during active mobile touch scrolling to prioritize 60/120fps compositor
+      if (isScrolling && isMobile) {
+        lastTime = now;
+        rafId = requestAnimationFrame(renderFrame);
         return;
       }
 
@@ -248,6 +268,8 @@ export function IsolatedAtmosphere() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+      if (scrollPauseTimer) clearTimeout(scrollPauseTimer);
       if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };

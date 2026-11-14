@@ -102,10 +102,10 @@ export default function RootLayout({
           }}
         />
 
-        {/* Multi-layered Cyberpunk Neon Ambient Glows (GPU Layer Isolated) */}
-        <div className="pointer-events-none fixed -top-40 left-10 w-[500px] h-[500px] rounded-full bg-cyan-400/20 blur-[140px] z-0 animate-pulse transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
-        <div className="pointer-events-none fixed top-1/3 -right-40 w-[600px] h-[600px] rounded-full bg-pink-500/20 blur-[150px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
-        <div className="pointer-events-none fixed -bottom-32 left-1/3 w-[500px] h-[500px] rounded-full bg-purple-500/15 blur-[140px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        {/* Multi-layered Cyberpunk Neon Ambient Glows (GPU Layer Isolated & Responsive for Mobile) */}
+        <div className="pointer-events-none fixed -top-40 left-10 w-[260px] h-[260px] md:w-[500px] md:h-[500px] rounded-full bg-cyan-400/15 md:bg-cyan-400/20 blur-[60px] md:blur-[140px] z-0 md:animate-pulse transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        <div className="pointer-events-none fixed top-1/3 -right-40 w-[280px] h-[280px] md:w-[600px] md:h-[600px] rounded-full bg-pink-500/15 md:bg-pink-500/20 blur-[70px] md:blur-[150px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        <div className="pointer-events-none fixed -bottom-32 left-1/3 hidden md:block w-[500px] h-[500px] rounded-full bg-purple-500/15 blur-[140px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
 
         {/* Live Animated PCB Electric Circuit Background */}
         <CircuitBackground />

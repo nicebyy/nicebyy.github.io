@@ -124,33 +124,31 @@ export function AppShell({
         }
       }
 
-      let scrollRaf: number | null = null;
-      const handleScroll = () => {
-        if (scrollRaf !== null) return;
-        scrollRaf = requestAnimationFrame(() => {
-          scrollRaf = null;
-          const postsEl = document.getElementById("posts");
-          const projectsEl = document.getElementById("projects");
-          const postsRect = postsEl?.getBoundingClientRect();
-          const projectsRect = projectsEl?.getBoundingClientRect();
+      const postsEl = document.getElementById("posts");
+      const projectsEl = document.getElementById("projects");
 
-          if (postsRect && postsRect.top <= 250) {
-            setActiveSection("posts");
-          } else if (projectsRect && projectsRect.top <= 250) {
-            setActiveSection("projects");
-          } else {
-            setActiveSection("dashboard");
-          }
-        });
-      };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              if (entry.target.id === "posts") {
+                setActiveSection("posts");
+              } else if (entry.target.id === "projects") {
+                setActiveSection("projects");
+              }
+            } else if (entry.target.id === "projects" && entry.boundingClientRect.top > 0) {
+              setActiveSection("dashboard");
+            }
+          });
+        },
+        { rootMargin: "-15% 0px -65% 0px", threshold: 0 }
+      );
 
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      handleScroll();
+      if (postsEl) observer.observe(postsEl);
+      if (projectsEl) observer.observe(projectsEl);
+
       return () => {
-        window.removeEventListener("scroll", handleScroll);
-        if (scrollRaf !== null) {
-          cancelAnimationFrame(scrollRaf);
-        }
+        observer.disconnect();
       };
     }
   }, [pathname]);

@@ -15,6 +15,7 @@ import {
   Flame,
   ChevronDown,
   ChevronUp,
+  ArrowDown,
 } from "lucide-react";
 import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, matchesCategoryPath } from "@/lib/categories";
@@ -141,6 +142,43 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
       return matchesCategory && matchesTag && matchesSearch;
     });
   }, [posts, selectedCategory, selectedTag, searchQuery]);
+
+  // Mobile & Scroll Performance: Progressive Batch Loading
+  const INITIAL_BATCH_SIZE = 16;
+  const BATCH_SIZE = 12;
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_BATCH_SIZE);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset pagination count on filter or search changes
+  useEffect(() => {
+    setVisibleCount(INITIAL_BATCH_SIZE);
+  }, [selectedCategory, selectedTag, searchQuery]);
+
+  // Seamless infinite scroll trigger via IntersectionObserver
+  useEffect(() => {
+    if (visibleCount >= filteredPosts.length) return;
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) =>
+            Math.min(prev + BATCH_SIZE, filteredPosts.length)
+          );
+        }
+      },
+      { rootMargin: "600px 0px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, filteredPosts.length]);
+
+  const visiblePosts = useMemo(
+    () => filteredPosts.slice(0, visibleCount),
+    [filteredPosts, visibleCount]
+  );
 
   const handleCategorySelect = (cat: string) => {
     setSelectedCategory(cat);
@@ -379,11 +417,11 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredPosts.map((post) => (
+          {visiblePosts.map((post) => (
             <Link
               key={post.slug}
               href={`/posts/${post.slug}`}
-              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-box cyber-corner"
+              className="group relative rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-cyan-500/60 dark:hover:border-neon-cyan dark:hover:shadow-neon-cyan transition-all flex flex-col justify-between cyber-box cyber-corner cyber-post-card"
             >
               {/* 4-Corner Reticle Brackets */}
               <span className="cyber-corner-bracket-tl" />
@@ -459,11 +497,11 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 dark:border-cyan-500/30 bg-white dark:bg-[#0b101e]/95 divide-y divide-slate-100 dark:divide-cyan-500/15 overflow-hidden cyber-corner">
-          {filteredPosts.map((post) => (
+          {visiblePosts.map((post) => (
             <Link
               key={post.slug}
               href={`/posts/${post.slug}`}
-              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-cyan-500/[0.08] dark:hover:border-l-4 dark:hover:border-neon-cyan hover:translate-x-1.5 transition-all"
+              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-cyan-500/[0.08] dark:hover:border-l-4 dark:hover:border-neon-cyan hover:translate-x-1.5 transition-all cyber-post-card"
             >
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 text-xs font-mono">
@@ -509,6 +547,48 @@ export function BlogExplorer({ posts }: { posts: PostMeta[] }) {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+
+      {/* Progressive Infinite Scroll Sentinel & Load More Action */}
+      {filteredPosts.length > visibleCount && (
+        <div
+          ref={loadMoreSentinelRef}
+          className="pt-6 pb-2 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fadeIn"
+        >
+          <button
+            type="button"
+            onClick={() =>
+              setVisibleCount((prev) =>
+                Math.min(prev + BATCH_SIZE, filteredPosts.length)
+              )
+            }
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-mono font-bold text-neon-cyan bg-cyan-500/10 hover:bg-cyan-500/20 active:bg-cyan-500/30 border border-cyan-500/40 hover:border-neon-cyan shadow-sm hover:shadow-neon-cyan transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 group"
+          >
+            <ArrowDown className="w-4 h-4 text-neon-cyan group-hover:translate-y-0.5 transition-transform" />
+            <span>더 많은 로그 로드 (+{Math.min(BATCH_SIZE, filteredPosts.length - visibleCount)} MORE)</span>
+            <span className="text-[11px] font-chakra px-2 py-0.5 rounded bg-black/50 border border-cyan-500/30 text-slate-300">
+              {visibleCount} / {filteredPosts.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setVisibleCount(filteredPosts.length)}
+            className="text-[11px] font-mono text-slate-400 hover:text-white px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer active:scale-95"
+          >
+            전체 한 번에 보기 ({filteredPosts.length}개)
+          </button>
+        </div>
+      )}
+
+      {/* End of logs badge */}
+      {filteredPosts.length > INITIAL_BATCH_SIZE && visibleCount >= filteredPosts.length && (
+        <div className="pt-6 pb-2 text-center animate-fadeIn">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-mono text-slate-400 bg-white/[0.02] border border-white/10">
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan animate-pulse" />
+            <span>// END OF LOG ARCHIVE · TOTAL {filteredPosts.length} POSTS LOADED //</span>
+          </span>
         </div>
       )}
     </section>

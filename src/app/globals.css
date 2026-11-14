@@ -291,7 +291,7 @@ nextjs-portal [data-nextjs-toast],
   background-size: 32px 32px;
 }
 
-/* Subtle CRT Scanline effect */
+/* Subtle CRT Scanline effect (Desktop only to protect mobile GPU fillrate) */
 .cyber-scanlines::before {
   content: " ";
   position: fixed;
@@ -301,6 +301,12 @@ nextjs-portal [data-nextjs-toast],
   z-index: 1;
   pointer-events: none;
   opacity: 0.35;
+}
+
+@media (max-width: 768px) {
+  .cyber-scanlines::before {
+    display: none !important;
+  }
 }
 
 /* Neon Sign Text Shadows */
@@ -463,7 +469,6 @@ html.tab-inactive *::after {
   pointer-events: none;
   z-index: 2;
   transition: opacity 0.2s ease;
-  will-change: transform, opacity;
 }
 
 /* 45도 레이더 홀로그램 스캔 광선 */
@@ -486,26 +491,62 @@ html.tab-inactive *::after {
   z-index: 1;
   transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
   opacity: 0;
-  will-change: transform, opacity;
 }
 
-.cyber-box:hover {
-  border-color: rgba(0, 243, 255, 0.85);
-  box-shadow: 
-    0 0 25px rgba(0, 243, 255, 0.35),
-    0 0 50px rgba(0, 243, 255, 0.15),
-    inset 0 0 20px rgba(0, 243, 255, 0.1);
-  transform: translateY(-2px);
+/* Desktop Only Hover Sweeping & Hardware Acceleration (Eliminates 300+ GPU layers on mobile) */
+@media (hover: hover) and (pointer: fine) {
+  .cyber-box::before,
+  .cyber-box::after {
+    will-change: transform, opacity;
+  }
+
+  .cyber-box:hover {
+    border-color: rgba(0, 243, 255, 0.85);
+    box-shadow: 
+      0 0 25px rgba(0, 243, 255, 0.35),
+      0 0 50px rgba(0, 243, 255, 0.15),
+      inset 0 0 20px rgba(0, 243, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .cyber-box:hover::before {
+    opacity: 1;
+    animation: cyber-laser-sweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  .cyber-box:hover::after {
+    opacity: 1;
+    transform: rotate(25deg) translateY(100%);
+  }
 }
 
-.cyber-box:hover::before {
-  opacity: 1;
-  animation: cyber-laser-sweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+/* Mobile Touch: Disable expensive pseudo-elements to free mobile VRAM */
+@media (hover: none) {
+  .cyber-box::before,
+  .cyber-box::after {
+    display: none !important;
+  }
 }
 
-.cyber-box:hover::after {
-  opacity: 1;
-  transform: rotate(25deg) translateY(100%);
+/* Mobile & Long List Performance: Virtualize rendering with content-visibility */
+.cyber-post-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 220px;
+}
+
+/* Mobile Circuit Background Performance Optimization */
+@media (max-width: 768px) {
+  .circuit-mobile-optimize g[filter^="url"] {
+    filter: none !important;
+  }
+  .circuit-mobile-optimize .electric-pulse-fast,
+  .circuit-mobile-optimize .electric-pulse-normal,
+  .circuit-mobile-optimize .electric-pulse-medium,
+  .circuit-mobile-optimize .electric-pulse-slow,
+  .circuit-mobile-optimize .electric-pulse-reverse {
+    animation: none !important;
+    opacity: 0.25;
+  }
 }
 
 /* Cyber HUD Corner Marks (Curved Reticle Arcs hugging card border-radius) */
