@@ -24,6 +24,11 @@ const CyberBootSequence = dynamic(
   { ssr: false }
 );
 
+const CyberScrollTop = dynamic(
+  () => import("./CyberScrollTop").then((mod) => mod.CyberScrollTop),
+  { ssr: false }
+);
+
 export type NavSection = "dashboard" | "posts" | "projects" | "about";
 
 export function AppShell({
@@ -211,6 +216,7 @@ export function AppShell({
       <CyberBootSequence />
       <IsolatedAtmosphere />
       <CyberCursor />
+      <CyberScrollTop />
       <Navbar
         isSidebarCollapsed={isCollapsed}
         onToggleSidebar={toggleCollapse}
