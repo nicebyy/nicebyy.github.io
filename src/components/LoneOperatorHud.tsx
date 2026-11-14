@@ -17,7 +17,8 @@ class ProceduralRainEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private noiseSource: AudioBufferSourceNode | null = null;
-  private droneOsc: OscillatorNode | null = null;
+  private lfoGain: GainNode | null = null;
+  private lfoOsc: OscillatorNode | null = null;
   private isRunning = false;
 
   start() {
@@ -38,14 +39,17 @@ class ProceduralRainEngine {
     }
 
     const ctx = this.ctx;
+
+    // Master Gain Node with gentle smooth fade-in
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    masterGain.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + 0.9);
+    masterGain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 1.2);
     masterGain.connect(ctx.destination);
     this.masterGain = masterGain;
 
-    // 1. Create seamless 3-second pink/brown noise rain buffer
-    const bufferSize = ctx.sampleRate * 3;
+    // 1. Create seamless 4-second stereo rain bed with realistic droplet patters
+    const duration = 4;
+    const bufferSize = ctx.sampleRate * duration;
     const noiseBuffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
 
     for (let channel = 0; channel < 2; channel++) {
@@ -57,6 +61,8 @@ class ProceduralRainEngine {
         b4 = 0,
         b5 = 0,
         b6 = 0;
+
+      // Base pink noise filter (continuous gentle rainfall bed)
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
         b0 = 0.99886 * b0 + white * 0.0555179;
@@ -65,12 +71,31 @@ class ProceduralRainEngine {
         b3 = 0.8665 * b3 + white * 0.3104856;
         b4 = 0.55 * b4 + white * 0.5329522;
         b5 = -0.7616 * b5 - white * 0.016898;
-        const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.09;
+        const pink = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.075;
         b6 = white * 0.115926;
+        output[i] = pink;
+      }
 
-        // Subtle random raindrop crackle modulation
-        const droplet = Math.random() < 0.0025 ? (Math.random() - 0.5) * 0.32 : 0;
-        output[i] = Math.max(-1, Math.min(1, pink + droplet));
+      // Add realistic microscopic raindrop impacts (토독토독 창문/포장도로 타격음)
+      const numDroplets = Math.floor(bufferSize * 0.0009); // ~40 droplets per sec
+      for (let d = 0; d < numDroplets; d++) {
+        const startIdx = Math.floor(Math.random() * (bufferSize - 1000));
+        const dropletFreq = 2800 + Math.random() * 3400; // 2.8kHz ~ 6.2kHz water drop resonance
+        const decaySeconds = 0.003 + Math.random() * 0.006; // 3ms - 9ms fast impact
+        const amplitude = 0.06 + Math.random() * 0.14;
+        const decaySamples = Math.floor(decaySeconds * ctx.sampleRate);
+
+        for (let s = 0; s < decaySamples; s++) {
+          const t = s / ctx.sampleRate;
+          const envelope = Math.exp(-s / (decaySamples * 0.32));
+          const wave = Math.sin(2 * Math.PI * dropletFreq * t) * envelope * amplitude;
+          output[startIdx + s] += wave;
+        }
+      }
+
+      // Clamp buffer to prevent any digital clipping
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.max(-0.95, Math.min(0.95, output[i]));
       }
     }
 
@@ -78,33 +103,48 @@ class ProceduralRainEngine {
     noiseSource.buffer = noiseBuffer;
     noiseSource.loop = true;
 
-    // Warm indoor rain filter (sounds like rain outside a cyberpunk shelter window)
-    const lowpass = ctx.createBiquadFilter();
-    lowpass.type = "lowpass";
-    lowpass.frequency.setValueAtTime(1050, ctx.currentTime);
-    lowpass.Q.setValueAtTime(0.6, ctx.currentTime);
-
+    // Highpass Filter: 1,200 Hz (Completely cuts 100~800Hz low wind whoosh / typhoon rumble)
     const highpass = ctx.createBiquadFilter();
     highpass.type = "highpass";
-    highpass.frequency.setValueAtTime(160, ctx.currentTime);
+    highpass.frequency.setValueAtTime(1200, ctx.currentTime);
+    highpass.Q.setValueAtTime(0.7, ctx.currentTime);
 
+    // Lowpass Filter: 6,800 Hz (Allows crisp, soothing water sizzle through without harshness)
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(6800, ctx.currentTime);
+    lowpass.Q.setValueAtTime(0.5, ctx.currentTime);
+
+    // Peaking EQ: 3,500 Hz (Accentuates delicate glass/pavement droplet pitter-patter)
+    const presence = ctx.createBiquadFilter();
+    presence.type = "peaking";
+    presence.frequency.setValueAtTime(3500, ctx.currentTime);
+    presence.gain.setValueAtTime(3.0, ctx.currentTime);
+    presence.Q.setValueAtTime(1.2, ctx.currentTime);
+
+    // Subtle Natural Rain Breathing Swell (LFO at 0.12 Hz)
+    const lfoOsc = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfoOsc.type = "sine";
+    lfoOsc.frequency.setValueAtTime(0.12, ctx.currentTime); // ~8 sec breathing cycle
+    lfoGain.gain.setValueAtTime(0.08, ctx.currentTime); // ±8% volume drift
+    lfoOsc.connect(lfoGain);
+
+    // Audio Graph Routing:
+    // Source -> Highpass(1.2kHz) -> Presence(3.5kHz) -> Lowpass(6.8kHz) -> MasterGain -> Destination
     noiseSource.connect(highpass);
-    highpass.connect(lowpass);
+    highpass.connect(presence);
+    presence.connect(lowpass);
     lowpass.connect(masterGain);
+
+    lfoGain.connect(masterGain.gain);
+
+    lfoOsc.start();
     noiseSource.start();
+
     this.noiseSource = noiseSource;
-
-    // 2. Ultra-subtle cyberpunk terminal shelter hum (58Hz sub-ambient drone)
-    const droneOsc = ctx.createOscillator();
-    const droneGain = ctx.createGain();
-    droneOsc.type = "sine";
-    droneOsc.frequency.setValueAtTime(58, ctx.currentTime);
-    droneGain.gain.setValueAtTime(0.06, ctx.currentTime);
-    droneOsc.connect(droneGain);
-    droneGain.connect(masterGain);
-    droneOsc.start();
-    this.droneOsc = droneOsc;
-
+    this.lfoOsc = lfoOsc;
+    this.lfoGain = lfoGain;
     this.isRunning = true;
   }
 
@@ -119,27 +159,30 @@ class ProceduralRainEngine {
         Math.max(0.0001, this.masterGain.gain.value),
         now
       );
-      this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+      this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
     } catch {
       // ignore
     }
 
     const src = this.noiseSource;
-    const osc = this.droneOsc;
+    const lfo = this.lfoOsc;
+    const lfoG = this.lfoGain;
     this.noiseSource = null;
-    this.droneOsc = null;
+    this.lfoOsc = null;
+    this.lfoGain = null;
     this.isRunning = false;
 
     setTimeout(() => {
       try {
         src?.stop();
         src?.disconnect();
-        osc?.stop();
-        osc?.disconnect();
+        lfo?.stop();
+        lfo?.disconnect();
+        lfoG?.disconnect();
       } catch {
         // ignore
       }
-    }, 500);
+    }, 550);
   }
 
   dispose() {
