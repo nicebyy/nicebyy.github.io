@@ -105,6 +105,86 @@ export const PLAYLIST: Track[] = [
     genre: "Dreamy Synthwave",
     license: "CC BY 3.0",
   },
+  {
+    id: "jiglr-night-rider",
+    title: "Night Rider",
+    artist: "jiglr",
+    src: "/audio/jiglr-night-rider.mp3",
+    genre: "Outrun Synthwave",
+    license: "CC BY 3.0",
+  },
+  {
+    id: "jiglr-miami-life",
+    title: "Miami Life",
+    artist: "jiglr",
+    src: "/audio/jiglr-miami-life.mp3",
+    genre: "Retro Synthwave",
+    license: "CC BY 3.0",
+  },
+  {
+    id: "jiglr-odyssey",
+    title: "Odyssey",
+    artist: "jiglr",
+    src: "/audio/jiglr-odyssey.mp3",
+    genre: "Space Synthwave",
+    license: "CC BY 3.0",
+  },
+  {
+    id: "ghostrifter-downtown-glow",
+    title: "Downtown Glow",
+    artist: "Ghostrifter & Devyzed",
+    src: "/audio/ghostrifter-downtown-glow.mp3",
+    genre: "Retrowave Chill",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "ghostrifter-fast-lane",
+    title: "Fast Lane",
+    artist: "Ghostrifter & Devyzed",
+    src: "/audio/ghostrifter-fast-lane.mp3",
+    genre: "Outrun Synthwave",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "ghostrifter-sundown-drive",
+    title: "Sundown Drive",
+    artist: "Ghostrifter Official",
+    src: "/audio/ghostrifter-sundown-drive.mp3",
+    genre: "Driving Synthwave",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "aries-beats-outrun",
+    title: "Outrun",
+    artist: "Aries Beats",
+    src: "/audio/aries-beats-outrun.mp3",
+    genre: "80s Outrun Synth",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "aries-beats-neowise",
+    title: "Neowise",
+    artist: "Aries Beats",
+    src: "/audio/aries-beats-neowise.mp3",
+    genre: "Space Synthwave",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "electronic-senses-robotik-love",
+    title: "Robotik Love",
+    artist: "Electronic Senses",
+    src: "/audio/electronic-senses-robotik-love.mp3",
+    genre: "Cyber Electro Synth",
+    license: "CC BY-SA 3.0",
+  },
+  {
+    id: "electronic-senses-yesterday",
+    title: "Yesterday",
+    artist: "Electronic Senses",
+    src: "/audio/electronic-senses-yesterday.mp3",
+    genre: "Dark Retrowave",
+    license: "CC BY-SA 3.0",
+  },
 ];
 
 // Gentle, calm ambient default volume (12%) so reading remains comfortable
@@ -972,7 +1052,7 @@ export function CyberBgmPlayer() {
             </div>
           </div>
 
-          {/* Playlist selector (10 Tracks) */}
+          {/* Playlist selector (20 Tracks) */}
           <div className="border-t border-cyan-500/20 pt-2 space-y-1.5">
             <div className="flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider px-0.5">
               <span className="font-chakra font-semibold text-slate-300 whitespace-nowrap">
@@ -996,7 +1076,7 @@ export function CyberBgmPlayer() {
               <span className="text-right">ARTIST</span>
             </div>
 
-            <div className="space-y-1 max-h-44 overflow-y-auto cyber-scrollbar pr-1">
+            <div className="space-y-1 max-h-48 sm:max-h-56 overflow-y-auto cyber-scrollbar pr-1">
               {PLAYLIST.map((track, idx) => (
                 <button
                   key={track.id}
