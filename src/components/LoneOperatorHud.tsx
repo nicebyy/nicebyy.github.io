@@ -325,7 +325,7 @@ export function LoneOperatorHud() {
             }`}
           />
 
-          <span className="hidden 2xl:inline-flex items-center gap-1 text-[11px] font-chakra tracking-wider text-slate-300 group-hover:text-white whitespace-nowrap">
+          <span className="hidden 3xl:inline-flex items-center gap-1 text-[11px] font-chakra tracking-wider text-slate-300 group-hover:text-white whitespace-nowrap">
             <span
               className={
                 rainAudio ? "text-neon-pink font-bold" : "text-neon-cyan font-bold"

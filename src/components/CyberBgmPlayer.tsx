@@ -803,8 +803,8 @@ export function CyberBgmPlayer() {
             />
           </div>
 
-          {/* Desktop Track Indicator (Only expanded on 2xl+ to prevent header collision) */}
-          <span className="hidden 2xl:inline-flex items-center gap-1.5 text-[11px] font-chakra tracking-wider text-slate-300 group-hover:text-white">
+          {/* Desktop Track Indicator (Only expanded on 3xl+ to prevent header collision) */}
+          <span className="hidden 3xl:inline-flex items-center gap-1.5 text-[11px] font-chakra tracking-wider text-slate-300 group-hover:text-white">
             <span
               className={
                 isPlaying ? "text-neon-cyan font-bold" : "text-slate-400"

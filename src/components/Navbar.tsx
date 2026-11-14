@@ -102,8 +102,8 @@ export function Navbar({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-cyan-500/30 bg-[#060911]/90 backdrop-blur-md transition-colors shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]">
-      <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Sidebar Toggle + Brand & System Status */}
+      <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 max-w-full overflow-hidden">
+        {/* Left: Sidebar Toggle + Brand & Ultra-wide Status */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Mobile Menu Toggle */}
           <button
@@ -153,108 +153,109 @@ export function Navbar({
             </span>
           </Link>
 
-          {/* Live HUD Status Badge */}
-          <div className="hidden 2xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
+          {/* Live HUD Status Badge (Only on ultra-wide 3xl+ to prevent header collision on zoom) */}
+          <div className="hidden 3xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
             <span className="w-2 h-2 rounded-full bg-neon-green animate-ping" />
             <span>{siteConfig.statusText}</span>
           </div>
         </div>
 
-        {/* Center / Right Navigation */}
-        <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 justify-end">
-          <nav className="hidden xl:flex items-center gap-1 font-chakra text-xs mr-1">
-            <Link
-              href="/"
-              onClick={handleDashboardClick}
-              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                activeSection === "dashboard" && pathname === "/"
-                  ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
-              }`}
-            >
-              <Cpu className="w-3.5 h-3.5 text-neon-cyan" />
-              <span>DASHBOARD</span>
-            </Link>
-            <Link
-              href="/projects"
-              onClick={handleProjectsClick}
-              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                (activeSection === "projects" && pathname === "/") || pathname?.startsWith("/projects")
-                  ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
-              }`}
-            >
-              <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>PROJECTS</span>
-            </Link>
-            <Link
-              href="/career"
-              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                pathname?.startsWith("/career")
-                  ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/20"
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
-              <span>CAREER</span>
-            </Link>
-            <Link
-              href="/#posts"
-              onClick={handlePostsClick}
-              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                activeSection === "posts" && (pathname === "/" || pathname.startsWith("/posts/"))
-                  ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5 text-neon-pink" />
-              <span>POSTS</span>
-            </Link>
-            <Link
-              href="/studio"
-              title={isAuthenticated ? "스튜디오 (운영자 로그인됨)" : "스튜디오 (운영자 전용)"}
-              className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider ${
-                pathname?.startsWith("/studio")
-                  ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
-              }`}
-            >
-              {isAuthenticated ? (
-                <>
-                  <Edit3 className="w-3.5 h-3.5 text-neon-cyan" />
-                  <span>STUDIO</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5 text-slate-500" />
-                  <span>STUDIO</span>
-                </>
-              )}
-            </Link>
-            <Link
-              href="/about"
-              onClick={() => onSelectSection?.("about")}
-              className={`hidden 2xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider ${
-                pathname?.startsWith("/about")
-                  ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
-                  : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
-              }`}
-            >
-              <User className="w-3.5 h-3.5 text-purple-400" />
-              <span>ABOUT</span>
-            </Link>
-            <button
-              type="button"
-              onClick={onOpenContact}
-              title="문의하기 (nicebyy@naver.com)"
-              className="hidden 2xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer"
-            >
-              <Mail className="w-3.5 h-3.5 text-neon-green" />
-              <span>CONTACT</span>
-            </button>
-          </nav>
+        {/* Center: Desktop Navigation Bar (xl+) */}
+        <nav className="hidden xl:flex items-center justify-center gap-1 2xl:gap-1.5 font-chakra text-xs flex-1 min-w-0 mx-1 2xl:mx-3">
+          <Link
+            href="/"
+            onClick={handleDashboardClick}
+            className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              activeSection === "dashboard" && pathname === "/"
+                ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+            }`}
+          >
+            <Cpu className="w-3.5 h-3.5 text-neon-cyan" />
+            <span>DASHBOARD</span>
+          </Link>
+          <Link
+            href="/projects"
+            onClick={handleProjectsClick}
+            className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              (activeSection === "projects" && pathname === "/") || pathname?.startsWith("/projects")
+                ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+            }`}
+          >
+            <FolderGit2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span>PROJECTS</span>
+          </Link>
+          <Link
+            href="/career"
+            className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              pathname?.startsWith("/career")
+                ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/20"
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
+            <span>CAREER</span>
+          </Link>
+          <Link
+            href="/#posts"
+            onClick={handlePostsClick}
+            className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              activeSection === "posts" && (pathname === "/" || pathname.startsWith("/posts/"))
+                ? "bg-pink-500/15 text-neon-pink border border-pink-500/50 shadow-neon-pink font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-pink-500/20"
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-neon-pink" />
+            <span>POSTS</span>
+          </Link>
+          <Link
+            href="/studio"
+            title={isAuthenticated ? "스튜디오 (운영자 로그인됨)" : "스튜디오 (운영자 전용)"}
+            className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              pathname?.startsWith("/studio")
+                ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
+            }`}
+          >
+            {isAuthenticated ? (
+              <>
+                <Edit3 className="w-3.5 h-3.5 text-neon-cyan" />
+                <span>STUDIO</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5 text-slate-500" />
+                <span>STUDIO</span>
+              </>
+            )}
+          </Link>
+          <Link
+            href="/about"
+            onClick={() => onSelectSection?.("about")}
+            className={`hidden 3xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
+              pathname?.startsWith("/about")
+                ? "bg-purple-500/15 text-purple-300 border border-purple-500/50 shadow-neon-purple font-bold"
+                : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-purple-500/20"
+            }`}
+          >
+            <User className="w-3.5 h-3.5 text-purple-400" />
+            <span>ABOUT</span>
+          </Link>
+          <button
+            type="button"
+            onClick={onOpenContact}
+            title="문의하기 (nicebyy@naver.com)"
+            className="hidden 3xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <Mail className="w-3.5 h-3.5 text-neon-green" />
+            <span>CONTACT</span>
+          </button>
+        </nav>
 
+        {/* Right: Utilities & Quick Controls */}
+        <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 justify-end">
           {/* Cyberpunk HUD BGM Player */}
           <CyberBgmPlayer />
 
@@ -269,8 +270,8 @@ export function Navbar({
             className="hidden sm:flex items-center gap-1.5 px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-mono bg-black/60 hover:bg-cyan-500/10 text-slate-400 hover:text-slate-200 border border-cyan-500/30 hover:border-neon-cyan hover:shadow-neon-cyan transition-all cursor-pointer shrink-0"
           >
             <Search className="w-3.5 h-3.5 text-neon-cyan" />
-            <span className="font-chakra tracking-wider hidden 2xl:inline">SEARCH...</span>
-            <kbd className="hidden 2xl:inline-block px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+            <span className="font-chakra tracking-wider hidden 3xl:inline">SEARCH...</span>
+            <kbd className="hidden 3xl:inline-block px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
               Ctrl K
             </kbd>
           </button>
