@@ -102,7 +102,7 @@ export function Navbar({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-cyan-500/30 bg-[#060911]/90 backdrop-blur-md transition-colors shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]">
-      <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 max-w-full overflow-hidden">
+      <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 max-w-full">
         {/* Left: Sidebar Toggle + Brand & Ultra-wide Status */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Mobile Menu Toggle */}
