@@ -3,10 +3,8 @@
 import React, { useEffect, useRef } from "react";
 import { MessageSquareCode, ExternalLink } from "lucide-react";
 import { siteConfig } from "@/config/site";
-import { useTheme } from "./ThemeProvider";
 
 export function GiscusComments() {
-  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const { giscus } = siteConfig;
 
@@ -28,33 +26,30 @@ export function GiscusComments() {
     script.setAttribute("data-reactions-enabled", giscus.reactionsEnabled);
     script.setAttribute("data-emit-metadata", giscus.emitMetadata);
     script.setAttribute("data-input-position", giscus.inputPosition);
-    script.setAttribute(
-      "data-theme",
-      theme === "dark" ? "transparent_dark" : "light"
-    );
+    script.setAttribute("data-theme", "transparent_dark");
     script.setAttribute("data-lang", giscus.lang);
     script.crossOrigin = "anonymous";
     script.async = true;
 
     containerRef.current.appendChild(script);
-  }, [isConfigured, giscus, theme]);
+  }, [isConfigured, giscus]);
 
   return (
-    <section className="mt-12 pt-8 border-t border-slate-200 dark:border-white/10">
-      <div className="flex items-center gap-2 font-mono text-sm font-bold text-slate-900 dark:text-white mb-4">
-        <MessageSquareCode className="w-4 h-4 text-cyan-500 dark:text-neon-cyan" />
+    <section className="mt-12 pt-8 border-t border-cyan-500/20">
+      <div className="flex items-center gap-2 font-mono text-sm font-bold text-white mb-4">
+        <MessageSquareCode className="w-4 h-4 text-neon-cyan" />
         <span>COMMENTS // GITHUB DISCUSSIONS (GISCUS)</span>
       </div>
 
       {isConfigured ? (
         <div
           ref={containerRef}
-          className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/60 dark:bg-[#0b101e]/60 p-4 sm:p-6"
+          className="rounded-2xl border border-cyan-500/30 bg-[#070b14]/70 backdrop-blur-md p-4 sm:p-6 shadow-[0_0_20px_rgba(0,243,255,0.05)]"
         />
       ) : (
         <div className="rounded-2xl border border-dashed border-cyan-500/40 bg-cyan-500/[0.04] p-5 sm:p-6 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-xs font-mono font-semibold text-cyan-700 dark:text-neon-cyan">
+            <span className="text-xs font-mono font-semibold text-neon-cyan">
               [GISCUS_SETUP_READY] GitHub Discussions 댓글 위젯이 준비되어 있습니다.
             </span>
             <a
@@ -67,13 +62,13 @@ export function GiscusComments() {
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             저장소 Settings에서 <strong>Discussions</strong>를 활성화한 뒤,{" "}
-            <code className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono text-xs">
+            <code className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-xs text-neon-cyan">
               src/config/site.ts
             </code>{" "}
-            파일의 <code className="font-mono text-xs">giscus.repoId</code>와{" "}
-            <code className="font-mono text-xs">giscus.categoryId</code>만
+            파일의 <code className="font-mono text-xs text-neon-pink">giscus.repoId</code>와{" "}
+            <code className="font-mono text-xs text-neon-pink">giscus.categoryId</code>만
             채워 넣으면 이 자리에 실시간 댓글창이 표시됩니다.
           </p>
         </div>

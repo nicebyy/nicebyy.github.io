@@ -44,33 +44,95 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    // 2. Add Copy buttons to all <pre> blocks inside article
+    // 2. Add Code Block Language Badge & Copy buttons to all <pre> blocks
     const preBlocks = document.querySelectorAll(".prose-cyber pre");
     preBlocks.forEach((pre) => {
-      if (pre.querySelector(".copy-code-btn")) return;
       const wrapper = pre as HTMLElement;
       wrapper.style.position = "relative";
 
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className =
-        "copy-code-btn absolute top-2.5 right-2.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-white/10 hover:bg-cyan-500/25 text-slate-300 hover:text-neon-cyan border border-white/15 transition-all";
-      btn.textContent = "COPY";
+      // Detect language from code class (e.g. language-typescript, language-bash)
+      const codeEl = pre.querySelector("code");
+      if (!wrapper.querySelector(".cyber-code-lang-badge")) {
+        let lang = "";
+        if (codeEl) {
+          for (const cls of Array.from(codeEl.classList)) {
+            if (cls.startsWith("language-")) {
+              lang = cls.replace("language-", "").toUpperCase();
+              break;
+            }
+          }
+        }
+        if (lang) {
+          const badge = document.createElement("span");
+          badge.className =
+            "cyber-code-lang-badge absolute top-2.5 left-3.5 text-[10px] font-mono tracking-wider text-cyan-400/80 font-bold select-none pointer-events-none";
+          badge.textContent = `// ${lang}`;
+          wrapper.appendChild(badge);
+          wrapper.style.paddingTop = "2.25rem";
+        }
+      }
 
-      btn.addEventListener("click", () => {
-        const codeEl = pre.querySelector("code");
-        const text = codeEl ? codeEl.textContent || "" : pre.textContent || "";
-        navigator.clipboard.writeText(text);
-        btn.textContent = "COPIED!";
-        setTimeout(() => {
-          btn.textContent = "COPY";
-        }, 1800);
-      });
+      if (!pre.querySelector(".copy-code-btn")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className =
+          "copy-code-btn absolute top-2.5 right-2.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-white/10 hover:bg-cyan-500/25 text-slate-300 hover:text-neon-cyan border border-white/15 hover:border-cyan-400/50 transition-all cursor-pointer active:scale-95";
+        btn.textContent = "COPY";
 
-      wrapper.appendChild(btn);
+        btn.addEventListener("click", () => {
+          const text = codeEl ? codeEl.textContent || "" : pre.textContent || "";
+          navigator.clipboard.writeText(text);
+          btn.textContent = "COPIED!";
+          btn.classList.add("text-neon-green", "border-emerald-500/50");
+          setTimeout(() => {
+            btn.textContent = "COPY";
+            btn.classList.remove("text-neon-green", "border-emerald-500/50");
+          }, 1800);
+        });
+
+        wrapper.appendChild(btn);
+      }
     });
 
-    // 3. Add Click-to-Zoom handler to all images inside article
+    // 3. Add Heading Anchor Copy Buttons to all h2, h3 in article
+    const headingEls = Array.from(
+      document.querySelectorAll(".prose-cyber h2, .prose-cyber h3")
+    ) as HTMLElement[];
+    headingEls.forEach((heading) => {
+      if (heading.querySelector(".heading-anchor-btn")) return;
+      if (!heading.id) return;
+
+      heading.style.position = "relative";
+      const anchorBtn = document.createElement("button");
+      anchorBtn.type = "button";
+      anchorBtn.className =
+        "heading-anchor-btn inline-flex items-center justify-center ml-2 text-slate-500 hover:text-neon-cyan transition-colors text-xs font-mono cursor-pointer opacity-40 hover:opacity-100 p-1";
+      anchorBtn.title = "이 단락의 다이렉트 URL 복사";
+      anchorBtn.setAttribute("aria-label", "섹션 링크 복사");
+      anchorBtn.innerHTML = "#";
+
+      anchorBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const hashUrl = `${window.location.origin}${window.location.pathname}#${heading.id}`;
+        try {
+          await navigator.clipboard.writeText(hashUrl);
+          window.history.pushState(null, "", `#${heading.id}`);
+          anchorBtn.innerHTML = "✓";
+          anchorBtn.classList.add("text-neon-green", "!opacity-100");
+          setTimeout(() => {
+            anchorBtn.innerHTML = "#";
+            anchorBtn.classList.remove("text-neon-green", "!opacity-100");
+          }, 1800);
+        } catch {
+          // ignore
+        }
+      });
+
+      heading.appendChild(anchorBtn);
+    });
+
+    // 4. Add Click-to-Zoom handler to all images inside article
     const images = Array.from(
       document.querySelectorAll(".prose-cyber img")
     ) as HTMLImageElement[];
@@ -88,7 +150,7 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
       img.addEventListener("click", handleImgClick);
     });
 
-    // 4. IntersectionObserver for headings
+    // 5. IntersectionObserver for headings in TOC
     const headings = Array.from(
       document.querySelectorAll(".prose-cyber h2, .prose-cyber h3")
     );
@@ -129,9 +191,9 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
       {/* Desktop Sticky TOC Sidebar */}
       {toc.length > 0 && (
         <aside className="hidden xl:block w-64 min-w-[16rem] max-w-[16rem] shrink-0">
-          <div className="sticky top-24 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#0b101e]/80 backdrop-blur-md p-4 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-900 dark:text-neon-cyan border-b border-slate-100 dark:border-white/10 pb-2">
-              <ListTree className="w-4 h-4" />
+          <div className="sticky top-24 rounded-2xl border border-cyan-500/30 bg-[#070b14]/85 backdrop-blur-md p-4 space-y-3 shadow-[0_0_20px_rgba(0,243,255,0.08)]">
+            <div className="flex items-center gap-2 text-xs font-mono font-bold text-neon-cyan border-b border-cyan-500/20 pb-2">
+              <ListTree className="w-4 h-4 text-neon-cyan" />
               <span>ON THIS PAGE</span>
             </div>
             <ul className="space-y-1.5 text-xs font-mono">
@@ -144,8 +206,8 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
                     href={`#${item.id}`}
                     className={`block py-1 transition-colors truncate ${
                       activeId === item.id
-                        ? "text-cyan-600 dark:text-neon-cyan font-bold"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                        ? "text-neon-cyan font-bold"
+                        : "text-slate-400 hover:text-white"
                     }`}
                   >
                     {item.level === 3 ? "└ " : ""}
@@ -157,7 +219,7 @@ export function PostEnhancer({ toc }: { toc: TocItem[] }) {
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="w-full mt-2 pt-2 border-t border-slate-100 dark:border-white/10 flex items-center justify-center gap-1.5 text-[11px] font-mono text-slate-500 hover:text-cyan-600 dark:hover:text-neon-cyan transition-colors"
+              className="w-full mt-2 pt-2 border-t border-cyan-500/20 flex items-center justify-center gap-1.5 text-[11px] font-mono text-slate-400 hover:text-neon-cyan transition-colors cursor-pointer"
             >
               <ArrowUp className="w-3.5 h-3.5" />
               <span>BACK TO TOP</span>

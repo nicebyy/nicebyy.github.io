@@ -37,17 +37,17 @@ export default function AboutPage() {
   return (
     <div className="py-6 space-y-6 max-w-4xl mx-auto">
       {/* Header Profile Card */}
-      <section className="rounded-3xl border border-slate-200 dark:border-cyan-500/40 bg-white/95 dark:bg-[#0b101e]/95 p-5 sm:p-10 shadow-xl dark:shadow-[0_0_30px_rgba(0,243,255,0.2)] space-y-6 cyber-corner">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-cyan-500/20">
+      <section className="rounded-3xl border border-cyan-500/30 bg-[#0b101e]/95 p-5 sm:p-10 shadow-[0_0_30px_rgba(0,243,255,0.15)] space-y-6 cyber-corner">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-cyan-500/20">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-neon-cyan text-xs font-mono dark:shadow-[0_0_10px_rgba(0,243,255,0.3)]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-neon-cyan text-xs font-mono shadow-[0_0_10px_rgba(0,243,255,0.25)]">
               <Terminal className="w-3.5 h-3.5 text-neon-cyan animate-pulse" />
               <span>OPERATOR PROFILE // {siteConfig.author.toUpperCase()}</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black font-cyber tracking-wide text-slate-900 dark:text-white tracking-tight dark:drop-shadow-[0_0_15px_rgba(0,243,255,0.5)]">
+            <h1 className="text-2xl sm:text-4xl font-black font-cyber tracking-wide text-white tracking-tight drop-shadow-[0_0_15px_rgba(0,243,255,0.4)]">
               {siteConfig.author}
             </h1>
-            <p className="font-mono text-sm text-pink-600 dark:text-neon-pink font-bold">
+            <p className="font-mono text-sm text-neon-pink font-bold">
               {siteConfig.role} · {siteConfig.location}
             </p>
           </div>
@@ -56,21 +56,21 @@ export default function AboutPage() {
             href={siteConfig.social.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-slate-900 dark:bg-cyan-500/15 text-white dark:text-neon-cyan border border-slate-800 dark:border-neon-cyan/40 hover:opacity-90 transition-all w-full sm:w-auto"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold bg-cyan-500/15 text-neon-cyan border border-neon-cyan/40 hover:bg-cyan-500/25 transition-all w-full sm:w-auto active:scale-95 shadow-[0_0_10px_rgba(0,243,255,0.15)]"
           >
             <Github className="w-4 h-4" />
             <span>github.com/{siteConfig.githubUsername}</span>
           </a>
         </div>
 
-        <p className="text-sm sm:text-base text-slate-700 dark:text-slate-200 leading-relaxed">
+        <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
           {siteConfig.bio} 이 블로그는 <strong>Next.js Static Export</strong>와{" "}
           <strong>GitHub Pages</strong>를 활용해 구축한 개인 개발 아카이브입니다.
         </p>
 
         {/* Tech Stack Section */}
         <div className="space-y-4 pt-2">
-          <h2 className="text-sm font-mono font-bold text-slate-900 dark:text-neon-cyan flex items-center gap-2">
+          <h2 className="text-sm font-mono font-bold text-neon-cyan flex items-center gap-2">
             <Cpu className="w-4 h-4" />
             <span>TECH STACK & CAPABILITIES</span>
           </h2>
@@ -78,11 +78,11 @@ export default function AboutPage() {
             {siteConfig.techStack.map((item) => (
               <div
                 key={item.name}
-                className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] space-y-2"
+                className="p-4 rounded-2xl border border-white/10 bg-white/[0.03] space-y-2 hover:border-cyan-500/30 transition-all"
               >
                 <div className="flex items-center justify-between font-mono text-xs">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-900 dark:text-white">
+                    <span className="font-bold text-white">
                       {item.name}
                     </span>
                     {"bytes" in item && item.bytes && (
@@ -91,11 +91,11 @@ export default function AboutPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-cyan-600 dark:text-neon-cyan font-bold font-orbitron">
+                  <span className="text-neon-cyan font-bold font-orbitron">
                     {item.level}%
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-purple-500 to-emerald-400"
                     style={{ width: `${item.level}%` }}
@@ -109,7 +109,7 @@ export default function AboutPage() {
         {/* Career & Work Experience Section */}
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-mono font-bold text-slate-900 dark:text-neon-cyan flex items-center gap-2">
+            <h2 className="text-sm font-mono font-bold text-neon-cyan flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-neon-green" />
               <span>CAREER & WORK EXPERIENCE // 3 COMPANIES (ANONYMIZED)</span>
             </h2>
@@ -127,7 +127,7 @@ export default function AboutPage() {
               <Link
                 key={comp.id}
                 href="/career"
-                className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] hover:border-emerald-500/50 hover:shadow-neon-green transition-all space-y-2 group block"
+                className="p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-emerald-500/50 hover:shadow-neon-green transition-all space-y-2 group block"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
@@ -138,14 +138,14 @@ export default function AboutPage() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-green transition-colors break-keep leading-snug line-clamp-1">
+                  <h3 className="font-cyber font-bold text-sm text-white group-hover:text-neon-green transition-colors break-keep leading-snug line-clamp-1">
                     {comp.name}
                   </h3>
                   <p className="font-mono text-[11px] text-pink-400 break-keep mt-0.5">
                     {comp.team} · {comp.position}
                   </p>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed font-sans">
+                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed font-sans">
                   {comp.description}
                 </p>
                 <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] font-mono text-slate-400">
@@ -163,7 +163,7 @@ export default function AboutPage() {
         {/* Featured Projects Section */}
         <div className="space-y-4 pt-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-mono font-bold text-slate-900 dark:text-neon-cyan flex items-center gap-2">
+            <h2 className="text-sm font-mono font-bold text-neon-cyan flex items-center gap-2">
               <FolderGit2 className="w-4 h-4" />
               <span>FEATURED PROJECTS // 4 BUILDS</span>
             </h2>
@@ -181,7 +181,7 @@ export default function AboutPage() {
               <Link
                 key={proj.id}
                 href={`/projects#${proj.id}`}
-                className="p-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.03] hover:border-cyan-500/50 hover:shadow-neon-cyan transition-all space-y-2 group block"
+                className="p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:border-cyan-500/50 hover:shadow-neon-cyan transition-all space-y-2 group block"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold uppercase">
@@ -192,14 +192,14 @@ export default function AboutPage() {
                   </span>
                 </div>
                 <div className="space-y-0.5">
-                  <h3 className="font-cyber font-bold text-sm text-slate-900 dark:text-white group-hover:text-neon-cyan transition-colors break-keep leading-snug">
+                  <h3 className="font-cyber font-bold text-sm text-white group-hover:text-neon-cyan transition-colors break-keep leading-snug">
                     {proj.title}
                   </h3>
                   <p className="font-mono text-[11px] text-pink-400 break-keep">
                     {proj.subtitle}
                   </p>
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
                   {proj.summary}
                 </p>
                 <div className="flex flex-wrap gap-1 pt-1">
@@ -222,7 +222,6 @@ export default function AboutPage() {
           </div>
         </div>
 
-
         {/* Contact & Transmission Card */}
         <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/[0.05] p-5 sm:p-6 space-y-3 cyber-corner">
           <div className="flex items-center justify-between">
@@ -234,7 +233,7 @@ export default function AboutPage() {
               ACTIVE
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             프로젝트 제안, 기술 질문, 개발 관련 문의는 언제든 환영합니다. 아래 이메일 주소로 편하게 연락주세요!
           </p>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
@@ -255,13 +254,13 @@ export default function AboutPage() {
 
         {/* Customization Quick Guide */}
         <div className="rounded-2xl border border-purple-500/30 bg-purple-500/[0.05] p-5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-purple-700 dark:text-purple-300">
+          <div className="flex items-center gap-2 text-xs font-mono font-bold text-purple-300">
             <Sparkles className="w-4 h-4" />
             <span>HOW TO CUSTOMIZE THIS PAGE</span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             프로필 소개글, 역할, 기술 스택 게이지, GitHub 주소는{" "}
-            <code className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/10 font-mono">
+            <code className="px-1.5 py-0.5 rounded bg-white/10 font-mono text-neon-cyan">
               src/config/site.ts
             </code>{" "}
             파일에서 수정하면 홈페이지 전체에 즉시 반영됩니다.
