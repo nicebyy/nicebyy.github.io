@@ -153,15 +153,15 @@ export function Navbar({
             </span>
           </Link>
 
-          {/* Live HUD Status Badge (Only on ultra-wide 3xl+ to prevent header collision on zoom) */}
-          <div className="hidden 3xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
+          {/* Live HUD Status Badge (Only on ultra-wide min-[2000px]+ to prevent header collision) */}
+          <div className="hidden min-[2000px]:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-chakra tracking-wider text-neon-green shadow-[0_0_10px_rgba(0,255,157,0.2)] shrink-0">
             <span className="w-2 h-2 rounded-full bg-neon-green animate-ping" />
             <span>{siteConfig.statusText}</span>
           </div>
         </div>
 
         {/* Center: Desktop Navigation Bar (xl+) */}
-        <nav className="hidden xl:flex items-center justify-center gap-1 2xl:gap-1.5 font-chakra text-xs flex-1 min-w-0 mx-1 2xl:mx-3">
+        <nav className="hidden xl:flex items-center justify-center gap-1 2xl:gap-1.5 font-chakra text-xs flex-1 min-w-0 mx-1 2xl:mx-3 overflow-x-clip">
           <Link
             href="/"
             onClick={handleDashboardClick}
@@ -247,7 +247,7 @@ export function Navbar({
             type="button"
             onClick={onOpenContact}
             title="문의하기 (nicebyy@naver.com)"
-            className="hidden 3xl:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer whitespace-nowrap shrink-0"
+            className="hidden min-[2000px]:flex px-2.5 2xl:px-3 py-1.5 rounded-xl items-center gap-1.5 transition-all tracking-wider text-slate-400 hover:text-neon-green hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/30 hover:shadow-neon-green cursor-pointer whitespace-nowrap shrink-0"
           >
             <Mail className="w-3.5 h-3.5 text-neon-green" />
             <span>CONTACT</span>
