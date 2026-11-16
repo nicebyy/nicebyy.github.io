@@ -22,6 +22,7 @@ import {
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
 import { useOperatorAuth } from "@/lib/useOperatorAuth";
+import type { NavSection } from "./AppShell";
 
 const CyberBgmPlayer = dynamic(
   () => import("./CyberBgmPlayer").then((mod) => mod.CyberBgmPlayer),
@@ -48,8 +49,8 @@ interface NavbarProps {
   onToggleSidebar?: () => void;
   onOpenMobileSidebar?: () => void;
   onOpenContact?: () => void;
-  activeSection?: "dashboard" | "posts" | "projects" | "about";
-  onSelectSection?: (section: "dashboard" | "posts" | "projects" | "about") => void;
+  activeSection?: NavSection;
+  onSelectSection?: (section: NavSection) => void;
 }
 
 export function Navbar({
@@ -188,8 +189,9 @@ export function Navbar({
           </Link>
           <Link
             href="/career"
+            onClick={() => onSelectSection?.("career")}
             className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
-              pathname?.startsWith("/career")
+              pathname?.startsWith("/career") || activeSection === "career"
                 ? "bg-emerald-500/15 text-neon-green border border-emerald-500/50 shadow-neon-green font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-emerald-500/20"
             }`}
@@ -211,9 +213,10 @@ export function Navbar({
           </Link>
           <Link
             href="/studio"
+            onClick={() => onSelectSection?.("studio")}
             title={isAuthenticated ? "스튜디오 (운영자 로그인됨)" : "스튜디오 (운영자 전용)"}
             className={`px-2.5 2xl:px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all tracking-wider whitespace-nowrap shrink-0 ${
-              pathname?.startsWith("/studio")
+              pathname?.startsWith("/studio") || activeSection === "studio"
                 ? "bg-cyan-500/15 text-neon-cyan border border-cyan-500/50 shadow-neon-cyan font-bold"
                 : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-cyan-500/20"
             }`}

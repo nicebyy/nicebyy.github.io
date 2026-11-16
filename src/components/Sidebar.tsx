@@ -29,6 +29,7 @@ import { PostMeta } from "@/lib/posts";
 import { buildCategoryTree, CategoryNode } from "@/lib/categories";
 import { VisitorCounter } from "./VisitorCounter";
 import { useOperatorAuth } from "@/lib/useOperatorAuth";
+import type { NavSection } from "./AppShell";
 
 const MIN_SIDEBAR_WIDTH = 180;
 const MAX_SIDEBAR_WIDTH = 560;
@@ -43,8 +44,8 @@ interface SidebarProps {
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   onOpenContact?: () => void;
-  activeSection?: "dashboard" | "posts" | "projects" | "about";
-  onSelectSection?: (section: "dashboard" | "posts" | "projects" | "about") => void;
+  activeSection?: NavSection;
+  onSelectSection?: (section: NavSection) => void;
 }
 
 export function Sidebar({
@@ -387,11 +388,12 @@ export function Sidebar({
               pathname?.startsWith("/projects") ||
               (activeSection === "projects" && pathname === "/");
             const isAllLogsActive =
-              (activeSection === "posts" || pathname.startsWith("/posts/")) &&
-              activeCategory === "ALL";
+              activeCategory === "ALL" &&
+              (pathname.startsWith("/posts/") ||
+                (pathname === "/" && activeSection === "posts"));
             const isAboutActive = pathname?.startsWith("/about") || activeSection === "about";
-            const isStudioActive = pathname?.startsWith("/studio");
-            const isCareerActive = pathname?.startsWith("/career");
+            const isStudioActive = pathname?.startsWith("/studio") || activeSection === "studio";
+            const isCareerActive = pathname?.startsWith("/career") || activeSection === "career";
 
             return (
               <>
@@ -449,7 +451,10 @@ export function Sidebar({
 
                 <Link
                   href="/career"
-                  onClick={() => onCloseMobile()}
+                  onClick={() => {
+                    onCloseMobile();
+                    onSelectSection?.("career");
+                  }}
                   title="실무 경력 및 이력서 (Career Experience)"
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"
@@ -503,7 +508,10 @@ export function Sidebar({
 
                 <Link
                   href="/studio"
-                  onClick={() => onCloseMobile()}
+                  onClick={() => {
+                    onCloseMobile();
+                    onSelectSection?.("studio");
+                  }}
                   title={isAuthenticated ? "블로그 스튜디오 (운영자 모드)" : "블로그 스튜디오 (운영자 로그인 필요)"}
                   className={`flex items-center ${
                     collapsed ? "justify-center px-2" : "gap-2.5 px-3"

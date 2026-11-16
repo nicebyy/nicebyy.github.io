@@ -29,7 +29,13 @@ const CyberScrollTop = dynamic(
   { ssr: false }
 );
 
-export type NavSection = "dashboard" | "posts" | "projects" | "about";
+export type NavSection =
+  | "dashboard"
+  | "posts"
+  | "projects"
+  | "about"
+  | "career"
+  | "studio";
 
 export function AppShell({
   posts,
@@ -143,6 +149,14 @@ export function AppShell({
     }
     if (pathname.startsWith("/projects")) {
       setActiveSection("projects");
+      return;
+    }
+    if (pathname.startsWith("/career")) {
+      setActiveSection("career");
+      return;
+    }
+    if (pathname.startsWith("/studio")) {
+      setActiveSection("studio");
       return;
     }
     if (pathname.startsWith("/posts/")) {
