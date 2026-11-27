@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Terminal,
-  Github,
   Search,
   Cpu,
   BookOpen,
@@ -18,10 +17,13 @@ import {
   Edit3,
   Lock,
   Briefcase,
+  Moon,
+  Zap,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { siteConfig } from "@/config/site";
 import { useOperatorAuth } from "@/lib/useOperatorAuth";
+import { useThemeMode } from "@/lib/useThemeMode";
 import type { NavSection } from "./AppShell";
 
 const CyberBgmPlayer = dynamic(
@@ -63,6 +65,7 @@ export function Navbar({
 }: NavbarProps) {
   const pathname = usePathname();
   const { isAuthenticated } = useOperatorAuth();
+  const { themeMode, setThemeMode, toggleThemeMode } = useThemeMode();
 
   const triggerSearchFocus = () => {
     window.dispatchEvent(new CustomEvent("focus-blog-search"));
@@ -100,9 +103,14 @@ export function Navbar({
     }
   };
 
-
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-cyan-500/30 bg-[#060911]/90 backdrop-blur-md transition-colors shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]">
+    <header
+      className={`sticky top-0 z-40 w-full border-b backdrop-blur-md transition-colors ${
+        themeMode === "dark"
+          ? "border-slate-800 bg-[#0d1117]/95 shadow-sm"
+          : "border-cyan-500/30 bg-[#060911]/90 shadow-[0_4px_25px_-5px_rgba(0,243,255,0.2)]"
+      }`}
+    >
       <div className="px-2.5 sm:px-4 2xl:px-6 h-16 flex items-center justify-between gap-2 sm:gap-4 max-w-full">
         {/* Left: Sidebar Toggle + Brand & Ultra-wide Status */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -133,22 +141,46 @@ export function Navbar({
             )}
           </button>
 
-          {/* Brand Logo with Orbitron Font & Neon Sign */}
+          {/* Brand Logo */}
           <Link
             href="/"
             className="group flex items-center gap-2 sm:gap-2.5 font-bold text-sm sm:text-lg tracking-tight text-white shrink-0"
           >
-            <span className="hidden min-[400px]:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-cyan-400/10 border border-cyan-400/60 items-center justify-center text-neon-cyan group-hover:shadow-neon-cyan group-hover:scale-105 transition-all shrink-0">
+            <span
+              className={`hidden min-[400px]:flex w-8 h-8 sm:w-9 sm:h-9 rounded-xl border items-center justify-center group-hover:scale-105 transition-all shrink-0 ${
+                themeMode === "dark"
+                  ? "bg-slate-800/80 border-slate-700 text-sky-400 group-hover:border-sky-400/60"
+                  : "bg-cyan-400/10 border-cyan-400/60 text-neon-cyan group-hover:shadow-neon-cyan"
+              }`}
+            >
               <Terminal className="w-4 h-4" />
             </span>
             <span className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap shrink-0">
-              <span className="font-cyber font-black tracking-wider text-white group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff] transition-all">
+              <span
+                className={`font-cyber font-black tracking-wider text-white transition-all ${
+                  themeMode === "dark"
+                    ? "group-hover:text-sky-300"
+                    : "group-hover:text-neon-cyan group-hover:drop-shadow-[0_0_12px_#00f3ff]"
+                }`}
+              >
                 {siteConfig.author}
               </span>
-              <span className="text-neon-cyan animate-pulse font-black font-mono shrink-0">
+              <span
+                className={`font-black font-mono shrink-0 ${
+                  themeMode === "dark"
+                    ? "text-sky-400"
+                    : "text-neon-cyan animate-pulse"
+                }`}
+              >
                 ::
               </span>
-              <span className="font-orbitron text-[10px] sm:text-sm px-1.5 sm:px-2 py-0.5 rounded-md font-black uppercase tracking-widest bg-pink-500/10 text-neon-pink border border-pink-500/50 shadow-[0_0_12px_rgba(255,0,127,0.35)] group-hover:shadow-[0_0_18px_rgba(255,0,127,0.6)] transition-all shrink-0">
+              <span
+                className={`font-orbitron text-[10px] sm:text-sm px-1.5 sm:px-2 py-0.5 rounded-md font-black uppercase tracking-widest border transition-all shrink-0 ${
+                  themeMode === "dark"
+                    ? "bg-sky-500/15 text-sky-300 border-sky-500/40"
+                    : "bg-pink-500/10 text-neon-pink border-pink-500/50 shadow-[0_0_12px_rgba(255,0,127,0.35)] group-hover:shadow-[0_0_18px_rgba(255,0,127,0.6)]"
+                }`}
+              >
                 LOG
               </span>
             </span>
@@ -259,35 +291,40 @@ export function Navbar({
 
         {/* Right: Utilities & Quick Controls */}
         <div className="flex items-center gap-1 sm:gap-1.5 2xl:gap-2 shrink-0 justify-end">
-          {/* Cyberpunk HUD BGM Player */}
-          <CyberBgmPlayer />
-
-          {/* Isolated Solo Operator Radar & Rain Ambience Dropdown */}
-          <LoneOperatorHud />
+          {/* Cyberpunk HUD BGM & Rain Controls (Cyberpunk Theme Only) */}
+          {themeMode === "cyber" && (
+            <>
+              <CyberBgmPlayer />
+              <LoneOperatorHud />
+            </>
+          )}
 
           {/* Desktop Search Button */}
           <button
             type="button"
             onClick={triggerSearchFocus}
             title="포스트 빠른 검색 (Ctrl + K)"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-mono bg-black/60 hover:bg-cyan-500/10 text-slate-400 hover:text-slate-200 border border-cyan-500/30 hover:border-neon-cyan hover:shadow-neon-cyan transition-all cursor-pointer shrink-0"
+            className={`hidden sm:flex items-center gap-1.5 px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-mono transition-all cursor-pointer shrink-0 ${
+              themeMode === "dark"
+                ? "bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 hover:border-sky-400/60"
+                : "bg-black/60 hover:bg-cyan-500/10 text-slate-400 hover:text-slate-200 border border-cyan-500/30 hover:border-neon-cyan hover:shadow-neon-cyan"
+            }`}
           >
-            <Search className="w-3.5 h-3.5 text-neon-cyan" />
+            <Search
+              className={`w-3.5 h-3.5 ${
+                themeMode === "dark" ? "text-sky-400" : "text-neon-cyan"
+              }`}
+            />
             <span className="font-chakra tracking-wider hidden 3xl:inline">SEARCH...</span>
-            <kbd className="hidden 3xl:inline-block px-1.5 py-0.5 text-[10px] rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+            <kbd
+              className={`hidden 3xl:inline-block px-1.5 py-0.5 text-[10px] rounded border ${
+                themeMode === "dark"
+                  ? "bg-slate-800 text-slate-300 border-slate-700"
+                  : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
+              }`}
+            >
               Ctrl K
             </kbd>
-          </button>
-
-          {/* Quick Contact Button (Desktop & Mobile) */}
-          <button
-            type="button"
-            onClick={onOpenContact}
-            aria-label="문의하기 (이메일)"
-            title="문의하기 (nicebyy@naver.com)"
-            className="p-2 rounded-xl text-slate-400 hover:text-neon-green bg-white/5 hover:bg-emerald-500/15 border border-cyan-500/20 hover:border-emerald-500/40 hover:shadow-neon-green transition-all cursor-pointer shrink-0"
-          >
-            <Mail className="w-4 h-4 text-neon-green" />
           </button>
 
           {/* Studio Button for Viewports where Header Nav is hidden */}
@@ -297,13 +334,21 @@ export function Navbar({
             title={isAuthenticated ? "스튜디오 (운영자 모드)" : "스튜디오 (운영자 로그인 필요)"}
             className={`xl:hidden p-2 rounded-xl border transition-all cursor-pointer relative shrink-0 ${
               pathname?.startsWith("/studio")
-                ? "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-neon-cyan"
+                ? themeMode === "dark"
+                  ? "bg-sky-500/15 text-sky-300 border-sky-500/40"
+                  : "bg-cyan-500/20 text-neon-cyan border-cyan-500/50 shadow-neon-cyan"
+                : themeMode === "dark"
+                ? "text-slate-400 hover:text-white bg-slate-900/70 hover:bg-slate-800 border-slate-700/80"
                 : "text-slate-400 hover:text-neon-cyan bg-white/5 hover:bg-cyan-500/15 border-cyan-500/20 hover:border-cyan-500/40"
             }`}
           >
             {isAuthenticated ? (
               <>
-                <Edit3 className="w-4 h-4 text-neon-cyan" />
+                <Edit3
+                  className={`w-4 h-4 ${
+                    themeMode === "dark" ? "text-sky-400" : "text-neon-cyan"
+                  }`}
+                />
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               </>
             ) : (
@@ -316,20 +361,87 @@ export function Navbar({
             type="button"
             onClick={triggerSearchFocus}
             aria-label="포스트 검색"
-            className="sm:hidden p-2 rounded-xl bg-white/5 hover:bg-cyan-500/15 text-neon-cyan border border-cyan-500/30 hover:shadow-neon-cyan transition-all cursor-pointer shrink-0"
+            className={`sm:hidden p-2 rounded-xl border transition-all cursor-pointer shrink-0 ${
+              themeMode === "dark"
+                ? "bg-slate-900/70 hover:bg-slate-800 text-sky-400 border-slate-700/80"
+                : "bg-white/5 hover:bg-cyan-500/15 text-neon-cyan border-cyan-500/30 hover:shadow-neon-cyan"
+            }`}
           >
             <Search className="w-4 h-4" />
           </button>
 
-          <a
-            href={siteConfig.social.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub Profile"
-            className="hidden min-[380px]:inline-flex p-2 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-cyan-500/15 border border-cyan-500/20 hover:border-neon-cyan hover:shadow-neon-cyan transition-all shrink-0"
+          {/* Top-Right Theme Switcher: Desktop Segmented Pill */}
+          <div
+            role="group"
+            aria-label="테마 모드 선택"
+            className={`hidden md:inline-flex items-center p-0.5 rounded-xl border transition-colors shrink-0 ${
+              themeMode === "dark"
+                ? "bg-slate-900/90 border-slate-700/80"
+                : "bg-black/60 border-cyan-500/30"
+            }`}
           >
-            <Github className="w-4 h-4" />
-          </a>
+            <button
+              type="button"
+              onClick={() => setThemeMode("cyber")}
+              aria-pressed={themeMode === "cyber"}
+              title="사이버펑크 네온 테마"
+              className={`flex items-center gap-1 px-2 py-1 rounded-[9px] text-[11px] font-mono transition-all cursor-pointer active:scale-95 ${
+                themeMode === "cyber"
+                  ? "bg-cyan-500/20 text-neon-cyan border border-cyan-400/50 shadow-[0_0_10px_rgba(0,243,255,0.25)] font-bold"
+                  : "text-slate-400 hover:text-slate-200 border border-transparent"
+              }`}
+            >
+              <Zap className="w-3 h-3" />
+              <span>CYBER</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setThemeMode("dark")}
+              aria-pressed={themeMode === "dark"}
+              title="일반 다크 테마 (고대비 가독성 모드)"
+              className={`flex items-center gap-1 px-2 py-1 rounded-[9px] text-[11px] font-mono transition-all cursor-pointer active:scale-95 ${
+                themeMode === "dark"
+                  ? "bg-slate-700/90 text-white border border-slate-500/50 shadow-sm font-bold"
+                  : "text-slate-400 hover:text-slate-200 border border-transparent"
+              }`}
+            >
+              <Moon className="w-3 h-3" />
+              <span>DARK</span>
+            </button>
+          </div>
+
+          {/* Top-Right Theme Switcher: Compact Mobile Toggle */}
+          <button
+            type="button"
+            onClick={toggleThemeMode}
+            aria-label={
+              themeMode === "cyber"
+                ? "일반 다크 테마로 전환"
+                : "사이버펑크 테마로 전환"
+            }
+            title={
+              themeMode === "cyber"
+                ? "일반 다크 테마로 전환 (가독성 모드)"
+                : "사이버펑크 테마로 전환"
+            }
+            className={`md:hidden inline-flex items-center gap-1 px-2 py-1.5 rounded-xl border text-[11px] font-mono transition-all cursor-pointer active:scale-95 shrink-0 ${
+              themeMode === "dark"
+                ? "bg-slate-800/90 text-sky-300 border-slate-700 hover:border-sky-400/50"
+                : "bg-white/5 text-neon-cyan border-cyan-500/30 hover:bg-cyan-500/15 hover:shadow-neon-cyan"
+            }`}
+          >
+            {themeMode === "dark" ? (
+              <>
+                <Moon className="w-3.5 h-3.5" />
+                <span className="hidden min-[400px]:inline font-bold">DARK</span>
+              </>
+            ) : (
+              <>
+                <Zap className="w-3.5 h-3.5" />
+                <span className="hidden min-[400px]:inline font-bold">CYBER</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </header>

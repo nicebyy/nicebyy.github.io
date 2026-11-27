@@ -115,9 +115,13 @@ export function CyberBootSequence() {
     [clearAllTimers]
   );
 
-  // Initial mount trigger (on first entry or browser refresh)
+  // Initial mount trigger (on first entry or browser refresh, Cyber mode only)
   useEffect(() => {
     try {
+      const savedTheme = localStorage.getItem("kimgatta_theme_mode");
+      if (savedTheme === "dark") {
+        return;
+      }
       const savedPref = localStorage.getItem("kimgatta_boot_glitch");
       if (savedPref === "off") {
         return;

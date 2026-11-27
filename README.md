@@ -5,11 +5,13 @@ GitHub Pages(`output: 'export'`)를 통해 **100% 무료 호스팅** 및 **GitHu
 
 ## 주요 기능
 
-- **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `career`, `projects`, `skills`, `ls`, `scan`, `rain`, `status`, `clear` 명령어 실시간 실행
+- **인터랙티브 CLI 터미널 히어로**: `help`, `whoami`, `career`, `projects`, `skills`, `ls`, `scan`, `theme`, `rain`, `boot`, `status`, `clear` 명령어 실시간 실행
 - **CAREER & RESUME ARCHIVE (`/career`)**: 3개사(G사, C사, A사) 실무 경력 및 미션 크리티컬 아키텍처 문제 해결 이력서 (회사명 및 고유 프로젝트명 비공개/익명화 원칙 준수, 대용량 정산·배치·EDA·Web3·Clean Architecture STAR 성과 아카이브)
 - **FEATURED PROJECTS ARCHIVE (`/projects`)**: 6대 핵심 개인 프로젝트 아카이브 (1234pickban 웹 시뮬레이터, kkt-bookmark 안드로이드/PWA 앱, old-calendar 윈도우 스토어 데스크톱 캘린더, job-blocking 크롬 웹스토어 확장 프로그램, boardgame-calc Flutter 테이블탑 계산기, pw-manager Electron 로컬 암호화 금고)
-- **사이버펑크 네온 단일 테마 & 고립 무드 앰비언스**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI, 네온 빗줄기·부유 먼지 캔버스(`IsolatedAtmosphere`), CRT 비네팅 & 주사선, 단독 오퍼레이터 레이더 HUD(`LoneOperatorHud`)
-- **프로시저럴 Web Audio 빗소리 신디사이저**: 외부 오디오 파일 없이 실시간 생성되는 Night City 빗소리 사운드스케이프(`RAIN FX` / `RAIN SND` 토글 및 `$rain` 명령 지원)
+- **듀얼 다크 테마 (`CYBER` ↔ `DARK` 가독성 모드)**: 우측 상단/하단 스위처 및 `$theme` 명령으로 즉시 전환 가능 (화이트 모드 비활성화 유지)
+  - **사이버펑크 다크 (`CYBER`)**: 딥 블랙/네이비 배경과 시안/핫핑크/에메랄드 네온 글로우 UI, 네온 빗줄기·부유 먼지 캔버스(`IsolatedAtmosphere`), CRT 비네팅 & 주사선, BGM 플레이어, 단독 오퍼레이터 레이더 HUD(`LoneOperatorHud`)
+  - **일반 다크 (`DARK`)**: 장식용 BGM·Rain·CRT/글로우 이펙트를 모두 제거하고, 뉴트럴 차콜(`#0d1117`/`#161b22`)·Pretendard·JetBrains Mono 중심의 장시간 읽기 최적화된 고대비 가독성 모드
+- **Night City 빗소리 & BGM 사운드스케이프**: 사이버펑크 테마 전용 고립 무드 BGM 플레이어 및 빗소리 앰비언스(`RAIN FX` / `RAIN SND` 토글 및 `$rain` 명령 지원)
 - **실시간 방문자 수 텔레메트리**: `hitscounter.dev` 연동 TODAY / TOTAL 방문자 카운터 (`VisitorCounter` 위젯 — 이전 티스토리 누적 방문자 수 `49,561`명 합산, 사이드바 및 대시보드 HUD 표시, 세션 중복 집계 방지 및 로컬 미리보기 조회 전용 모드 지원)
 - **CYBER STUDIO (`/studio`) CMS & 에디터**:
   - **게시물 관리 & 가리기/삭제**: 발행된 게시물을 클릭 한 번으로 가리기(`draft: true`), 영구 삭제(GitHub API `DELETE`), 또는 스튜디오로 즉시 불러와 수정

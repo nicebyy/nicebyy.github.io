@@ -88,11 +88,20 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen flex flex-col relative overflow-x-hidden cyber-grid-bg cyber-scanlines bg-[#05070e] text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-neon-cyan">
-        {/* Auto-clean legacy Service Worker & Cache Storage from previous projects */}
+        {/* Auto-clean legacy Service Worker & apply persisted theme mode before paint */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
+                try {
+                  var theme = localStorage.getItem('kimgatta_theme_mode');
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('theme-standard');
+                    document.documentElement.setAttribute('data-theme', 'standard');
+                  } else {
+                    document.documentElement.setAttribute('data-theme', 'cyber');
+                  }
+                } catch (e) {}
                 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
                   navigator.serviceWorker.getRegistrations().then(function(regs) {
                     regs.forEach(function(reg) { reg.unregister(); });
@@ -108,10 +117,10 @@ export default function RootLayout({
           }}
         />
 
-        {/* Multi-layered Cyberpunk Neon Ambient Glows (GPU Layer Isolated & Responsive for Mobile) */}
-        <div className="pointer-events-none fixed -top-40 left-10 w-[260px] h-[260px] md:w-[500px] md:h-[500px] rounded-full bg-cyan-400/15 md:bg-cyan-400/20 blur-[60px] md:blur-[140px] z-0 md:animate-pulse transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
-        <div className="pointer-events-none fixed top-1/3 -right-40 w-[280px] h-[280px] md:w-[600px] md:h-[600px] rounded-full bg-pink-500/15 md:bg-pink-500/20 blur-[70px] md:blur-[150px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
-        <div className="pointer-events-none fixed -bottom-32 left-1/3 hidden md:block w-[500px] h-[500px] rounded-full bg-purple-500/15 blur-[140px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        {/* Multi-layered Cyberpunk Neon Ambient Glows (Hidden in Standard Dark Mode) */}
+        <div className="cyber-only-fx pointer-events-none fixed -top-40 left-10 w-[260px] h-[260px] md:w-[500px] md:h-[500px] rounded-full bg-cyan-400/15 md:bg-cyan-400/20 blur-[60px] md:blur-[140px] z-0 md:animate-pulse transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        <div className="cyber-only-fx pointer-events-none fixed top-1/3 -right-40 w-[280px] h-[280px] md:w-[600px] md:h-[600px] rounded-full bg-pink-500/15 md:bg-pink-500/20 blur-[70px] md:blur-[150px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
+        <div className="cyber-only-fx pointer-events-none fixed -bottom-32 left-1/3 hidden md:block w-[500px] h-[500px] rounded-full bg-purple-500/15 blur-[140px] z-0 transform-gpu [contain:paint]" style={{ transform: "translateZ(0)" }} />
 
         {/* Live Animated PCB Electric Circuit Background */}
         <CircuitBackground />

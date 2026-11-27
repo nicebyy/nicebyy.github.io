@@ -1066,3 +1066,317 @@ html.tab-inactive *::after {
   animation: cyber-signal-scan-fast 0.35s linear forwards;
   will-change: top, opacity;
 }
+
+/* =========================================================================
+   Standard Dark Mode (html.theme-standard) — High-Readability Dev Dark Theme
+   ========================================================================= */
+
+html.theme-standard {
+  color-scheme: dark;
+}
+
+html.theme-standard body {
+  background-color: #0d1117 !important;
+  background-image: none !important;
+  color: #e6edf3;
+}
+
+/* Disable Cyberpunk atmospheric overlays, CRT scanlines & ambient glow blobs */
+html.theme-standard .cyber-only-fx,
+html.theme-standard .cyber-scanlines::before,
+html.theme-standard .cyber-crt-vignette,
+html.theme-standard .cyber-crt-vignette-idle,
+html.theme-standard .cyber-crt-beam,
+html.theme-standard .cyber-corner-bracket-tl,
+html.theme-standard .cyber-corner-bracket-tr,
+html.theme-standard .cyber-corner-bracket-bl,
+html.theme-standard .cyber-corner-bracket-br,
+html.theme-standard .cyber-box::before,
+html.theme-standard .cyber-box::after,
+html.theme-standard .cyber-corner::before,
+html.theme-standard .cyber-corner::after {
+  display: none !important;
+}
+
+/* Prioritize clean, fatigue-free typography (Pretendard + JetBrains Mono) */
+html.theme-standard .font-cyber,
+html.theme-standard .font-orbitron,
+html.theme-standard .font-chakra,
+html.theme-standard .font-orbit,
+html.theme-standard .font-pixel,
+html.theme-standard .font-bit {
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+  letter-spacing: -0.015em !important;
+}
+
+html.theme-standard .font-mono,
+html.theme-standard code,
+html.theme-standard pre,
+html.theme-standard kbd {
+  font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Eliminate glowing text-shadow, drop-shadow, glitch & signal flicker */
+html.theme-standard .neon-sign-cyan,
+html.theme-standard .neon-sign-pink,
+html.theme-standard .neon-sign-green {
+  color: #f8fafc !important;
+  text-shadow: none !important;
+}
+
+html.theme-standard .neon-glow-cyan,
+html.theme-standard .neon-glow-pink,
+html.theme-standard [class*="drop-shadow-[0_0_"] {
+  filter: none !important;
+}
+
+html.theme-standard .hover-glitch,
+html.theme-standard .group:hover .hover-glitch,
+html.theme-standard .hover-glitch:hover {
+  animation: none !important;
+  text-shadow: none !important;
+  transform: none !important;
+}
+
+html.theme-standard .group:hover .hover-glitch,
+html.theme-standard .hover-glitch:hover {
+  color: #38bdf8 !important;
+}
+
+html.theme-standard .cyber-signal-flicker {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+/* Disable distracting blinking/ping animations on decorative UI badges */
+html.theme-standard aside .animate-ping,
+html.theme-standard main .animate-ping,
+html.theme-standard aside .animate-pulse,
+html.theme-standard main .animate-pulse {
+  animation: none !important;
+}
+
+/* Calm, high-contrast neutral dark surfaces & crisp borders */
+html.theme-standard .cyber-box,
+html.theme-standard [class*="bg-[#0b101e]"] {
+  background-color: #161b22 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html.theme-standard .cyber-box:hover {
+    border-color: rgba(56, 189, 248, 0.42) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38) !important;
+    transform: translateY(-2px);
+  }
+}
+
+html.theme-standard [class*="bg-[#070b14]"],
+html.theme-standard [class*="bg-[#060911]"],
+html.theme-standard [class*="bg-[#060a14]"],
+html.theme-standard [class*="bg-[#070c17]"] {
+  background-color: rgba(13, 17, 23, 0.96) !important;
+}
+
+html.theme-standard [class*="border-cyan-500/20"],
+html.theme-standard [class*="border-cyan-500/25"],
+html.theme-standard [class*="border-cyan-500/30"] {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+html.theme-standard [class*="shadow-neon-"],
+html.theme-standard [class*="shadow-[0_0_"] {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.26) !important;
+}
+
+/* Harmonized high-contrast Dev Dark accent colors */
+html.theme-standard .text-neon-cyan {
+  color: #38bdf8 !important;
+}
+
+html.theme-standard .text-neon-pink {
+  color: #f472b6 !important;
+}
+
+html.theme-standard .text-neon-green {
+  color: #34d399 !important;
+}
+
+html.theme-standard .text-neon-amber {
+  color: #fbbf24 !important;
+}
+
+html.theme-standard .bg-neon-cyan {
+  background-color: #38bdf8 !important;
+}
+
+html.theme-standard .bg-neon-pink {
+  background-color: #f472b6 !important;
+}
+
+html.theme-standard .bg-neon-green {
+  background-color: #34d399 !important;
+}
+
+html.theme-standard .cyber-chip:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(56, 189, 248, 0.55) !important;
+}
+
+html.theme-standard .cyber-chip-pink:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+  border-color: rgba(244, 114, 182, 0.55) !important;
+}
+
+/* Article & Markdown Reading Optimization (.prose-cyber) */
+html.theme-standard .prose-cyber {
+  color: #dbe2ea;
+  font-size: 15.5px;
+  line-height: 1.85;
+}
+
+@media (min-width: 640px) {
+  html.theme-standard .prose-cyber {
+    font-size: 16.5px;
+  }
+}
+
+html.theme-standard .prose-cyber p,
+html.theme-standard .prose-cyber li {
+  line-height: 1.85;
+  color: #d8dee9;
+}
+
+html.theme-standard .prose-cyber h1,
+html.theme-standard .prose-cyber h2 {
+  text-shadow: none !important;
+  color: #f8fafc !important;
+  border-bottom-color: rgba(148, 163, 184, 0.22) !important;
+  letter-spacing: -0.02em;
+}
+
+html.theme-standard .prose-cyber h1::before,
+html.theme-standard .prose-cyber h2::before {
+  color: #38bdf8 !important;
+  opacity: 0.65;
+}
+
+html.theme-standard .prose-cyber h3,
+html.theme-standard .prose-cyber h4 {
+  color: #f1f5f9 !important;
+}
+
+html.theme-standard .prose-cyber a {
+  color: #38bdf8 !important;
+}
+
+html.theme-standard .prose-cyber blockquote {
+  border-left-color: #38bdf8 !important;
+  background-color: rgba(56, 189, 248, 0.06) !important;
+  color: #cbd5e1 !important;
+  font-style: normal;
+}
+
+html.theme-standard .prose-cyber code:not(pre code) {
+  background-color: rgba(110, 118, 129, 0.22) !important;
+  color: #7dd3fc !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html.theme-standard .prose-cyber pre {
+  background-color: #0d1117 !important;
+  border-color: #30363d !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+  line-height: 1.7;
+}
+
+html.theme-standard .prose-cyber img {
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+html.theme-standard .prose-cyber img:hover {
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+html.theme-standard .prose-cyber table {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html.theme-standard .prose-cyber th {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  color: #f1f5f9 !important;
+  border-bottom-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html.theme-standard .prose-cyber td {
+  border-bottom-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+/* Clean GitHub Dark syntax highlighting (Zero text-shadow) */
+html.theme-standard .hljs-keyword,
+html.theme-standard .hljs-selector-tag,
+html.theme-standard .hljs-built_in,
+html.theme-standard .hljs-name {
+  color: #ff7b72;
+  text-shadow: none;
+}
+
+html.theme-standard .hljs-string,
+html.theme-standard .hljs-attr,
+html.theme-standard .hljs-symbol,
+html.theme-standard .hljs-bullet,
+html.theme-standard .hljs-addition {
+  color: #a5d6ff;
+  text-shadow: none;
+}
+
+html.theme-standard .hljs-title,
+html.theme-standard .hljs-section,
+html.theme-standard .hljs-function {
+  color: #d2a8ff;
+  text-shadow: none;
+}
+
+html.theme-standard .hljs-number,
+html.theme-standard .hljs-literal,
+html.theme-standard .hljs-variable,
+html.theme-standard .hljs-template-variable,
+html.theme-standard .hljs-type {
+  color: #ffa657;
+  text-shadow: none;
+}
+
+html.theme-standard .hljs-comment,
+html.theme-standard .hljs-quote,
+html.theme-standard .hljs-meta {
+  color: #8b949e;
+  text-shadow: none;
+}
+
+/* Neutral clean scrollbars in Standard Dark Mode */
+html.theme-standard .cyber-scrollbar {
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+}
+
+html.theme-standard .cyber-scrollbar::-webkit-scrollbar-thumb,
+html.theme-standard ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-color: transparent;
+}
+
+html.theme-standard .cyber-scrollbar::-webkit-scrollbar-thumb:hover,
+html.theme-standard ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html.theme-standard ::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+

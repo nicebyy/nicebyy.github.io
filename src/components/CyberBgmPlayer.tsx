@@ -474,6 +474,11 @@ export function CyberBgmPlayer() {
     return () => {
       clearFade();
       clearInteractionUnlock();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute("src");
+        audioRef.current.load();
+      }
     };
   }, [clearFade, clearInteractionUnlock, playCurrentAudio]);
 

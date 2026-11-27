@@ -8,6 +8,7 @@ import { Sidebar } from "./Sidebar";
 import { ContactModal } from "./ContactModal";
 import { PostMeta } from "@/lib/posts";
 import { siteConfig } from "@/config/site";
+import { useThemeMode } from "@/lib/useThemeMode";
 
 const CyberCursor = dynamic(
   () => import("./CyberCursor").then((mod) => mod.CyberCursor),
@@ -45,6 +46,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { themeMode, toggleThemeMode } = useThemeMode();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -52,6 +54,15 @@ export function AppShell({
   const [cursorMode, setCursorMode] = useState<"cyber" | "native">("cyber");
   const [rainAudio, setRainAudio] = useState(false);
   const [bootGlitch, setBootGlitch] = useState(true);
+
+  // Stop cyber-only cursor/audio state when switching to Standard Dark Mode
+  useEffect(() => {
+    if (themeMode === "dark") {
+      document.body.classList.remove("cyber-cursor-active");
+      setRainAudio(false);
+      window.dispatchEvent(new CustomEvent("rain-audio-state", { detail: false }));
+    }
+  }, [themeMode]);
 
   // Global event listener for opening contact modal
   useEffect(() => {
@@ -227,9 +238,13 @@ export function AppShell({
 
   return (
     <div className="min-h-screen w-full max-w-full flex flex-col relative overflow-x-clip">
-      <CyberBootSequence />
-      <IsolatedAtmosphere />
-      <CyberCursor />
+      {themeMode === "cyber" && (
+        <>
+          <CyberBootSequence />
+          <IsolatedAtmosphere />
+          <CyberCursor />
+        </>
+      )}
       <CyberScrollTop />
       <Navbar
         isSidebarCollapsed={isCollapsed}
@@ -263,10 +278,22 @@ export function AppShell({
             {children}
           </main>
 
-          <footer className="border-t border-cyan-500/20 bg-[#060911]/90 backdrop-blur-md py-6 mt-8 sm:mt-12">
+          <footer
+            className={`border-t backdrop-blur-md py-6 mt-8 sm:mt-12 transition-colors ${
+              themeMode === "dark"
+                ? "border-slate-800 bg-[#0d1117]/95"
+                : "border-cyan-500/20 bg-[#060911]/90"
+            }`}
+          >
             <div className="max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-chakra tracking-wider text-slate-400">
               <div className="flex items-center gap-2 text-[11px] sm:text-xs text-center sm:text-left">
-                <span className="w-2 h-2 rounded-full bg-neon-cyan shadow-[0_0_8px_#00f3ff] shrink-0" />
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    themeMode === "dark"
+                      ? "bg-sky-400"
+                      : "bg-neon-cyan shadow-[0_0_8px_#00f3ff]"
+                  }`}
+                />
                 <span>
                   © {new Date().getFullYear()} {siteConfig.author} (@
                   {siteConfig.githubUsername}). POWERED BY NEXT.JS & GITHUB PAGES.
@@ -275,65 +302,97 @@ export function AppShell({
               <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5">
                 <button
                   type="button"
-                  onClick={toggleBootGlitch}
-                  title="초기 접속 및 새로고침 치지직 CRT 부팅 연출 전환"
+                  onClick={toggleThemeMode}
+                  title={
+                    themeMode === "cyber"
+                      ? "일반 다크 테마로 전환 (가독성 모드)"
+                      : "사이버펑크 테마로 전환"
+                  }
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
-                    bootGlitch
-                      ? "border-cyan-500/50 bg-cyan-500/15 text-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.25)]"
-                      : "border-cyan-500/30 bg-black/40 text-slate-400 hover:text-white"
+                    themeMode === "dark"
+                      ? "border-slate-700 bg-slate-800/80 text-slate-200 hover:border-sky-400/60 hover:text-sky-300"
+                      : "border-cyan-500/40 bg-cyan-500/10 text-neon-cyan hover:bg-cyan-500/20"
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      bootGlitch
-                        ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
-                        : "bg-slate-500"
+                      themeMode === "dark"
+                        ? "bg-sky-400"
+                        : "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
                     }`}
                   />
-                  <span>BOOT: {bootGlitch ? "ON" : "OFF"}</span>
+                  <span>THEME: {themeMode === "dark" ? "DARK" : "CYBER"}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={toggleRainAudio}
-                  title="사이버펑크 빗소리 앰비언스 전환"
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
-                    rainAudio
-                      ? "border-pink-500/50 bg-pink-500/15 text-neon-pink shadow-[0_0_10px_rgba(255,0,127,0.25)]"
-                      : "border-cyan-500/30 bg-black/40 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-400 hover:text-neon-cyan"
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      rainAudio
-                        ? "bg-neon-pink shadow-[0_0_6px_#ff007f] animate-pulse"
-                        : "bg-slate-500"
-                    }`}
-                  />
-                  <span>RAIN: {rainAudio ? "ON" : "OFF"}</span>
-                </button>
+                {themeMode === "cyber" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={toggleBootGlitch}
+                      title="초기 접속 및 새로고침 치지직 CRT 부팅 연출 전환"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
+                        bootGlitch
+                          ? "border-cyan-500/50 bg-cyan-500/15 text-neon-cyan shadow-[0_0_8px_rgba(0,243,255,0.25)]"
+                          : "border-cyan-500/30 bg-black/40 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          bootGlitch
+                            ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
+                            : "bg-slate-500"
+                        }`}
+                      />
+                      <span>BOOT: {bootGlitch ? "ON" : "OFF"}</span>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={toggleCursorMode}
-                  title="마우스 커서 스타일 전환 (사이버펑크 / 시스템 기본)"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-[10px] font-mono text-slate-300 hover:text-neon-cyan transition-all cursor-pointer active:scale-95"
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      cursorMode === "cyber"
-                        ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
-                        : "bg-slate-500"
-                    }`}
-                  />
-                  <span>CURSOR: {cursorMode === "cyber" ? "CYBER" : "SYSTEM"}</span>
-                </button>
+                    <button
+                      type="button"
+                      onClick={toggleRainAudio}
+                      title="사이버펑크 빗소리 앰비언스 전환"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono transition-all cursor-pointer active:scale-95 ${
+                        rainAudio
+                          ? "border-pink-500/50 bg-pink-500/15 text-neon-pink shadow-[0_0_10px_rgba(255,0,127,0.25)]"
+                          : "border-cyan-500/30 bg-black/40 text-slate-300 hover:bg-cyan-500/10 hover:border-cyan-400 hover:text-neon-cyan"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          rainAudio
+                            ? "bg-neon-pink shadow-[0_0_6px_#ff007f] animate-pulse"
+                            : "bg-slate-500"
+                        }`}
+                      />
+                      <span>RAIN: {rainAudio ? "ON" : "OFF"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={toggleCursorMode}
+                      title="마우스 커서 스타일 전환 (사이버펑크 / 시스템 기본)"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-black/40 hover:bg-cyan-500/10 hover:border-cyan-400 text-[10px] font-mono text-slate-300 hover:text-neon-cyan transition-all cursor-pointer active:scale-95"
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          cursorMode === "cyber"
+                            ? "bg-neon-cyan shadow-[0_0_6px_#00f3ff]"
+                            : "bg-slate-500"
+                        }`}
+                      />
+                      <span>CURSOR: {cursorMode === "cyber" ? "CYBER" : "SYSTEM"}</span>
+                    </button>
+                  </>
+                )}
 
                 <a
                   href={siteConfig.social.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-neon-cyan drop-shadow-[0_0_8px_#00f3ff] transition-colors"
+                  className={
+                    themeMode === "dark"
+                      ? "hover:text-sky-400 transition-colors"
+                      : "hover:text-neon-cyan drop-shadow-[0_0_8px_#00f3ff] transition-colors"
+                  }
                 >
                   GITHUB // @{siteConfig.githubUsername}
                 </a>

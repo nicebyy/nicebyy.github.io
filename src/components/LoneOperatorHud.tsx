@@ -152,6 +152,9 @@ export function LoneOperatorHud() {
 
     return () => {
       rainEngineRef.current?.dispose();
+      window.dispatchEvent(
+        new CustomEvent("rain-audio-state", { detail: false })
+      );
     };
   }, []);
 

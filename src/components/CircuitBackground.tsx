@@ -1,12 +1,19 @@
 "use client";
 
 import React from "react";
+import { useThemeMode } from "@/lib/useThemeMode";
 
 export function CircuitBackground() {
+  const { themeMode } = useThemeMode();
+
+  if (themeMode === "dark") {
+    return null;
+  }
+
   return (
     <div
       aria-hidden="true"
-      className="circuit-mobile-optimize fixed inset-0 pointer-events-none z-0 overflow-hidden select-none opacity-40 dark:opacity-65 transition-opacity transform-gpu [contain:strict]"
+      className="cyber-only-fx circuit-mobile-optimize fixed inset-0 pointer-events-none z-0 overflow-hidden select-none opacity-40 dark:opacity-65 transition-opacity transform-gpu [contain:strict]"
       style={{ transform: "translateZ(0)" }}
     >
       <svg

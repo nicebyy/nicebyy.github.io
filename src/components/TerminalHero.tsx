@@ -27,6 +27,7 @@ import {
   clearOperatorSession,
 } from "@/lib/auth";
 import { DEFAULT_BRANCH, DEFAULT_REPO } from "@/lib/github-api";
+import { useThemeMode } from "@/lib/useThemeMode";
 
 interface TerminalLine {
   id: number;
@@ -88,6 +89,7 @@ function TechProgressBar({ tech, colorStyles, delay }: TechProgressBarProps) {
 
 export function TerminalHero({ posts }: { posts: PostMeta[] }) {
   const router = useRouter();
+  const { themeMode, setThemeMode, toggleThemeMode } = useThemeMode();
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<TerminalLine[]>([
     {
@@ -170,9 +172,10 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
             "  skills   — 실시간 핵심 기술 스택 게이지 전송",
             "  ls       — 최근 발행된 블로그 아카이브 목록 조회",
             "  scan     — 주변 서브넷 활성 오퍼레이터 신호 탐색",
-            "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환",
-            "  boot     — CRT 치지직 부팅 글리치 & 시그널 락 시퀀스 재생 (동의어: reboot)",
-            "  status   — 나이트 시티 메인프레임 통신 상태 진단",
+            "  theme    — 테마 모드 전환 (사용법: theme [cyber|dark])",
+            "  rain     — Night City 빗소리 사운드 & 빗줄기 이펙트 전환 (CYBER 전용)",
+            "  boot     — CRT 치지직 부팅 글리치 & 시그널 락 시퀀스 재생 (CYBER 전용)",
+            "  status   — 메인프레임 통신 및 현재 테마 상태 진단",
             "  clear    — 터미널 콘솔 로그 초기화",
           ].join("\n"),
         },
@@ -459,8 +462,59 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
       return;
     }
 
+    // Command: Theme Switch (cyber | dark)
+    if (mainCmd === "theme") {
+      const arg = (parts[1] || "").toLowerCase();
+      if (arg === "dark" || arg === "standard") {
+        setThemeMode("dark");
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "accent",
+            text: `[DISPLAY] Switched to STANDARD DARK MODE (High-Readability, BGM/Rain FX disabled).`,
+          },
+        ]);
+      } else if (arg === "cyber" || arg === "cyberpunk") {
+        setThemeMode("cyber");
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "accent",
+            text: `[DISPLAY] Switched to CYBERPUNK NEON MODE (HUD, BGM & Rain FX restored).`,
+          },
+        ]);
+      } else {
+        const nextMode = themeMode === "cyber" ? "dark" : "cyber";
+        toggleThemeMode();
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "accent",
+            text: `[DISPLAY] Theme toggled -> ${
+              nextMode === "dark" ? "STANDARD_DARK (Readability)" : "CYBERPUNK_NEON"
+            }.`,
+          },
+        ]);
+      }
+      return;
+    }
+
     // Command: Rain
     if (mainCmd === "rain" || trimmed.toLowerCase() === "rain on" || trimmed.toLowerCase() === "rain off") {
+      if (themeMode === "dark") {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: `[INFO] Rain & ambient audio FX are disabled in Standard Dark Mode. Run 'theme cyber' to re-enable cyberpunk effects.`,
+          },
+        ]);
+        return;
+      }
       const low = trimmed.toLowerCase();
       const explicitState =
         low === "rain on" ? true : low === "rain off" ? false : undefined;
@@ -496,7 +550,11 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
         {
           id: Date.now() + 1,
           type: "accent",
-          text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • PROTOCOL: CYBERPUNK_DARK_ONLY (IMMUTABLE)\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
+          text: `[MAINFRAME STATUS] ISOLATED_SOLO_NODE\n  • THEME_MODE: ${
+            themeMode === "dark"
+              ? "STANDARD_DARK (HIGH_READABILITY)"
+              : "CYBERPUNK_NEON_DARK"
+          }\n  • PEERS_IN_RANGE: 0000 (ALONE)\n  • UPTIME: 99.99%\n  • NODE: NIGHT_CITY_SECTOR_09`,
         },
       ]);
       return;
@@ -504,6 +562,17 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
 
     // Command: Boot / Reboot / Glitch
     if (mainCmd === "boot" || mainCmd === "reboot" || mainCmd === "glitch") {
+      if (themeMode === "dark") {
+        setHistory((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            type: "output",
+            text: `[INFO] CRT Boot Glitch FX is disabled in Standard Dark Mode. Run 'theme cyber' to switch back.`,
+          },
+        ]);
+        return;
+      }
       window.dispatchEvent(new CustomEvent("trigger-boot-glitch"));
       setHistory((prev) => [
         ...prev,
@@ -600,7 +669,8 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 { name: "studio", color: "pink" },
                 { name: "projects", color: "pink" },
                 { name: "scan", color: "pink" },
-                { name: "rain", color: "cyan" },
+                ...(themeMode === "cyber" ? [{ name: "rain", color: "cyan" }] : []),
+                { name: "theme", color: "cyan" },
                 { name: "whoami", color: "cyan" },
                 { name: "skills", color: "green" },
                 { name: "ls", color: "cyan" },
@@ -637,7 +707,11 @@ export function TerminalHero({ posts }: { posts: PostMeta[] }) {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="명령어 입력 (help, studio, whoami, login <token>, rain)..."
+                placeholder={
+                  themeMode === "dark"
+                    ? "명령어 입력 (help, studio, whoami, theme, ls)..."
+                    : "명령어 입력 (help, studio, whoami, theme, rain)..."
+                }
                 spellCheck={false}
                 autoComplete="off"
                 autoCorrect="off"
