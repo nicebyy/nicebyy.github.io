@@ -165,7 +165,7 @@ export default function AboutPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono font-bold text-neon-cyan flex items-center gap-2">
               <FolderGit2 className="w-4 h-4" />
-              <span>FEATURED PROJECTS // 4 BUILDS</span>
+              <span>FEATURED PROJECTS // {siteConfig.projects.length} BUILDS</span>
             </h2>
             <Link
               href="/projects"

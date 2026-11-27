@@ -28,7 +28,7 @@ export interface ProjectItem {
   storeUrl?: string;
   status: string;
   accentColor: "cyan" | "pink" | "emerald" | "purple";
-  iconName: "gamepad" | "bookmark" | "calendar" | "shield";
+  iconName: "gamepad" | "bookmark" | "calendar" | "shield" | "dice" | "key";
 }
 
 export const projectsData: ProjectItem[] = [
@@ -202,5 +202,89 @@ export const projectsData: ProjectItem[] = [
     status: "v0.2.6 // Chrome 웹스토어 출시",
     accentColor: "purple",
     iconName: "shield",
+  },
+  {
+    id: "boardgame-calc",
+    title: "보드게임 계산기 (Boardgame Calc)",
+    subtitle: "Real-time Multiplayer & Offline Tabletop Assistant",
+    category: "Mobile & Web App",
+    badge: "Flutter 3.50+ · Dart · Socket.IO · Provider · Android APK",
+    summary:
+      "실시간 소켓 멀티플레이와 로컬 오프라인(Pass & Play)을 모두 지원하며, 점수·화폐 듀얼 트래커와 주사위·경매·배팅·비밀노트 4대 중앙 도구를 갖춘 테이블탑 계산기",
+    description:
+      "보드게임 플레이 시 발생하는 복잡한 화폐 계산, 승점 집계, 경매 입찰 및 판돈 관리를 스마트폰과 웹에서 원스톱으로 해결하는 종합 보드게임 도구 웹앱입니다. NestJS Socket.IO 백엔드와 연동되는 실시간 온라인 멀티플레이 모드와 네트워크 없는 환경을 위한 로컬 엔진(Pass & Play 및 SharedPreferences 영구 저장) 이중 모드를 제공합니다. 자율 모드 vs 엄격 뱅커 모드 권한 분리, P2P 상호 합의 송금, D6/다면체 텀블링 애니메이션 주사위 롤러, 테이블 팟 배팅, 실시간 카운트다운 경매, 블라인드 비밀노트 및 Web Audio API 0KB PCM 합성 효과음과 로비 BGM을 지원합니다.",
+    keyFeatures: [
+      "온라인 멀티플레이어(Socket.IO) & 오프라인 로컬 엔진(Pass & Play) 이중 모드 지원",
+      "화폐(포인트) & 점수(VP) 듀얼 트래커 및 자율 모드 vs 엄격 뱅커 모드 권한 분리",
+      "테이블탑 4대 중앙 도구: 🎲 주사위 롤러, 💰 배팅 판돈/테이블 팟, 🔨 실시간 호가 경매, 📝 블라인드 비밀노트",
+      "잔액 및 최고입찰액 보호가 적용된 P2P 상호 합의 송금 시스템",
+      "Web Audio API 경량 PCM 합성 효과음 11종 및 로비 BGM 플레이어",
+      "Flutter Web PWA 및 Android APK (GitHub Actions 자동 릴리스) 크로스 플랫폼 배포",
+    ],
+    techStack: [
+      "Flutter 3.50+",
+      "Dart",
+      "Socket.IO",
+      "Provider",
+      "SharedPreferences",
+      "Web Audio API",
+      "Android APK",
+    ],
+    metrics: [
+      { label: "Dual Engine", value: "Socket.IO + Offline Local" },
+      { label: "Platform", value: "Flutter Web + Android APK" },
+      { label: "Audio Engine", value: "0KB Web Audio PCM Synth" },
+    ],
+    primaryLink: {
+      type: "github",
+      label: "GitHub 저장소 & APK",
+      url: "https://github.com/nicebyy/boardgame-calc",
+    },
+    githubUrl: "https://github.com/nicebyy/boardgame-calc",
+    status: "Active // Open Source",
+    accentColor: "cyan",
+    iconName: "dice",
+  },
+  {
+    id: "pw-manager",
+    title: "pw-manager (비밀번호 & KV 금고)",
+    subtitle: "Zero-Knowledge Desktop Password & Key-Value Vault",
+    category: "Desktop Application",
+    badge: "Electron 34 · TypeScript · scrypt · AES-256-GCM · Vitest",
+    summary:
+      "다단계 계층 폴더 트리, 무제한 Key-Value 쌍 및 이미지 식별, scrypt + AES-256-GCM 종단간 암호화와 12단어 복구 문구를 지원하는 로컬 데스크톱 비밀번호 금고",
+    description:
+      "외부 클라우드 의존 없이 100% 로컬 환경에서 민감한 계정 정보와 API 키, 토큰을 안전하게 보호하는 데스크톱 암호화 금고입니다. 마스터 비밀번호를 scrypt(N=16384, r=8, p=1)로 키 유도하여 256-bit DEK를 생성하고, 전체 계층 폴더 트리·Key-Value 속성·식별 이미지(128x128 리사이즈)를 AES-256-GCM으로 인증 암호화합니다. 비밀번호 분실 시 12단어 복구 문구(Dual-Key Envelope)로 복구할 수 있으며, 30초 클립보드 자동 소멸, Windows 시스템 트레이 상주, 미사용 시 자동 잠금, Electron 샌드박스 격리 및 NSIS/포터블 EXE 자동 릴리스를 지원합니다.",
+    keyFeatures: [
+      "다단계 계층 폴더(트리 구조) & 무제한 커스텀 Key-Value 쌍(API Key, PAT, Token 등)",
+      "scrypt 키 유도 + 256-bit AES-256-GCM 강력한 로컬 종단간 인증 암호화",
+      "마스터 비밀번호 분실 대비 12단어 복구 문구(Dual-Key Envelope) 시스템",
+      "항목별 직관적 이미지 식별 (드래그앤드롭/클립보드 붙여넣기 128x128 암호화 저장) & 프리셋",
+      "30초 클립보드 자동 파기, Windows 트레이 백그라운드 상주, 미사용 시 자동 잠금",
+      "writeQueue 직렬화 및 .bak 자동 백업으로 프로세스 강제 종료 시 데이터 손상 원천 차단",
+    ],
+    techStack: [
+      "Electron 34",
+      "TypeScript 5",
+      "scrypt",
+      "AES-256-GCM",
+      "Vite",
+      "Vitest",
+      "NSIS / Portable EXE",
+    ],
+    metrics: [
+      { label: "Crypto Core", value: "scrypt + AES-256-GCM" },
+      { label: "Architecture", value: "Local-First Zero-Knowledge" },
+      { label: "Packaging", value: "NSIS Installer + Portable EXE" },
+    ],
+    primaryLink: {
+      type: "github",
+      label: "GitHub 저장소 & 릴리스",
+      url: "https://github.com/nicebyy/pw-manager",
+    },
+    githubUrl: "https://github.com/nicebyy/pw-manager",
+    status: "v1.0.0 // Open Source",
+    accentColor: "emerald",
+    iconName: "key",
   },
 ];

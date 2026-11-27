@@ -19,6 +19,8 @@ import {
   Globe,
   Lock,
   X,
+  Dices,
+  KeyRound,
 } from "lucide-react";
 import { projectsData, ProjectItem, ProjectPlatformType } from "@/config/projects";
 
@@ -27,6 +29,8 @@ const iconMap = {
   bookmark: Bookmark,
   calendar: Calendar,
   shield: ShieldCheck,
+  dice: Dices,
+  key: KeyRound,
 };
 
 const colorConfig = {
@@ -116,7 +120,7 @@ export function ProjectShowcase({
               FEATURED PROJECTS
             </h2>
             <p className="text-xs sm:text-sm font-chakra text-slate-300 max-w-2xl leading-relaxed">
-              단순한 토이를 넘어 실제 사용자 가치와 문제 해결, 0ms 무지연 로컬 우선 및 엔터프라이즈 아키텍처를 탐구한 4대 핵심 개인 프로젝트입니다.
+              단순한 토이를 넘어 실제 사용자 가치와 문제 해결, 0ms 무지연 로컬 우선 및 엔터프라이즈 아키텍처를 탐구한 핵심 개인 프로젝트 포트폴리오입니다.
             </p>
           </div>
 
